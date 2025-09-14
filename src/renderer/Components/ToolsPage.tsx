@@ -1,7 +1,11 @@
 import {Card, Image, Tooltip} from '@heroui/react';
+import {useCallback} from 'react';
+import {useDispatch} from 'react-redux';
 
 import {useAppState} from '../../../../src/renderer/src/App/Redux/Reducer/AppReducer';
+import {useTabsState} from '../../../../src/renderer/src/App/Redux/Reducer/TabsReducer';
 import icon from '../icon.png';
+import {reducerActions} from '../reducer';
 import SpotlightCard from './SpotlightCard';
 
 const title: string = 'Custom Actions';
@@ -10,7 +14,13 @@ const description: string = 'Create, customize and manage custom cards with cust
 export default function ToolsPage() {
   const isDarkMode = useAppState('darkMode');
 
-  const openModal = () => {};
+  const activeTab = useTabsState('activeTab');
+  const dispatch = useDispatch();
+
+  const openModal = useCallback(() => {
+    console.log('ressed');
+    dispatch(reducerActions.openModal({tabID: activeTab}));
+  }, [activeTab]);
 
   return (
     <>
