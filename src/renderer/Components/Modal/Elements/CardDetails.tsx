@@ -14,8 +14,10 @@ export function CardDetails({accentColor, setAccentColor}: Props) {
         <Textarea maxRows={3} placeholder="Card Description (optional)" />
       </div>
       <div className="flex flex-col items-center justify-center space-y-3">
-        <Button className="border-2 border-dashed hover:border-success size-24 group" isIconOnly>
-          <ImageGeneration_Icon className="size-10 group-hover:text-success-700 transition-colors duration-300" />
+        <Button className="border-2 border-dashed border-foreground-500 hover:border-success size-24 group" isIconOnly>
+          <ImageGeneration_Icon
+            className={'size-10 text-foreground-500 group-hover:text-success-700 transition-colors duration-300'}
+          />
         </Button>
         <span className="text-sm text-foreground-500">Select Icon (optional)</span>
         <div className="flex items-center space-x-2">
