@@ -4,7 +4,7 @@ import {useDispatch} from 'react-redux';
 
 import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/LynxScroll';
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
-import {ArrowDuo_Icon} from '../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
+import {ArrowDuo_Icon, DiskDuo_Icon} from '../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {CustomCard} from '../../../cross/CrossTypes';
 import {reducerActions} from '../../reducer';
 import CustomActionsManager from './CustomActionsManager';
@@ -86,10 +86,10 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
             <ModalFooter className="justify-end">
               {view === 'form' ? (
                 <>
-                  <Button color="success" variant="light" onPress={saveCard}>
+                  <Button color="success" variant="light" onPress={saveCard} startContent={<DiskDuo_Icon />}>
                     Save Card
                   </Button>
-                  <Button color="default" variant="light" onPress={handleBackToList}>
+                  <Button color="warning" variant="light" onPress={handleBackToList}>
                     Cancel
                   </Button>
                 </>
