@@ -2,7 +2,7 @@ import {Card} from '@heroui/react';
 import {motion} from 'framer-motion';
 import {ReactNode} from 'react';
 
-import {CustomCard} from '../../../cross/CrossTypes';
+import {CustomCard} from '../../../../cross/CrossTypes';
 
 type Props = {card: CustomCard; handleEdit: (card: CustomCard) => void; icon: ReactNode};
 

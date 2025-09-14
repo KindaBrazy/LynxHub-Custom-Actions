@@ -3,7 +3,8 @@ import type {FC, ReactNode} from 'react';
 import React, {useEffect, useRef, useState} from 'react';
 
 import {CustomCard} from '../../../cross/CrossTypes';
-import {PreviewCard} from './PreviewCard';
+import {NewCard} from './Elements/NewCard';
+import {PreviewCard} from './Elements/PreviewCard';
 
 /* eslint max-len: 0 */
 
@@ -242,15 +243,7 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                       icon={<Icon name={card.icon || 'Settings'} className="h-6 w-6 text-white" />}
                     />
                   ))}
-                  <motion.div
-                    onClick={handleCreateNew}
-                    whileHover={{y: -5, scale: 1.05}}
-                    className="cursor-pointer flex flex-col items-center justify-center rounded-lg bg-gray-800/50 p-4 text-center transition-colors hover:bg-gray-800 border-2 border-dashed border-gray-600 hover:border-blue-500">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-700">
-                      <Icon name="Plus" className="h-6 w-6 text-gray-400" />
-                    </div>
-                    <p className="mt-4 font-semibold text-gray-400">Create New</p>
-                  </motion.div>
+                  <NewCard handleCreateNew={handleCreateNew} />
                 </div>
               </motion.div>
             ) : (
