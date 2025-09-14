@@ -259,49 +259,15 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                   {/* --- FORM CONTENT --- */}
                   <FormSection title="URL Configuration">
                     <UrlConfig
+                      timeout={timeout}
                       customUrl={customUrl}
                       setCustomUrl={setCustomUrl}
                       useAutoCatch={useAutoCatch}
                       setUseAutoCatch={setUseAutoCatch}
+                      openImmediately={openImmediately}
+                      setTimeoutValue={setTimeoutValue}
+                      setOpenImmediately={setOpenImmediately}
                     />
-                    <AnimatePresence>
-                      {customUrl && !useAutoCatch && (
-                        <motion.div
-                          className="overflow-hidden"
-                          exit={{opacity: 0, height: 0}}
-                          initial={{opacity: 0, height: 0}}
-                          animate={{opacity: 1, height: 'auto'}}>
-                          <div className="flex items-center space-x-4 border-t border-gray-700 pt-4 mt-4">
-                            <span className="text-sm text-gray-300">Open URL:</span>
-                            <div className="flex items-center space-x-2">
-                              <button
-                                type="button"
-                                onClick={() => setOpenImmediately(true)}
-                                className={`px-3 py-1 text-sm rounded-md ${openImmediately ? 'bg-[var(--accent-color)] text-white' : 'bg-gray-600 hover:bg-gray-500'}`}>
-                                Immediately
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setOpenImmediately(false)}
-                                className={`px-3 py-1 text-sm rounded-md ${!openImmediately ? 'bg-[var(--accent-color)] text-white' : 'bg-gray-600 hover:bg-gray-500'}`}>
-                                After Timeout
-                              </button>
-                            </div>
-                            {!openImmediately && (
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="number"
-                                  value={timeout}
-                                  onChange={e => setTimeoutValue(Number(e.target.value))}
-                                  className="w-20 rounded-md border-0 bg-gray-700 px-3 py-1 text-white ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-[var(--accent-color)]"
-                                />
-                                <span className="text-sm text-gray-400">seconds</span>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
                   </FormSection>
 
                   <FormSection title="Execute Actions">
