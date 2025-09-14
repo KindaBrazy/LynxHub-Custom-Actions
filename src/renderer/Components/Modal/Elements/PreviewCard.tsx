@@ -9,7 +9,7 @@ type Props = {card: CustomCard; handleEdit: (card: CustomCard) => void; icon: Re
 
 export function PreviewCard({card, handleEdit, icon}: Props) {
   return (
-    <motion.div whileHover={{y: -5, scale: 1.05}}>
+    <motion.div transition={{duration: 0.2}} whileHover={{y: -5, scale: 1.05}}>
       <Card
         className={
           'text-center p-8 bg-foreground-100 w-[170px] h-[150px] flex flex-col' +

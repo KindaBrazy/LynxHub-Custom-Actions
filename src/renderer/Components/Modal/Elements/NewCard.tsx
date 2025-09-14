@@ -7,7 +7,7 @@ type Props = {handleCreateNew: () => void};
 
 export function NewCard({handleCreateNew}: Props) {
   return (
-    <motion.div whileHover={{y: -5, scale: 1.05}}>
+    <motion.div transition={{duration: 0.2}} whileHover={{y: -5, scale: 1.05}}>
       <Card
         className={
           'w-[170px] h-[150px] group flex flex-col items-center justify-center' +
