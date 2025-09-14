@@ -53,7 +53,7 @@ export function ExecuteActions() {
             onValueChange={setTerminalCommandInput}
             placeholder="Enter command and press Enter..."
           />
-          <Button onPress={handleAddCommand} startContent={<Add_Icon />}>
+          <Button variant="flat" onPress={handleAddCommand} startContent={<Add_Icon />}>
             Add
           </Button>
         </div>
