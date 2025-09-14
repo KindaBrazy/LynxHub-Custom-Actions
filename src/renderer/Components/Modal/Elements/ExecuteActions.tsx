@@ -74,7 +74,7 @@ export function ExecuteActions() {
                   <Reorder.Item
                     className={
                       'rounded-medium bg-foreground-100 cursor-grab active:cursor-grabbing' +
-                      ' flex items-center gap-x-2 p-3'
+                      ' flex items-center gap-x-2 p-2'
                     }
                     key={command}
                     value={command}>
