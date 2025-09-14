@@ -1,7 +1,10 @@
-import {Card, Image} from '@heroui/react';
+import {Card, Image, Tooltip} from '@heroui/react';
 
 import {useAppState} from '../../../../src/renderer/src/App/Redux/Reducer/AppReducer';
 import SpotlightCard from './SpotlightCard';
+
+const title: string = 'Custom Actions';
+const description: string = 'Create, customize and manage custom cards with custom scripts, actions.';
 
 export default function ToolsPage() {
   const isDarkMode = useAppState('darkMode');
@@ -36,10 +39,10 @@ export default function ToolsPage() {
 
             {/* Title and Description */}
             <div className="text-center space-y-5">
-              <h3 className="text-2xl font-bold tracking-tight text-center">Custom Actions</h3>
-              <p className="text-foreground/70 text-sm leading-relaxed">
-                Create, customize and manage custom cards with custom scripts, actions.
-              </p>
+              <h3 className="text-2xl font-bold tracking-tight text-center">{title}</h3>
+              <Tooltip delay={700} content={description} className="max-w-[350px]" showArrow>
+                <p className="text-foreground/70 text-sm leading-relaxed line-clamp-2">{description}</p>
+              </Tooltip>
             </div>
           </div>
         </SpotlightCard>
