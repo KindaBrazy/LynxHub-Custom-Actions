@@ -12,8 +12,6 @@ import {UrlConfig} from './Elements/UrlConfig';
 
 /* eslint max-len: 0 */
 
-// --- SVG ICONS ---
-// Using simple SVG components for icons to keep it self-contained
 export const TempActionsIcons: FC<{name: string; className?: string}> = ({name, className}) => {
   const icons: {[key: string]: ReactNode} = {
     Image: (
@@ -103,14 +101,15 @@ export const TempActionsIcons: FC<{name: string; className?: string}> = ({name, 
   );
 };
 
-// --- HELPER COMPONENTS ---
-
-const FormSection: FC<{title: string; children: ReactNode}> = ({title, children}) => (
-  <div className="space-y-4">
-    <h3 className="text-sm font-medium text-foreground-400">{title}</h3>
-    <div className="space-y-4 rounded-lg  bg-gray-50 dark:bg-LynxRaisinBlack p-4">{children}</div>
-  </div>
-);
+type FormSectionProps = {title: string; children: ReactNode};
+function FormSection({title, children}: FormSectionProps) {
+  return (
+    <div className="space-y-4">
+      <h3 className="text-sm font-medium text-foreground-400">{title}</h3>
+      <div className="space-y-4 rounded-lg  bg-gray-50 dark:bg-LynxRaisinBlack p-4">{children}</div>
+    </div>
+  );
+}
 
 type Props = {
   view: 'list' | 'form';
@@ -120,7 +119,6 @@ type Props = {
 };
 
 export default function CustomActionsManager({view, setView, setEditingCard, cards}: Props) {
-  // Form state
   const [useAutoCatch, setUseAutoCatch] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const [openImmediately, setOpenImmediately] = useState(true);
@@ -136,7 +134,6 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
 
   const handleEdit = (card: CustomCard) => {
     setEditingCard(card);
-    // Populate form with card data here...
     setAccentColor(card.accentColor);
     setView('form');
   };
