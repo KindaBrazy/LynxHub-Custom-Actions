@@ -1,8 +1,9 @@
 import {AnimatePresence, motion} from 'framer-motion';
-import type {ChangeEvent, CSSProperties, FC, ReactNode} from 'react';
+import type {CSSProperties, FC, ReactNode} from 'react';
 import {useRef, useState} from 'react';
 
 import {CustomCard} from '../../../cross/CrossTypes';
+import {AddToCategories} from './Elements/AddToCategories';
 import {CardDetails} from './Elements/CardDetails';
 import {ExecuteActions} from './Elements/ExecuteActions';
 import {NewCard} from './Elements/NewCard';
@@ -111,24 +112,6 @@ const FormSection: FC<{title: string; children: ReactNode}> = ({title, children}
   </div>
 );
 
-const Checkbox: FC<{
-  id: string;
-  label: string;
-  checked: boolean;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-}> = ({id, label, checked, onChange}) => (
-  <label htmlFor={id} className="flex items-center space-x-3 cursor-pointer">
-    <input
-      id={id}
-      type="checkbox"
-      checked={checked}
-      onChange={onChange}
-      className="h-4 w-4 rounded bg-gray-700 border-gray-600 text-blue-500 focus:ring-blue-600 focus:ring-offset-gray-800"
-    />
-    <span className="text-gray-300">{label}</span>
-  </label>
-);
-
 type Props = {
   view: 'list' | 'form';
   setView: (view: 'list' | 'form') => void;
@@ -143,14 +126,6 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
   const [openImmediately, setOpenImmediately] = useState(true);
   const [timeout, setTimeoutValue] = useState(5);
   const [accentColor, setAccentColor] = useState('#3b82f6');
-  const [categories, setCategories] = useState({
-    pinned: false,
-    recentlyUsed: false,
-    all: true,
-    image: false,
-    text: false,
-    audio: false,
-  });
 
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -164,11 +139,6 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
     // Populate form with card data here...
     setAccentColor(card.accentColor);
     setView('form');
-  };
-
-  const handleCategoryChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const {id, checked} = e.target;
-    setCategories(prev => ({...prev, [id]: checked}));
   };
 
   return (
@@ -235,39 +205,7 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                   </FormSection>
 
                   <FormSection title="Add To Categories">
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      <Checkbox
-                        id="pinned"
-                        label="Pinned"
-                        checked={categories.pinned}
-                        onChange={handleCategoryChange}
-                      />
-                      <Checkbox
-                        id="recentlyUsed"
-                        label="Recently Used"
-                        onChange={handleCategoryChange}
-                        checked={categories.recentlyUsed}
-                      />
-                      <Checkbox id="all" label="All" checked={categories.all} onChange={handleCategoryChange} />
-                      <Checkbox
-                        id="image"
-                        label="Image Generation"
-                        checked={categories.image}
-                        onChange={handleCategoryChange}
-                      />
-                      <Checkbox
-                        id="text"
-                        label="Text Generation"
-                        checked={categories.text}
-                        onChange={handleCategoryChange}
-                      />
-                      <Checkbox
-                        id="audio"
-                        label="Audio Generation"
-                        checked={categories.audio}
-                        onChange={handleCategoryChange}
-                      />
-                    </div>
+                    <AddToCategories />
                   </FormSection>
                 </div>
               </motion.div>
