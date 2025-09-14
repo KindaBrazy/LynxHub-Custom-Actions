@@ -3,6 +3,7 @@ import {motion} from 'framer-motion';
 import {ReactNode} from 'react';
 
 import {CustomCard} from '../../../../cross/CrossTypes';
+import {PenDuo_Icon} from '../../SvgIcons';
 
 type Props = {card: CustomCard; handleEdit: (card: CustomCard) => void; icon: ReactNode};
 
@@ -12,7 +13,7 @@ export function PreviewCard({card, handleEdit, icon}: Props) {
       <Card
         className={
           'text-center p-8 bg-foreground-100 w-[170px] h-[150px] flex flex-col' +
-          ' items-center justify-center gap-y-4 shadow-lg'
+          ' items-center justify-center gap-y-4 shadow-lg group'
         }
         onPress={() => handleEdit(card)}
         isPressable>
@@ -22,6 +23,9 @@ export function PreviewCard({card, handleEdit, icon}: Props) {
           {icon}
         </div>
         <p className="font-semibold">{card.title}</p>
+        <PenDuo_Icon
+          className={'absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300'}
+        />
       </Card>
     </motion.div>
   );
