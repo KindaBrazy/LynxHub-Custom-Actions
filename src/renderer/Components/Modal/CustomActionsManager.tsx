@@ -5,6 +5,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import {CustomCard} from '../../../cross/CrossTypes';
 import {NewCard} from './Elements/NewCard';
 import {PreviewCard} from './Elements/PreviewCard';
+import {UrlConfig} from './Elements/UrlConfig';
 
 /* eslint max-len: 0 */
 
@@ -257,24 +258,12 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                 <div className="space-y-8 pr-2 pb-4">
                   {/* --- FORM CONTENT --- */}
                   <FormSection title="URL Configuration">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
-                      <input
-                        type="text"
-                        value={customUrl}
-                        disabled={useAutoCatch}
-                        placeholder="Enter custom URL..."
-                        onChange={e => setCustomUrl(e.target.value)}
-                        className="flex-grow rounded-md border-0 bg-gray-700 px-3 py-2 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[var(--accent-color)] disabled:opacity-50 disabled:cursor-not-allowed"
-                      />
-                      <div className="flex items-center">
-                        <Checkbox
-                          id="auto-catch"
-                          checked={useAutoCatch}
-                          label="Auto Catch Address"
-                          onChange={e => setUseAutoCatch(e.target.checked)}
-                        />
-                      </div>
-                    </div>
+                    <UrlConfig
+                      customUrl={customUrl}
+                      setCustomUrl={setCustomUrl}
+                      useAutoCatch={useAutoCatch}
+                      setUseAutoCatch={setUseAutoCatch}
+                    />
                     <AnimatePresence>
                       {customUrl && !useAutoCatch && (
                         <motion.div
