@@ -10,7 +10,7 @@ export function NewCard({handleCreateNew}: Props) {
     <motion.div whileHover={{y: -5, scale: 1.05}}>
       <Card
         className={
-          'w-[170px] h-[150px] flex flex-col items-center justify-center' +
+          'w-[170px] h-[150px] group flex flex-col items-center justify-center' +
           ' p-4 gap-y-4 border-2 border-dashed border-gray-600 hover:border-primary'
         }
         onPress={handleCreateNew}
@@ -18,7 +18,9 @@ export function NewCard({handleCreateNew}: Props) {
         <div className="flex size-12 items-center justify-center rounded-full bg-gray-700">
           <Add_Icon />
         </div>
-        <p className="font-semibold text-foreground-500">Create New</p>
+        <p className="font-semibold text-foreground-500 group-hover:text-foreground transition-colors duration-300">
+          Create New
+        </p>
       </Card>
     </motion.div>
   );
