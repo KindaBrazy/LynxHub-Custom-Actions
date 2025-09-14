@@ -18,7 +18,6 @@ export default function ToolsPage() {
   const dispatch = useDispatch();
 
   const openModal = useCallback(() => {
-    console.log('ressed');
     dispatch(reducerActions.openModal({tabID: activeTab}));
   }, [activeTab]);
 
