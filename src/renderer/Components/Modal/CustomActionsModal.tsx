@@ -6,6 +6,7 @@ import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
 import {CustomCard} from '../../../cross/CrossTypes';
 import {reducerActions} from '../../reducer';
+import {ArrowAltDuo_Icon} from '../SvgIcons';
 import CustomActionsManager from './CustomActionsManager';
 
 type Props = {isOpen: boolean; show: string; tabID: string};
@@ -62,7 +63,13 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
         {onClose => (
           <>
             <ModalHeader className="justify-between">
-              <div>{view === 'form' && <Button onPress={handleBackToList}>Back</Button>}</div>
+              <div>
+                {view === 'form' && (
+                  <Button variant="light" onPress={handleBackToList} isIconOnly>
+                    <ArrowAltDuo_Icon className="rotate-90 size-6" />
+                  </Button>
+                )}
+              </div>
 
               <div className="flex items-center gap-2 justify-center">
                 {view === 'list' ? 'Custom Actions' : formTitle}
