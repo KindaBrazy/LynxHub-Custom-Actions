@@ -108,7 +108,7 @@ export const TempActionsIcons: FC<{name: string; className?: string}> = ({name, 
 const FormSection: FC<{title: string; children: ReactNode}> = ({title, children}) => (
   <div className="space-y-4">
     <h3 className="text-sm font-medium text-foreground-400">{title}</h3>
-    <div className="space-y-4 rounded-lg bg-LynxRaisinBlack p-4">{children}</div>
+    <div className="space-y-4 rounded-lg  bg-gray-50 dark:bg-LynxRaisinBlack p-4">{children}</div>
   </div>
 );
 

@@ -15,7 +15,7 @@ export function NewCard({handleCreateNew}: Props) {
         }
         onPress={handleCreateNew}
         isPressable>
-        <div className="flex size-12 items-center justify-center rounded-full bg-gray-700">
+        <div className="flex size-12 items-center justify-center rounded-full bg-foreground-300 dark:bg-foreground-200">
           <Add_Icon />
         </div>
         <p className="font-semibold text-foreground-500 group-hover:text-foreground transition-colors duration-300">
