@@ -3,6 +3,7 @@ import type {FC, ReactNode} from 'react';
 import React, {useEffect, useRef, useState} from 'react';
 
 import {CustomCard} from '../../../cross/CrossTypes';
+import {PreviewCard} from './PreviewCard';
 
 /* eslint max-len: 0 */
 
@@ -232,20 +233,14 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                 animate={{opacity: 1, x: 0}}
                 transition={{duration: 0.3}}
                 initial={{opacity: 0, x: -50}}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="flex flex-row flex-wrap gap-4">
                   {cards.map(card => (
-                    <motion.div
-                      key={card.id}
-                      onClick={() => handleEdit(card)}
-                      whileHover={{y: -5, scale: 1.05}}
-                      className="cursor-pointer rounded-lg bg-gray-800 p-4 text-center transition-shadow shadow-md hover:shadow-lg hover:shadow-black/30 border border-gray-700">
-                      <div
-                        style={{backgroundColor: card.accentColor}}
-                        className="mx-auto flex h-12 w-12 items-center justify-center rounded-full">
-                        <Icon name={card.icon || 'Settings'} className="h-6 w-6 text-white" />
-                      </div>
-                      <p className="mt-4 font-semibold text-gray-200">{card.title}</p>
-                    </motion.div>
+                    <PreviewCard
+                      card={card}
+                      handleEdit={handleEdit}
+                      key={`${card.id}_custom_action`}
+                      icon={<Icon name={card.icon || 'Settings'} className="h-6 w-6 text-white" />}
+                    />
                   ))}
                   <motion.div
                     onClick={handleCreateNew}
