@@ -1,9 +1,9 @@
 import {useEffect} from 'react';
 import {useDispatch} from 'react-redux';
 
-import {useTabsState} from '../../../../src/renderer/src/App/Redux/Reducer/TabsReducer';
-import {AppDispatch} from '../../../../src/renderer/src/App/Redux/Store';
-import {reducerActions, useSystemMonitorState} from '../reducer';
+import {useTabsState} from '../../../../../src/renderer/src/App/Redux/Reducer/TabsReducer';
+import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
+import {reducerActions, useSystemMonitorState} from '../../reducer';
 import CustomActionsModal from './CustomActionsModal';
 
 export default function ModalManager() {

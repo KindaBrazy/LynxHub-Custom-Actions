@@ -1,7 +1,7 @@
 import './index.css';
 
 import {ExtensionRendererApi} from '../../../src/cross/plugin/ExtensionTypes_Renderer_Api';
-import ModalManager from './Components/ModalManager';
+import ModalManager from './Components/Modal/ModalManager';
 import ToolsPage from './Components/ToolsPage';
 import reducer from './reducer';
 
