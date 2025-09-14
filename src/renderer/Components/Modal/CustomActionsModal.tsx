@@ -26,7 +26,8 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
   const [editingCard, setEditingCard] = useState<CustomCard | null>(null);
 
   const formTitle = useMemo(
-    () => (editingCard ? `Editing "${editingCard.title}"` : 'Create New Custom Card'),
+    () =>
+      view === 'list' ? 'Custom Actions' : editingCard ? `Editing "${editingCard.title}"` : 'Create New Custom Card',
     [editingCard],
   );
 
@@ -71,8 +72,8 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 justify-center">
-                {view === 'list' ? 'Custom Actions' : formTitle}
+              <div key={formTitle} className="flex items-center gap-2 justify-center animate-appearance-in">
+                {formTitle}
               </div>
 
               <div />
