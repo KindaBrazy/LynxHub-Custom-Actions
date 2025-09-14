@@ -28,8 +28,9 @@ export function UrlConfig({
         <Input
           value={customUrl}
           isDisabled={useAutoCatch}
+          onValueChange={setCustomUrl}
           placeholder="Enter custom URL..."
-          onChange={e => setCustomUrl(e.target.value)}
+          isClearable
         />
         <Checkbox id="auto-catch" className="w-64" isSelected={useAutoCatch} onValueChange={setUseAutoCatch}>
           Auto Catch Address
