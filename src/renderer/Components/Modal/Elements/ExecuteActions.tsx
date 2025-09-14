@@ -46,9 +46,9 @@ export function ExecuteActions() {
       </div>
       <div>
         <div className="flex items-center gap-x-4">
-          <Terminal_Icon />
           <Input
             value={terminalCommandInput}
+            startContent={<Terminal_Icon />}
             onKeyDown={handleCommandKeyDown}
             onValueChange={setTerminalCommandInput}
             placeholder="Enter command and press Enter..."
