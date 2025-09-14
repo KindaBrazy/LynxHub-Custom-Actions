@@ -1,8 +1,9 @@
-import {AnimatePresence, motion, Reorder} from 'framer-motion';
+import {AnimatePresence, motion} from 'framer-motion';
 import type {FC, ReactNode} from 'react';
 import React, {useEffect, useRef, useState} from 'react';
 
 import {CustomCard} from '../../../cross/CrossTypes';
+import {ExecuteActions} from './Elements/ExecuteActions';
 import {NewCard} from './Elements/NewCard';
 import {PreviewCard} from './Elements/PreviewCard';
 import {UrlConfig} from './Elements/UrlConfig';
@@ -11,7 +12,7 @@ import {UrlConfig} from './Elements/UrlConfig';
 
 // --- SVG ICONS ---
 // Using simple SVG components for icons to keep it self-contained
-const Icon: FC<{name: string; className?: string}> = ({name, className}) => {
+export const TempActionsIcons: FC<{name: string; className?: string}> = ({name, className}) => {
   const icons: {[key: string]: ReactNode} = {
     Image: (
       <path
@@ -127,18 +128,6 @@ const Checkbox: FC<{
   </label>
 );
 
-const ActionButton: FC<{icon: string; label: string; onClick: () => void}> = ({icon, label, onClick}) => (
-  <button
-    type="button"
-    onClick={onClick}
-    className="flex w-full items-center justify-center space-x-2 rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-gray-300 transition hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900">
-    <Icon name={icon} className="h-5 w-5" />
-    <span>{label}</span>
-  </button>
-);
-
-// --- MAIN MODAL COMPONENT ---
-
 type Props = {
   view: 'list' | 'form';
   setView: (view: 'list' | 'form') => void;
@@ -152,8 +141,6 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
   const [customUrl, setCustomUrl] = useState('');
   const [openImmediately, setOpenImmediately] = useState(true);
   const [timeout, setTimeoutValue] = useState(5);
-  const [terminalCommandInput, setTerminalCommandInput] = useState('');
-  const [terminalCommandsList, setTerminalCommandsList] = useState<string[]>(['npm install', 'npm run dev']);
   const [accentColor, setAccentColor] = useState('#3b82f6');
   const [categories, setCategories] = useState({
     pinned: false,
@@ -197,24 +184,6 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
     setCategories(prev => ({...prev, [id]: checked}));
   };
 
-  const handleAddCommand = () => {
-    if (terminalCommandInput.trim()) {
-      setTerminalCommandsList(prev => [...prev, terminalCommandInput.trim()]);
-      setTerminalCommandInput('');
-    }
-  };
-
-  const handleCommandKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      handleAddCommand();
-    }
-  };
-
-  const handleRemoveCommand = (indexToRemove: number) => {
-    setTerminalCommandsList(prev => prev.filter((_, index) => index !== indexToRemove));
-  };
-
   return (
     <div className="size-full flex items-center justify-center">
       <motion.div
@@ -241,7 +210,7 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                       card={card}
                       handleEdit={handleEdit}
                       key={`${card.id}_custom_action`}
-                      icon={<Icon name={card.icon || 'Settings'} className="h-6 w-6 text-white" />}
+                      icon={<TempActionsIcons name={card.icon || 'Settings'} className="h-6 w-6 text-white" />}
                     />
                   ))}
                   <NewCard handleCreateNew={handleCreateNew} />
@@ -271,80 +240,7 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                   </FormSection>
 
                   <FormSection title="Execute Actions">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <ActionButton
-                        icon="File"
-                        label="Add .bat / .sh"
-                        onClick={() => console.log('Open file dialog for script...')}
-                      />
-                      <ActionButton
-                        icon="Play"
-                        label="Add .exe"
-                        onClick={() => console.log('Open file dialog for exe...')}
-                      />
-                      <ActionButton
-                        icon="Folder"
-                        label="Open File or Folder"
-                        onClick={() => console.log('Open file/folder dialog...')}
-                      />
-                    </div>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <Icon name="Terminal" className="h-5 w-5 text-gray-400" />
-                        <input
-                          type="text"
-                          value={terminalCommandInput}
-                          onKeyDown={handleCommandKeyDown}
-                          placeholder="Enter command and press Enter..."
-                          onChange={e => setTerminalCommandInput(e.target.value)}
-                          className="flex-grow rounded-md border-0 bg-gray-700 px-3 py-2 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[var(--accent-color)]"
-                        />
-                        <button
-                          type="button"
-                          onClick={handleAddCommand}
-                          className="rounded-md bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-500">
-                          Add
-                        </button>
-                      </div>
-
-                      <AnimatePresence>
-                        {terminalCommandsList.length > 0 && (
-                          <motion.div
-                            className="overflow-hidden"
-                            exit={{opacity: 0, height: 0, marginTop: 0}}
-                            initial={{opacity: 0, height: 0, marginTop: 0}}
-                            animate={{opacity: 1, height: 'auto', marginTop: '1rem'}}>
-                            <Reorder.Group
-                              axis="y"
-                              className="space-y-2"
-                              values={terminalCommandsList}
-                              onReorder={setTerminalCommandsList}>
-                              {terminalCommandsList.map((command, index) => (
-                                <Reorder.Item
-                                  value={command}
-                                  key={`command-${index}`}
-                                  className="bg-gray-700/50 rounded-md">
-                                  <div className="flex items-center space-x-2 p-2">
-                                    <div className="cursor-grab active:cursor-grabbing text-gray-500">
-                                      <Icon name="GripVertical" className="h-5 w-5" />
-                                    </div>
-                                    <code className="flex-grow text-sm text-gray-200 bg-gray-900/50 px-2 py-1 rounded">
-                                      {command}
-                                    </code>
-                                    <button
-                                      type="button"
-                                      onClick={() => handleRemoveCommand(index)}
-                                      className="p-1 rounded-full hover:bg-gray-600 text-red-400 hover:text-red-300">
-                                      <Icon name="Trash" className="h-4 w-4" />
-                                    </button>
-                                  </div>
-                                </Reorder.Item>
-                              ))}
-                            </Reorder.Group>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
+                    <ExecuteActions />
                   </FormSection>
 
                   <FormSection title="Card Details">
@@ -365,7 +261,7 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                         <button
                           type="button"
                           className="flex h-24 w-24 items-center justify-center rounded-lg bg-gray-700 border-2 border-dashed border-gray-600 text-gray-400 hover:border-[var(--accent-color)] hover:text-[var(--accent-color)] transition-colors">
-                          <Icon name="Image" className="h-10 w-10" />
+                          <TempActionsIcons name="Image" className="h-10 w-10" />
                         </button>
                         <span className="text-sm text-gray-400">Select Icon (optional)</span>
                         <div className="flex items-center space-x-2">
