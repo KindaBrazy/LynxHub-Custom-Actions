@@ -1,6 +1,7 @@
 import {Card, Image, Tooltip} from '@heroui/react';
 
 import {useAppState} from '../../../../src/renderer/src/App/Redux/Reducer/AppReducer';
+import icon from '../icon.png';
 import SpotlightCard from './SpotlightCard';
 
 const title: string = 'Custom Actions';
@@ -34,7 +35,7 @@ export default function ToolsPage() {
           <div className="relative h-full flex flex-col justify-between p-6">
             {/* Icon section */}
             <div className="flex justify-center">
-              <Image src={''} radius="none" className="size-[5.3rem]" />
+              <Image src={icon} radius="none" className="size-[5.3rem]" />
             </div>
 
             {/* Title and Description */}
