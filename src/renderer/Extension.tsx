@@ -1,7 +1,8 @@
 import './index.css';
 
 import {ExtensionRendererApi} from '../../../src/cross/plugin/ExtensionTypes_Renderer_Api';
+import ToolsPage from './Components/ToolsPage';
 
-export function InitialExtensions(_lynxAPI: ExtensionRendererApi, _extensionId: string) {
-  return;
+export function InitialExtensions(lynxAPI: ExtensionRendererApi, _extensionId: string) {
+  lynxAPI.customizePages.tools.addComponent(ToolsPage);
 }
