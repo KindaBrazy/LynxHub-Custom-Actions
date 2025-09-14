@@ -106,7 +106,7 @@ function FormSection({title, children}: FormSectionProps) {
   return (
     <div className="space-y-4">
       <h3 className="text-sm font-medium text-foreground-400">{title}</h3>
-      <div className="space-y-4 rounded-lg  bg-gray-50 dark:bg-LynxRaisinBlack p-4">{children}</div>
+      <div className="space-y-4 rounded-2xl shadow-small  bg-white dark:bg-LynxRaisinBlack p-4">{children}</div>
     </div>
   );
 }
