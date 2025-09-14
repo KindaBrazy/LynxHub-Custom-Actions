@@ -4,17 +4,11 @@ import {useDispatch} from 'react-redux';
 
 import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/LynxScroll';
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
+import {CustomCard} from '../../../cross/CrossTypes';
 import {reducerActions} from '../../reducer';
 import CustomActionsManager from './CustomActionsManager';
 
 type Props = {isOpen: boolean; show: string; tabID: string};
-
-interface CustomCard {
-  id: string;
-  title: string;
-  icon?: string; // SVG string or component name
-  accentColor: string;
-}
 
 const mockCards: CustomCard[] = [
   {id: '1', title: 'Image Gen', icon: 'Image', accentColor: '#3b82f6'},

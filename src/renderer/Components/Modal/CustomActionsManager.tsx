@@ -2,16 +2,9 @@ import {AnimatePresence, motion, Reorder} from 'framer-motion';
 import type {FC, ReactNode} from 'react';
 import React, {useEffect, useRef, useState} from 'react';
 
-/* eslint max-len: 0 */
+import {CustomCard} from '../../../cross/CrossTypes';
 
-// --- MOCK DATA & TYPES ---
-// In a real app, this would come from your state management
-interface CustomCard {
-  id: string;
-  title: string;
-  icon?: string; // SVG string or component name
-  accentColor: string;
-}
+/* eslint max-len: 0 */
 
 // --- SVG ICONS ---
 // Using simple SVG components for icons to keep it self-contained
