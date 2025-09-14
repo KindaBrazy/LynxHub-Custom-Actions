@@ -6,6 +6,7 @@ import {CustomCard} from '../../../cross/CrossTypes';
 import {AddToCategories} from './Elements/AddToCategories';
 import {CardDetails} from './Elements/CardDetails';
 import {ExecuteActions} from './Elements/ExecuteActions';
+import FormSection from './Elements/FormSection';
 import {NewCard} from './Elements/NewCard';
 import {PreviewCard} from './Elements/PreviewCard';
 import {UrlConfig} from './Elements/UrlConfig';
@@ -100,16 +101,6 @@ export const TempActionsIcons: FC<{name: string; className?: string}> = ({name, 
     </svg>
   );
 };
-
-type FormSectionProps = {title: string; children: ReactNode};
-function FormSection({title, children}: FormSectionProps) {
-  return (
-    <div className="space-y-4">
-      <h3 className="text-sm font-medium text-foreground-400">{title}</h3>
-      <div className="space-y-4 rounded-2xl shadow-small  bg-white dark:bg-LynxRaisinBlack p-4">{children}</div>
-    </div>
-  );
-}
 
 type Props = {
   view: 'list' | 'form';
