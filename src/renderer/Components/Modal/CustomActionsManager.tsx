@@ -1,8 +1,9 @@
 import {AnimatePresence, motion} from 'framer-motion';
-import type {FC, ReactNode} from 'react';
-import React, {useEffect, useRef, useState} from 'react';
+import type {ChangeEvent, CSSProperties, FC, ReactNode} from 'react';
+import {useRef, useState} from 'react';
 
 import {CustomCard} from '../../../cross/CrossTypes';
+import {CardDetails} from './Elements/CardDetails';
 import {ExecuteActions} from './Elements/ExecuteActions';
 import {NewCard} from './Elements/NewCard';
 import {PreviewCard} from './Elements/PreviewCard';
@@ -114,7 +115,7 @@ const Checkbox: FC<{
   id: string;
   label: string;
   checked: boolean;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
 }> = ({id, label, checked, onChange}) => (
   <label htmlFor={id} className="flex items-center space-x-3 cursor-pointer">
     <input
@@ -153,20 +154,6 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Effect to handle outside click to close (for demonstration)
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        // In a real app, you'd call a prop like `onClose()`
-        console.log('Clicked outside modal. Would close now.');
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [modalRef]);
-
   const handleCreateNew = () => {
     setEditingCard(null);
     setView('form');
@@ -179,7 +166,7 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
     setView('form');
   };
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCategoryChange = (e: ChangeEvent<HTMLInputElement>) => {
     const {id, checked} = e.target;
     setCategories(prev => ({...prev, [id]: checked}));
   };
@@ -193,7 +180,7 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
         exit={{opacity: 0, scale: 0.9, y: 20}}
         initial={{opacity: 0, scale: 0.9, y: 20}}
         transition={{duration: 0.3, ease: 'easeOut'}}
-        style={{'--accent-color': accentColor} as React.CSSProperties}>
+        style={{'--accent-color': accentColor} as CSSProperties}>
         <div className="size-full p-2">
           <AnimatePresence mode="wait">
             {view === 'list' ? (
@@ -244,40 +231,7 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                   </FormSection>
 
                   <FormSection title="Card Details">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="md:col-span-2 space-y-4">
-                        <input
-                          type="text"
-                          placeholder="Card Title (required)"
-                          className="w-full rounded-md border-0 bg-gray-700 px-3 py-2 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[var(--accent-color)]"
-                        />
-                        <textarea
-                          rows={3}
-                          placeholder="Card Description (optional)"
-                          className="w-full rounded-md border-0 bg-gray-700 px-3 py-2 text-white shadow-sm ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-[var(--accent-color)]"
-                        />
-                      </div>
-                      <div className="flex flex-col items-center justify-center space-y-3">
-                        <button
-                          type="button"
-                          className="flex h-24 w-24 items-center justify-center rounded-lg bg-gray-700 border-2 border-dashed border-gray-600 text-gray-400 hover:border-[var(--accent-color)] hover:text-[var(--accent-color)] transition-colors">
-                          <TempActionsIcons name="Image" className="h-10 w-10" />
-                        </button>
-                        <span className="text-sm text-gray-400">Select Icon (optional)</span>
-                        <div className="flex items-center space-x-2">
-                          <label htmlFor="accent-color" className="text-sm text-gray-400">
-                            Accent:
-                          </label>
-                          <input
-                            type="color"
-                            id="accent-color"
-                            value={accentColor}
-                            onChange={e => setAccentColor(e.target.value)}
-                            className="w-8 h-8 bg-transparent border-none cursor-pointer"
-                          />
-                        </div>
-                      </div>
-                    </div>
+                    <CardDetails accentColor={accentColor} setAccentColor={setAccentColor} />
                   </FormSection>
 
                   <FormSection title="Add To Categories">
