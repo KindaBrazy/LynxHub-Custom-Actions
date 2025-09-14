@@ -11,7 +11,7 @@ export function NewCard({handleCreateNew}: Props) {
       <Card
         className={
           'w-[170px] h-[150px] group flex flex-col items-center justify-center' +
-          ' p-4 gap-y-4 border-2 border-dashed border-gray-600 hover:border-primary'
+          ' p-4 gap-y-4 border-2 border-dashed border-gray-600 hover:border-secondary'
         }
         onPress={handleCreateNew}
         isPressable>
