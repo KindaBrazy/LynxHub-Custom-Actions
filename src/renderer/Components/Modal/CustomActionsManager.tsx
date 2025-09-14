@@ -103,8 +103,8 @@ const Icon: FC<{name: string; className?: string}> = ({name, className}) => {
 
 const FormSection: FC<{title: string; children: ReactNode}> = ({title, children}) => (
   <div className="space-y-4">
-    <h3 className="text-sm font-medium text-gray-400">{title}</h3>
-    <div className="space-y-4 rounded-lg bg-gray-800/50 p-4">{children}</div>
+    <h3 className="text-sm font-medium text-foreground-400">{title}</h3>
+    <div className="space-y-4 rounded-lg bg-LynxRaisinBlack p-4">{children}</div>
   </div>
 );
 
