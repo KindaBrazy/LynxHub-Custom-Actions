@@ -4,9 +4,9 @@ import {useDispatch} from 'react-redux';
 
 import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/LynxScroll';
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
+import {ArrowDuo_Icon} from '../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {CustomCard} from '../../../cross/CrossTypes';
 import {reducerActions} from '../../reducer';
-import {ArrowAltDuo_Icon} from '../SvgIcons';
 import CustomActionsManager from './CustomActionsManager';
 
 type Props = {isOpen: boolean; show: string; tabID: string};
@@ -67,7 +67,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
               <div>
                 {view === 'form' && (
                   <Button variant="light" onPress={handleBackToList} isIconOnly>
-                    <ArrowAltDuo_Icon className="rotate-90 size-6" />
+                    <ArrowDuo_Icon className="size-5" />
                   </Button>
                 )}
               </div>
