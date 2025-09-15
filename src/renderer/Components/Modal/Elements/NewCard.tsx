@@ -8,10 +8,7 @@ import {reducerActions} from '../../../reducer';
 export function NewCard() {
   const dispatch = useDispatch();
 
-  const handleCreateNew = () => {
-    dispatch(reducerActions.addCard());
-    dispatch(reducerActions.setView('form'));
-  };
+  const handleCreateNew = () => dispatch(reducerActions.addCard());
 
   return (
     <motion.div transition={{duration: 0.2}} whileHover={{y: -5, scale: 1.05}}>

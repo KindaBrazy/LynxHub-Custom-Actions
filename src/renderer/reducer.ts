@@ -86,39 +86,28 @@ const customActionsSlice = createSlice({
       };
       state.customCards = [...state.customCards, targetCard];
       state.editingCard = targetCard;
+      state.view = 'form';
     },
     removeCard: state => {
       state.customCards = state.customCards.filter(item => item.id !== state.editingCard?.id);
       state.editingCard = undefined;
+      state.view = 'list';
     },
     saveCard: state => {
       state.customCards = state.customCards.map(item => (item.id === state.editingCard?.id ? state.editingCard : item));
+      state.view = 'list';
+      state.editingCard = undefined;
     },
     setTitle: (state, action: PayloadAction<string>) => {
-      state.customCards = state.customCards.map(item => {
-        if (item.id === state.editingCard?.id) {
-          return {...item, id: `${action.payload}_ca`, title: action.payload};
-        }
-        return item;
-      });
-      if (state.editingCard) state.editingCard.title = action.payload;
+      if (state.editingCard) {
+        state.editingCard.title = action.payload;
+        state.editingCard.id = `${action.payload}_custom_action`;
+      }
     },
     setAccentColor: (state, action: PayloadAction<string>) => {
-      state.customCards = state.customCards.map(item => {
-        if (item.id === state.editingCard?.id) {
-          return {...item, accentColor: action.payload};
-        }
-        return item;
-      });
       if (state.editingCard) state.editingCard.accentColor = action.payload;
     },
     setIcon: (state, action: PayloadAction<string>) => {
-      state.customCards = state.customCards.map(item => {
-        if (item.id === state.editingCard?.id) {
-          return {...item, icon: action.payload};
-        }
-        return item;
-      });
       if (state.editingCard) state.editingCard.icon = action.payload;
     },
 
