@@ -16,12 +16,7 @@ import {UrlConfig} from './Elements/UrlConfig';
 
 /* eslint max-len: 0 */
 
-type Props = {
-  setEditingCard: (card: CustomCard | null) => void;
-  editingCard: CustomCard | null;
-};
-
-export default function CustomActionsManager({setEditingCard, editingCard}: Props) {
+export default function CustomActionsManager() {
   const dispatch = useDispatch();
 
   const [useAutoCatch, setUseAutoCatch] = useState(false);
@@ -36,12 +31,12 @@ export default function CustomActionsManager({setEditingCard, editingCard}: Prop
   const modalRef = useRef<HTMLDivElement>(null);
 
   const handleCreateNew = () => {
-    setEditingCard(null);
+    dispatch(reducerActions.setEditingCard(undefined));
     dispatch(reducerActions.setView('form'));
   };
 
   const handleEdit = (card: CustomCard) => {
-    setEditingCard(card);
+    dispatch(reducerActions.setEditingCard(card));
     setAccentColor(card.accentColor);
     dispatch(reducerActions.setView('form'));
   };
@@ -109,7 +104,7 @@ export default function CustomActionsManager({setEditingCard, editingCard}: Prop
                   </FormSection>
 
                   <FormSection title="Card Details">
-                    <CardDetails editingCard={editingCard} accentColor={accentColor} setAccentColor={setAccentColor} />
+                    <CardDetails accentColor={accentColor} setAccentColor={setAccentColor} />
                   </FormSection>
 
                   <FormSection title="Add To Categories">

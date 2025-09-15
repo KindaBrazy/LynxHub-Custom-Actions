@@ -1,11 +1,10 @@
 import {Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader} from '@heroui/react';
-import {useMemo, useState} from 'react';
+import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 
 import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/LynxScroll';
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
 import {ArrowDuo_Icon, DiskDuo_Icon} from '../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
-import {CustomCard} from '../../../cross/CrossTypes';
 import {reducerActions, useCustomActionsState} from '../../reducer';
 import {TrashDuo_Icon} from '../SvgIcons';
 import CustomActionsManager from './CustomActionsManager';
@@ -17,7 +16,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
 
   // State for view management
   const view = useCustomActionsState('view');
-  const [editingCard, setEditingCard] = useState<CustomCard | null>(null);
+  const editingCard = useCustomActionsState('editingCard');
 
   const formTitle = useMemo(
     () =>
@@ -27,7 +26,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
 
   const handleBackToList = () => {
     dispatch(reducerActions.setView('list'));
-    setEditingCard(null);
+    dispatch(reducerActions.setEditingCard(undefined));
   };
 
   const onOpenChange = (value: boolean) => {
@@ -75,7 +74,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
             </ModalHeader>
 
             <ModalBody as={LynxScroll}>
-              <CustomActionsManager editingCard={editingCard} setEditingCard={setEditingCard} />
+              <CustomActionsManager />
             </ModalBody>
 
             <ModalFooter className="justify-between">

@@ -1,12 +1,14 @@
 import {Button, Input, Textarea} from '@heroui/react';
 import {ColorPicker} from 'antd';
 
-import {CustomCard} from '../../../../cross/CrossTypes';
+import {useCustomActionsState} from '../../../reducer';
 import {CardIconById, CardIconsList} from '../../CardIcons';
 
-type Props = {accentColor: string; setAccentColor: (color: string) => void; editingCard: CustomCard | null};
+type Props = {accentColor: string; setAccentColor: (color: string) => void};
 
-export function CardDetails({accentColor, setAccentColor, editingCard}: Props) {
+export function CardDetails({accentColor, setAccentColor}: Props) {
+  const editingCard = useCustomActionsState('editingCard');
+
   return (
     <div className="flex flex-col gap-y-4">
       <div className="md:col-span-2 space-y-4">
