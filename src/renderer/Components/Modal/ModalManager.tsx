@@ -3,7 +3,7 @@ import {useDispatch} from 'react-redux';
 
 import {useTabsState} from '../../../../../src/renderer/src/App/Redux/Reducer/TabsReducer';
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
-import {reducerActions, useSystemMonitorState} from '../../reducer';
+import {reducerActions, useCustomActionsState} from '../../reducer';
 import CustomActionsModal from './CustomActionsModal';
 
 export default function ModalManager() {
@@ -11,7 +11,7 @@ export default function ModalManager() {
   const activeTab = useTabsState('activeTab');
   const tabs = useTabsState('tabs');
 
-  const modals = useSystemMonitorState('modals');
+  const modals = useCustomActionsState('modals');
 
   useEffect(() => {
     modals.forEach(card => {

@@ -6,20 +6,15 @@ import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
 import {ArrowDuo_Icon, DiskDuo_Icon} from '../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {CustomCard} from '../../../cross/CrossTypes';
-import {reducerActions} from '../../reducer';
+import {reducerActions, useCustomActionsState} from '../../reducer';
 import CustomActionsManager from './CustomActionsManager';
 
 type Props = {isOpen: boolean; show: string; tabID: string};
 
-const mockCards: CustomCard[] = [
-  {id: '1', title: 'Image Gen', icon: 'image', accentColor: '#3b82f6'},
-  {id: '2', title: 'Start ComfyUI', icon: 'star', accentColor: '#10b981'},
-  {id: '3', title: 'Project Folder', icon: 'folder', accentColor: '#f97316'},
-  {id: '4', title: 'Code Editor', icon: 'code', accentColor: '#8b5cf6'},
-];
-
 export default function CustomActionsModal({show, isOpen, tabID}: Props) {
   const dispatch = useDispatch<AppDispatch>();
+
+  const mockCards = useCustomActionsState('customCards');
 
   // State for view management
   const [view, setView] = useState<'list' | 'form'>('list');
