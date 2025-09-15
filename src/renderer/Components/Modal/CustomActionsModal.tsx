@@ -6,15 +6,14 @@ import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
 import {ArrowDuo_Icon, DiskDuo_Icon} from '../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {CustomCard} from '../../../cross/CrossTypes';
-import {reducerActions, useCustomActionsState} from '../../reducer';
+import {reducerActions} from '../../reducer';
+import {TrashDuo_Icon} from '../SvgIcons';
 import CustomActionsManager from './CustomActionsManager';
 
 type Props = {isOpen: boolean; show: string; tabID: string};
 
 export default function CustomActionsModal({show, isOpen, tabID}: Props) {
   const dispatch = useDispatch<AppDispatch>();
-
-  const mockCards = useCustomActionsState('customCards');
 
   // State for view management
   const [view, setView] = useState<'list' | 'form'>('list');
@@ -41,6 +40,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
   };
 
   const saveCard = () => {};
+  const deleteCard = () => {};
 
   return (
     <Modal
@@ -77,17 +77,29 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
             <ModalBody as={LynxScroll}>
               <CustomActionsManager
                 view={view}
-                cards={mockCards}
                 setView={setView}
                 editingCard={editingCard}
                 setEditingCard={setEditingCard}
               />
             </ModalBody>
 
-            <ModalFooter className="justify-end">
+            <ModalFooter className="justify-between">
               {view === 'form' ? (
                 <>
-                  <Button color="success" variant="light" onPress={saveCard} startContent={<DiskDuo_Icon />}>
+                  <Button
+                    color="danger"
+                    variant="light"
+                    className="w-full"
+                    onPress={deleteCard}
+                    startContent={<TrashDuo_Icon />}>
+                    Delete
+                  </Button>
+                  <Button
+                    color="success"
+                    variant="light"
+                    className="w-full"
+                    onPress={saveCard}
+                    startContent={<DiskDuo_Icon />}>
                     Save Card
                   </Button>
                   <Button color="warning" variant="light" onPress={handleBackToList}>
@@ -95,9 +107,12 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
                   </Button>
                 </>
               ) : (
-                <Button color="warning" variant="light" onPress={onClose}>
-                  Close
-                </Button>
+                <>
+                  <div />
+                  <Button color="warning" variant="light" onPress={onClose}>
+                    Close
+                  </Button>
+                </>
               )}
             </ModalFooter>
           </>

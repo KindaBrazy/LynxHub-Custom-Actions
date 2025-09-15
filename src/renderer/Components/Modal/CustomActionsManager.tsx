@@ -3,6 +3,7 @@ import {CSSProperties} from 'react';
 import {useRef, useState} from 'react';
 
 import {CustomCard} from '../../../cross/CrossTypes';
+import {useCustomActionsState} from '../../reducer';
 import {CardIconById} from '../CardIcons';
 import {AddToCategories} from './Elements/AddToCategories';
 import {CardDetails} from './Elements/CardDetails';
@@ -18,16 +19,17 @@ type Props = {
   view: 'list' | 'form';
   setView: (view: 'list' | 'form') => void;
   setEditingCard: (card: CustomCard | null) => void;
-  cards: CustomCard[];
   editingCard: CustomCard | null;
 };
 
-export default function CustomActionsManager({view, setView, setEditingCard, cards, editingCard}: Props) {
+export default function CustomActionsManager({view, setView, setEditingCard, editingCard}: Props) {
   const [useAutoCatch, setUseAutoCatch] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const [openImmediately, setOpenImmediately] = useState(true);
   const [timeout, setTimeoutValue] = useState(5);
   const [accentColor, setAccentColor] = useState('#3b82f6');
+
+  const cards = useCustomActionsState('customCards');
 
   const modalRef = useRef<HTMLDivElement>(null);
 
