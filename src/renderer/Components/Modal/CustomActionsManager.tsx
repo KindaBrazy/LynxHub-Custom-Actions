@@ -1,5 +1,4 @@
 import {AnimatePresence, motion} from 'framer-motion';
-import {CSSProperties} from 'react';
 import {useRef, useState} from 'react';
 import {useDispatch} from 'react-redux';
 
@@ -23,7 +22,6 @@ export default function CustomActionsManager() {
   const [customUrl, setCustomUrl] = useState('');
   const [openImmediately, setOpenImmediately] = useState(true);
   const [timeout, setTimeoutValue] = useState(5);
-  const [accentColor, setAccentColor] = useState('#3b82f6');
 
   const cards = useCustomActionsState('customCards');
   const view = useCustomActionsState('view');
@@ -37,7 +35,6 @@ export default function CustomActionsManager() {
 
   const handleEdit = (card: CustomCard) => {
     dispatch(reducerActions.setEditingCard(card));
-    setAccentColor(card.accentColor);
     dispatch(reducerActions.setView('form'));
   };
 
@@ -49,8 +46,7 @@ export default function CustomActionsManager() {
         animate={{opacity: 1, scale: 1, y: 0}}
         exit={{opacity: 0, scale: 0.9, y: 20}}
         initial={{opacity: 0, scale: 0.9, y: 20}}
-        transition={{duration: 0.3, ease: 'easeOut'}}
-        style={{'--accent-color': accentColor} as CSSProperties}>
+        transition={{duration: 0.3, ease: 'easeOut'}}>
         <div className="size-full p-2">
           <AnimatePresence mode="wait">
             {view === 'list' ? (
@@ -104,7 +100,7 @@ export default function CustomActionsManager() {
                   </FormSection>
 
                   <FormSection title="Card Details">
-                    <CardDetails accentColor={accentColor} setAccentColor={setAccentColor} />
+                    <CardDetails />
                   </FormSection>
 
                   <FormSection title="Add To Categories">

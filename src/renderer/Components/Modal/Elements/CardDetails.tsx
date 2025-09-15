@@ -1,18 +1,20 @@
 import {Button, Input, Textarea} from '@heroui/react';
 import {ColorPicker} from 'antd';
+import {AggregationColor} from 'antd/es/color-picker/color';
 import {useDispatch} from 'react-redux';
 
 import {reducerActions, useCustomActionsState} from '../../../reducer';
 import {CardIconById, CardIconsList} from '../../CardIcons';
 
-type Props = {accentColor: string; setAccentColor: (color: string) => void};
-
-export function CardDetails({accentColor, setAccentColor}: Props) {
+export function CardDetails() {
   const dispatch = useDispatch();
   const editingCard = useCustomActionsState('editingCard');
 
   const changeIcon = (icon: string) => {
     dispatch(reducerActions.setIcon(icon));
+  };
+  const changeAccent = (color: AggregationColor) => {
+    dispatch(reducerActions.setAccentColor(color.toHexString()));
   };
 
   return (
@@ -47,8 +49,8 @@ export function CardDetails({accentColor, setAccentColor}: Props) {
           </label>
           <ColorPicker
             defaultFormat="hex"
-            value={accentColor}
-            onChangeComplete={color => setAccentColor(color.toHexString())}
+            onChangeComplete={changeAccent}
+            value={editingCard?.accentColor}
             showText
             disabledAlpha
             disabledFormat
