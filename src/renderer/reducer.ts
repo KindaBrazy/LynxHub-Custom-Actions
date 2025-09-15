@@ -66,6 +66,7 @@ const customActionsSlice = createSlice({
         }
         return item;
       });
+      if (state.editingCard) state.editingCard.title = action.payload;
     },
     setAccentColor: (state, action: PayloadAction<string>) => {
       state.customCards = state.customCards.map(item => {
@@ -74,6 +75,7 @@ const customActionsSlice = createSlice({
         }
         return item;
       });
+      if (state.editingCard) state.editingCard.accentColor = action.payload;
     },
     setIcon: (state, action: PayloadAction<string>) => {
       state.customCards = state.customCards.map(item => {
@@ -82,6 +84,7 @@ const customActionsSlice = createSlice({
         }
         return item;
       });
+      if (state.editingCard) state.editingCard.icon = action.payload;
     },
 
     setView: (state, action: PayloadAction<'list' | 'form'>) => {
