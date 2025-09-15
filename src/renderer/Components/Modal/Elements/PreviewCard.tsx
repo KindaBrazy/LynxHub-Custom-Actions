@@ -17,14 +17,12 @@ export function PreviewCard({card, handleEdit, icon}: Props) {
         }
         onPress={() => handleEdit(card)}
         isPressable>
-        <div
-          style={{backgroundColor: card.accentColor}}
-          className="flex size-12 items-center justify-center rounded-full shrink-0">
-          {icon}
-        </div>
-        <p className="font-semibold">{card.title}</p>
+        <div className="flex size-[3.3rem] items-center justify-center rounded-full shrink-0 shadow-sm">{icon}</div>
+        <p className="font-semibold" style={{color: card.accentColor}}>
+          {card.title}
+        </p>
         <PenDuo_Icon
-          className={'absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300'}
+          className={'absolute top-4 right-4 opacity-0 group-hover:opacity-70 transition-opacity duration-300'}
         />
       </Card>
     </motion.div>

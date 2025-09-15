@@ -12,10 +12,10 @@ import CustomActionsManager from './CustomActionsManager';
 type Props = {isOpen: boolean; show: string; tabID: string};
 
 const mockCards: CustomCard[] = [
-  {id: '1', title: 'Image Gen', icon: 'Image', accentColor: '#3b82f6'},
-  {id: '2', title: 'Start ComfyUI', icon: 'Play', accentColor: '#10b981'},
-  {id: '3', title: 'Project Folder', icon: 'Folder', accentColor: '#f97316'},
-  {id: '4', title: 'Code Editor', icon: 'Code', accentColor: '#8b5cf6'},
+  {id: '1', title: 'Image Gen', icon: 'image', accentColor: '#3b82f6'},
+  {id: '2', title: 'Start ComfyUI', icon: 'star', accentColor: '#10b981'},
+  {id: '3', title: 'Project Folder', icon: 'folder', accentColor: '#f97316'},
+  {id: '4', title: 'Code Editor', icon: 'code', accentColor: '#8b5cf6'},
 ];
 
 export default function CustomActionsModal({show, isOpen, tabID}: Props) {
@@ -80,7 +80,13 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
             </ModalHeader>
 
             <ModalBody as={LynxScroll}>
-              <CustomActionsManager view={view} cards={mockCards} setView={setView} setEditingCard={setEditingCard} />
+              <CustomActionsManager
+                view={view}
+                cards={mockCards}
+                setView={setView}
+                editingCard={editingCard}
+                setEditingCard={setEditingCard}
+              />
             </ModalBody>
 
             <ModalFooter className="justify-end">

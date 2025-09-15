@@ -3,6 +3,7 @@ import type {CSSProperties, FC, ReactNode} from 'react';
 import {useRef, useState} from 'react';
 
 import {CustomCard} from '../../../cross/CrossTypes';
+import {CardIconById} from '../CardIcons';
 import {AddToCategories} from './Elements/AddToCategories';
 import {CardDetails} from './Elements/CardDetails';
 import {ExecuteActions} from './Elements/ExecuteActions';
@@ -107,9 +108,10 @@ type Props = {
   setView: (view: 'list' | 'form') => void;
   setEditingCard: (card: CustomCard | null) => void;
   cards: CustomCard[];
+  editingCard: CustomCard | null;
 };
 
-export default function CustomActionsManager({view, setView, setEditingCard, cards}: Props) {
+export default function CustomActionsManager({view, setView, setEditingCard, cards, editingCard}: Props) {
   const [useAutoCatch, setUseAutoCatch] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const [openImmediately, setOpenImmediately] = useState(true);
@@ -150,14 +152,17 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                 transition={{duration: 0.3}}
                 initial={{opacity: 0, x: -50}}>
                 <div className="flex flex-row flex-wrap gap-4">
-                  {cards.map(card => (
-                    <PreviewCard
-                      card={card}
-                      handleEdit={handleEdit}
-                      key={`${card.id}_custom_action`}
-                      icon={<TempActionsIcons name={card.icon || 'Settings'} className="h-6 w-6 text-white" />}
-                    />
-                  ))}
+                  {cards.map(card => {
+                    const TargetIcon = CardIconById(card.icon);
+                    return (
+                      <PreviewCard
+                        card={card}
+                        handleEdit={handleEdit}
+                        key={`${card.id}_custom_action`}
+                        icon={<TargetIcon className="size-full" />}
+                      />
+                    );
+                  })}
                   <NewCard handleCreateNew={handleCreateNew} />
                 </div>
               </motion.div>
@@ -189,7 +194,7 @@ export default function CustomActionsManager({view, setView, setEditingCard, car
                   </FormSection>
 
                   <FormSection title="Card Details">
-                    <CardDetails accentColor={accentColor} setAccentColor={setAccentColor} />
+                    <CardDetails editingCard={editingCard} accentColor={accentColor} setAccentColor={setAccentColor} />
                   </FormSection>
 
                   <FormSection title="Add To Categories">
