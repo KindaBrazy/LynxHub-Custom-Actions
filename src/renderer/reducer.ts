@@ -2,7 +2,6 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {useSelector} from 'react-redux';
 
 import {CustomCard} from '../cross/CrossTypes';
-import {CardIconId} from './Components/CardIcons';
 
 const mockCards: CustomCard[] = [
   {id: '1', title: 'Image Gen', icon: 'image', accentColor: '#3b82f6'},
@@ -57,29 +56,29 @@ const customActionsSlice = createSlice({
     addCard: state => {
       state.customCards = [...state.customCards, {id: 'temp', title: '', accentColor: '#AA00FF'}];
     },
-    removeCard: (state, action: PayloadAction<string>) => {
-      state.customCards = state.customCards.filter(item => item.id !== action.payload);
+    removeCard: state => {
+      state.customCards = state.customCards.filter(item => item.id !== state.editingCard?.id);
     },
-    setTitle: (state, action: PayloadAction<{id: string; title: string}>) => {
+    setTitle: (state, action: PayloadAction<string>) => {
       state.customCards = state.customCards.map(item => {
-        if (item.id === action.payload.id) {
-          return {...item, title: action.payload.title};
+        if (item.id === state.editingCard?.id) {
+          return {...item, title: action.payload};
         }
         return item;
       });
     },
-    setAccentColor: (state, action: PayloadAction<{id: string; accentColor: string}>) => {
+    setAccentColor: (state, action: PayloadAction<string>) => {
       state.customCards = state.customCards.map(item => {
-        if (item.id === action.payload.id) {
-          return {...item, accentColor: action.payload.accentColor};
+        if (item.id === state.editingCard?.id) {
+          return {...item, accentColor: action.payload};
         }
         return item;
       });
     },
-    setIcon: (state, action: PayloadAction<{id: string; icon: CardIconId}>) => {
+    setIcon: (state, action: PayloadAction<string>) => {
       state.customCards = state.customCards.map(item => {
-        if (item.id === action.payload.id) {
-          return {...item, icon: action.payload.icon};
+        if (item.id === state.editingCard?.id) {
+          return {...item, icon: action.payload};
         }
         return item;
       });
