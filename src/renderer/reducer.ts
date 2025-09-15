@@ -62,7 +62,7 @@ const customActionsSlice = createSlice({
     setTitle: (state, action: PayloadAction<string>) => {
       state.customCards = state.customCards.map(item => {
         if (item.id === state.editingCard?.id) {
-          return {...item, title: action.payload};
+          return {...item, id: `${action.payload}_ca`, title: action.payload};
         }
         return item;
       });
