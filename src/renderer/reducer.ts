@@ -100,6 +100,10 @@ const customActionsSlice = createSlice({
     },
     setTitle: (state, action: PayloadAction<string>) => {
       if (state.editingCard) {
+        const targetId = `${action.payload}_custom_action`;
+        state.customCards = state.customCards.map(item =>
+          item.id === state.editingCard!.id ? {...item, id: targetId} : item,
+        );
         state.editingCard.title = action.payload;
         state.editingCard.id = `${action.payload}_custom_action`;
       }
