@@ -9,28 +9,28 @@ const mockCards: CustomCard[] = [
     title: 'Image Gen',
     icon: 'image',
     accentColor: '#3b82f6',
-    urlConfig: {useAutoCatch: true, openImmediately: true},
+    urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
   },
   {
     id: '2',
     title: 'Start ComfyUI',
     icon: 'star',
     accentColor: '#10b981',
-    urlConfig: {useAutoCatch: true, openImmediately: true},
+    urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
   },
   {
     id: '3',
     title: 'Project Folder',
     icon: 'folder',
     accentColor: '#f97316',
-    urlConfig: {useAutoCatch: true, openImmediately: true},
+    urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
   },
   {
     id: '4',
     title: 'Code Editor',
     icon: 'code',
     accentColor: '#8b5cf6',
-    urlConfig: {useAutoCatch: true, openImmediately: true},
+    urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
   },
 ];
 
@@ -80,7 +80,12 @@ const customActionsSlice = createSlice({
     addCard: state => {
       state.customCards = [
         ...state.customCards,
-        {id: 'temp', title: '', accentColor: '#AA00FF', urlConfig: {useAutoCatch: true, openImmediately: true}},
+        {
+          id: 'temp',
+          title: '',
+          accentColor: '#AA00FF',
+          urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
+        },
       ];
     },
     removeCard: state => {
