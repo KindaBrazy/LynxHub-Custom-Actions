@@ -45,7 +45,10 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
     dispatch(reducerActions.setEditingCard(undefined));
     lynxTopToast(dispatch).success('Card saved successfully!');
   };
-  const deleteCard = () => {};
+  const deleteCard = () => {
+    dispatch(reducerActions.removeCard());
+    dispatch(reducerActions.setView('list'));
+  };
 
   return (
     <Modal

@@ -78,15 +78,18 @@ const customActionsSlice = createSlice({
     },
 
     addCard: state => {
-      state.editingCard = {
+      const targetCard = {
         id: 'temp',
         title: '',
         accentColor: '#AA00FF',
         urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
       };
+      state.customCards = [...state.customCards, targetCard];
+      state.editingCard = targetCard;
     },
     removeCard: state => {
       state.customCards = state.customCards.filter(item => item.id !== state.editingCard?.id);
+      state.editingCard = undefined;
     },
     saveCard: state => {
       state.customCards = state.customCards.map(item => (item.id === state.editingCard?.id ? state.editingCard : item));
