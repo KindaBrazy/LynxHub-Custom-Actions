@@ -1,13 +1,19 @@
 import {Button, Input, Textarea} from '@heroui/react';
 import {ColorPicker} from 'antd';
+import {useDispatch} from 'react-redux';
 
-import {useCustomActionsState} from '../../../reducer';
+import {reducerActions, useCustomActionsState} from '../../../reducer';
 import {CardIconById, CardIconsList} from '../../CardIcons';
 
 type Props = {accentColor: string; setAccentColor: (color: string) => void};
 
 export function CardDetails({accentColor, setAccentColor}: Props) {
+  const dispatch = useDispatch();
   const editingCard = useCustomActionsState('editingCard');
+
+  const changeIcon = (icon: string) => {
+    dispatch(reducerActions.setIcon(icon));
+  };
 
   return (
     <div className="flex flex-col gap-y-4">
@@ -26,6 +32,7 @@ export function CardDetails({accentColor, setAccentColor}: Props) {
                 size="lg"
                 key={icon}
                 className="size-20"
+                onPress={() => changeIcon(icon)}
                 variant={isSelected ? 'solid' : 'light'}
                 color={isSelected ? 'default' : 'default'}
                 isIconOnly>
