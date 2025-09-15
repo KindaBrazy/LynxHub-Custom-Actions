@@ -9,7 +9,7 @@ export function NewCard() {
   const dispatch = useDispatch();
 
   const handleCreateNew = () => {
-    dispatch(reducerActions.setEditingCard(undefined));
+    dispatch(reducerActions.addCard());
     dispatch(reducerActions.setView('form'));
   };
 
