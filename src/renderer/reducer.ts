@@ -14,6 +14,7 @@ const mockCards: CustomCard[] = [
 export type CustomActionsState = {
   modals: {isOpen: boolean; tabID: string}[];
   customCards: CustomCard[];
+  view: 'list' | 'form';
 };
 
 type CustomActionsStateTypes = {
@@ -23,6 +24,7 @@ type CustomActionsStateTypes = {
 const initialState: CustomActionsState = {
   modals: [],
   customCards: mockCards,
+  view: 'list',
 };
 
 const customActionsSlice = createSlice({
@@ -79,6 +81,10 @@ const customActionsSlice = createSlice({
         }
         return item;
       });
+    },
+
+    setView: (state, action: PayloadAction<'list' | 'form'>) => {
+      state.view = action.payload;
     },
   },
 });

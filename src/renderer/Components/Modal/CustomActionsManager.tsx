@@ -1,9 +1,10 @@
 import {AnimatePresence, motion} from 'framer-motion';
 import {CSSProperties} from 'react';
 import {useRef, useState} from 'react';
+import {useDispatch} from 'react-redux';
 
 import {CustomCard} from '../../../cross/CrossTypes';
-import {useCustomActionsState} from '../../reducer';
+import {reducerActions, useCustomActionsState} from '../../reducer';
 import {CardIconById} from '../CardIcons';
 import {AddToCategories} from './Elements/AddToCategories';
 import {CardDetails} from './Elements/CardDetails';
@@ -16,13 +17,13 @@ import {UrlConfig} from './Elements/UrlConfig';
 /* eslint max-len: 0 */
 
 type Props = {
-  view: 'list' | 'form';
-  setView: (view: 'list' | 'form') => void;
   setEditingCard: (card: CustomCard | null) => void;
   editingCard: CustomCard | null;
 };
 
-export default function CustomActionsManager({view, setView, setEditingCard, editingCard}: Props) {
+export default function CustomActionsManager({setEditingCard, editingCard}: Props) {
+  const dispatch = useDispatch();
+
   const [useAutoCatch, setUseAutoCatch] = useState(false);
   const [customUrl, setCustomUrl] = useState('');
   const [openImmediately, setOpenImmediately] = useState(true);
@@ -30,18 +31,19 @@ export default function CustomActionsManager({view, setView, setEditingCard, edi
   const [accentColor, setAccentColor] = useState('#3b82f6');
 
   const cards = useCustomActionsState('customCards');
+  const view = useCustomActionsState('view');
 
   const modalRef = useRef<HTMLDivElement>(null);
 
   const handleCreateNew = () => {
     setEditingCard(null);
-    setView('form');
+    dispatch(reducerActions.setView('form'));
   };
 
   const handleEdit = (card: CustomCard) => {
     setEditingCard(card);
     setAccentColor(card.accentColor);
-    setView('form');
+    dispatch(reducerActions.setView('form'));
   };
 
   return (

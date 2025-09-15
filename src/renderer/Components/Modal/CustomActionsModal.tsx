@@ -6,7 +6,7 @@ import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
 import {ArrowDuo_Icon, DiskDuo_Icon} from '../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {CustomCard} from '../../../cross/CrossTypes';
-import {reducerActions} from '../../reducer';
+import {reducerActions, useCustomActionsState} from '../../reducer';
 import {TrashDuo_Icon} from '../SvgIcons';
 import CustomActionsManager from './CustomActionsManager';
 
@@ -16,7 +16,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
   const dispatch = useDispatch<AppDispatch>();
 
   // State for view management
-  const [view, setView] = useState<'list' | 'form'>('list');
+  const view = useCustomActionsState('view');
   const [editingCard, setEditingCard] = useState<CustomCard | null>(null);
 
   const formTitle = useMemo(
@@ -26,7 +26,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
   );
 
   const handleBackToList = () => {
-    setView('list');
+    dispatch(reducerActions.setView('list'));
     setEditingCard(null);
   };
 
@@ -75,36 +75,23 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
             </ModalHeader>
 
             <ModalBody as={LynxScroll}>
-              <CustomActionsManager
-                view={view}
-                setView={setView}
-                editingCard={editingCard}
-                setEditingCard={setEditingCard}
-              />
+              <CustomActionsManager editingCard={editingCard} setEditingCard={setEditingCard} />
             </ModalBody>
 
             <ModalFooter className="justify-between">
               {view === 'form' ? (
                 <>
-                  <Button
-                    color="danger"
-                    variant="light"
-                    className="w-full"
-                    onPress={deleteCard}
-                    startContent={<TrashDuo_Icon />}>
+                  <Button color="danger" variant="light" onPress={deleteCard} startContent={<TrashDuo_Icon />}>
                     Delete
                   </Button>
-                  <Button
-                    color="success"
-                    variant="light"
-                    className="w-full"
-                    onPress={saveCard}
-                    startContent={<DiskDuo_Icon />}>
-                    Save Card
-                  </Button>
-                  <Button color="warning" variant="light" onPress={handleBackToList}>
-                    Cancel
-                  </Button>
+                  <div className="flex flex-row items-center gap-x-2">
+                    <Button color="success" variant="light" onPress={saveCard} startContent={<DiskDuo_Icon />}>
+                      Save Card
+                    </Button>
+                    <Button color="warning" variant="light" onPress={handleBackToList}>
+                      Cancel
+                    </Button>
+                  </div>
                 </>
               ) : (
                 <>
