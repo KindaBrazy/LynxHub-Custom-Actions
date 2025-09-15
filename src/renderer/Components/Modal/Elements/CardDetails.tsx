@@ -16,11 +16,14 @@ export function CardDetails() {
   const changeAccent = (color: AggregationColor) => {
     dispatch(reducerActions.setAccentColor(color.toHexString()));
   };
+  const onTitleChange = (value: string) => {
+    dispatch(reducerActions.setTitle(value));
+  };
 
   return (
     <div className="flex flex-col gap-y-4">
       <div className="md:col-span-2 space-y-4">
-        <Input placeholder="Card Title (required)" />
+        <Input value={editingCard?.title} onValueChange={onTitleChange} placeholder="Card Title (required)" />
 
         <Textarea maxRows={3} placeholder="Card Description (optional)" />
       </div>
@@ -45,9 +48,10 @@ export function CardDetails() {
         </div>
         <div className="flex items-center space-x-2">
           <label htmlFor="accent-color" className="text-sm text-foreground-500">
-            Accent:
+            Accent Color:
           </label>
           <ColorPicker
+            size="large"
             defaultFormat="hex"
             onChangeComplete={changeAccent}
             value={editingCard?.accentColor}
