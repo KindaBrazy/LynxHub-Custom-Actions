@@ -1,11 +1,18 @@
 import {Card} from '@heroui/react';
 import {motion} from 'framer-motion';
+import {useDispatch} from 'react-redux';
 
 import {Add_Icon} from '../../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
+import {reducerActions} from '../../../reducer';
 
-type Props = {handleCreateNew: () => void};
+export function NewCard() {
+  const dispatch = useDispatch();
 
-export function NewCard({handleCreateNew}: Props) {
+  const handleCreateNew = () => {
+    dispatch(reducerActions.setEditingCard(undefined));
+    dispatch(reducerActions.setView('form'));
+  };
+
   return (
     <motion.div transition={{duration: 0.2}} whileHover={{y: -5, scale: 1.05}}>
       <Card

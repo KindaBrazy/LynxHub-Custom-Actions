@@ -28,11 +28,6 @@ export default function CustomActionsManager() {
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const handleCreateNew = () => {
-    dispatch(reducerActions.setEditingCard(undefined));
-    dispatch(reducerActions.setView('form'));
-  };
-
   const handleEdit = (card: CustomCard) => {
     dispatch(reducerActions.setEditingCard(card));
     dispatch(reducerActions.setView('form'));
@@ -69,7 +64,7 @@ export default function CustomActionsManager() {
                       />
                     );
                   })}
-                  <NewCard handleCreateNew={handleCreateNew} />
+                  <NewCard />
                 </div>
               </motion.div>
             ) : (
