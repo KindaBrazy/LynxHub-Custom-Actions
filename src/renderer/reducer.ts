@@ -59,6 +59,9 @@ const customActionsSlice = createSlice({
     removeCard: state => {
       state.customCards = state.customCards.filter(item => item.id !== state.editingCard?.id);
     },
+    saveCard: state => {
+      state.customCards = state.customCards.map(item => (item.id === state.editingCard?.id ? state.editingCard : item));
+    },
     setTitle: (state, action: PayloadAction<string>) => {
       state.customCards = state.customCards.map(item => {
         if (item.id === state.editingCard?.id) {

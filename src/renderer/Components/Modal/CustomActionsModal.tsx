@@ -4,6 +4,7 @@ import {useDispatch} from 'react-redux';
 
 import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/LynxScroll';
 import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
+import {lynxTopToast} from '../../../../../src/renderer/src/App/Utils/UtilHooks';
 import {ArrowDuo_Icon, DiskDuo_Icon} from '../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {reducerActions, useCustomActionsState} from '../../reducer';
 import {TrashDuo_Icon} from '../SvgIcons';
@@ -38,7 +39,12 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
     }
   };
 
-  const saveCard = () => {};
+  const saveCard = () => {
+    dispatch(reducerActions.saveCard());
+    dispatch(reducerActions.setView('list'));
+    dispatch(reducerActions.setEditingCard(undefined));
+    lynxTopToast(dispatch).success('Card saved successfully!');
+  };
   const deleteCard = () => {};
 
   return (
