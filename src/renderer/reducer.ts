@@ -4,10 +4,34 @@ import {useSelector} from 'react-redux';
 import {CustomCard} from '../cross/CrossTypes';
 
 const mockCards: CustomCard[] = [
-  {id: '1', title: 'Image Gen', icon: 'image', accentColor: '#3b82f6'},
-  {id: '2', title: 'Start ComfyUI', icon: 'star', accentColor: '#10b981'},
-  {id: '3', title: 'Project Folder', icon: 'folder', accentColor: '#f97316'},
-  {id: '4', title: 'Code Editor', icon: 'code', accentColor: '#8b5cf6'},
+  {
+    id: '1',
+    title: 'Image Gen',
+    icon: 'image',
+    accentColor: '#3b82f6',
+    urlConfig: {useAutoCatch: true, openImmediately: true},
+  },
+  {
+    id: '2',
+    title: 'Start ComfyUI',
+    icon: 'star',
+    accentColor: '#10b981',
+    urlConfig: {useAutoCatch: true, openImmediately: true},
+  },
+  {
+    id: '3',
+    title: 'Project Folder',
+    icon: 'folder',
+    accentColor: '#f97316',
+    urlConfig: {useAutoCatch: true, openImmediately: true},
+  },
+  {
+    id: '4',
+    title: 'Code Editor',
+    icon: 'code',
+    accentColor: '#8b5cf6',
+    urlConfig: {useAutoCatch: true, openImmediately: true},
+  },
 ];
 
 export type CustomActionsState = {
@@ -54,7 +78,10 @@ const customActionsSlice = createSlice({
     },
 
     addCard: state => {
-      state.customCards = [...state.customCards, {id: 'temp', title: '', accentColor: '#AA00FF'}];
+      state.customCards = [
+        ...state.customCards,
+        {id: 'temp', title: '', accentColor: '#AA00FF', urlConfig: {useAutoCatch: true, openImmediately: true}},
+      ];
     },
     removeCard: state => {
       state.customCards = state.customCards.filter(item => item.id !== state.editingCard?.id);
@@ -95,6 +122,18 @@ const customActionsSlice = createSlice({
     },
     setEditingCard: (state, action: PayloadAction<CustomCard | undefined>) => {
       state.editingCard = action.payload;
+    },
+    setCustomUrl: (state, action: PayloadAction<string>) => {
+      if (state.editingCard) state.editingCard.urlConfig.customUrl = action.payload;
+    },
+    setUseAutoCatch: (state, action: PayloadAction<boolean>) => {
+      if (state.editingCard) state.editingCard.urlConfig.useAutoCatch = action.payload;
+    },
+    setOpenImmediately: (state, action: PayloadAction<boolean>) => {
+      if (state.editingCard) state.editingCard.urlConfig.openImmediately = action.payload;
+    },
+    setTimeoutValue: (state, action: PayloadAction<number>) => {
+      if (state.editingCard) state.editingCard.urlConfig.timeout = action.payload;
     },
   },
 });

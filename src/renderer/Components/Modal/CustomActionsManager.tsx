@@ -1,5 +1,5 @@
 import {AnimatePresence, motion} from 'framer-motion';
-import {useRef, useState} from 'react';
+import {useRef} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {CustomCard} from '../../../cross/CrossTypes';
@@ -17,11 +17,6 @@ import {UrlConfig} from './Elements/UrlConfig';
 
 export default function CustomActionsManager() {
   const dispatch = useDispatch();
-
-  const [useAutoCatch, setUseAutoCatch] = useState(false);
-  const [customUrl, setCustomUrl] = useState('');
-  const [openImmediately, setOpenImmediately] = useState(true);
-  const [timeout, setTimeoutValue] = useState(5);
 
   const cards = useCustomActionsState('customCards');
   const view = useCustomActionsState('view');
@@ -76,18 +71,8 @@ export default function CustomActionsManager() {
                 transition={{duration: 0.3}}
                 initial={{opacity: 0, x: 50}}>
                 <div className="space-y-8 pr-2 pb-4">
-                  {/* --- FORM CONTENT --- */}
                   <FormSection title="URL Configuration">
-                    <UrlConfig
-                      timeout={timeout}
-                      customUrl={customUrl}
-                      setCustomUrl={setCustomUrl}
-                      useAutoCatch={useAutoCatch}
-                      setUseAutoCatch={setUseAutoCatch}
-                      openImmediately={openImmediately}
-                      setTimeoutValue={setTimeoutValue}
-                      setOpenImmediately={setOpenImmediately}
-                    />
+                    <UrlConfig />
                   </FormSection>
 
                   <FormSection title="Execute Actions">

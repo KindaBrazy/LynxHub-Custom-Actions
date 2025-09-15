@@ -1,27 +1,24 @@
 import {Button, Checkbox, Input, NumberInput} from '@heroui/react';
 import {AnimatePresence, motion} from 'framer-motion';
+import {useMemo} from 'react';
+import {useDispatch} from 'react-redux';
 
-type Props = {
-  customUrl: string;
-  setCustomUrl: (url: string) => void;
-  useAutoCatch: boolean;
-  setUseAutoCatch: (use: boolean) => void;
-  openImmediately: boolean;
-  setOpenImmediately: (open: boolean) => void;
-  timeout: number;
-  setTimeoutValue: (value: number) => void;
-};
+import {reducerActions, useCustomActionsState} from '../../../reducer';
 
-export function UrlConfig({
-  customUrl,
-  setCustomUrl,
-  useAutoCatch,
-  setUseAutoCatch,
-  openImmediately,
-  setOpenImmediately,
-  timeout,
-  setTimeoutValue,
-}: Props) {
+export function UrlConfig() {
+  const dispatch = useDispatch();
+  const editingCard = useCustomActionsState('editingCard');
+
+  const customUrl = useMemo(() => editingCard?.urlConfig.customUrl, [editingCard]);
+  const useAutoCatch = useMemo(() => editingCard?.urlConfig.useAutoCatch, [editingCard]);
+  const openImmediately = useMemo(() => editingCard?.urlConfig.openImmediately, [editingCard]);
+  const timeout = useMemo(() => editingCard?.urlConfig.timeout, [editingCard]);
+
+  const setCustomUrl = (value: string) => dispatch(reducerActions.setCustomUrl(value));
+  const setUseAutoCatch = (value: boolean) => dispatch(reducerActions.setUseAutoCatch(value));
+  const setOpenImmediately = (value: boolean) => dispatch(reducerActions.setOpenImmediately(value));
+  const setTimeoutValue = (value: number) => dispatch(reducerActions.setTimeoutValue(value));
+
   return (
     <>
       <div className="flex flex-row gap-x-4 items-center justify-center">
