@@ -17,7 +17,7 @@ export function PreviewCard({card, handleEdit, icon}: Props) {
         }
         onPress={() => handleEdit(card)}
         isPressable>
-        <div className="flex size-[3.3rem] items-center justify-center rounded-full shrink-0 shadow-sm">{icon}</div>
+        <div className="flex size-[3.3rem] items-center justify-center shrink-0">{icon}</div>
         <p className="font-semibold" style={{color: card.accentColor}}>
           {card.title}
         </p>
