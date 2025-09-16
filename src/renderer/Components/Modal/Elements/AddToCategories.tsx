@@ -1,37 +1,44 @@
 import {Checkbox} from '@heroui/react';
-import {ChangeEvent, useState} from 'react';
+import {useMemo} from 'react';
+import {useDispatch} from 'react-redux';
+
+import {CustomCard} from '../../../../cross/CrossTypes';
+import {reducerActions, useCustomActionsState} from '../../../reducer';
 
 export function AddToCategories() {
-  const [categories, setCategories] = useState({
-    pinned: false,
-    recentlyUsed: false,
-    all: true,
-    image: false,
-    text: false,
-    audio: false,
-  });
-  const handleCategoryChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const {id, checked} = e.target;
-    setCategories(prev => ({...prev, [id]: checked}));
+  const dispatch = useDispatch();
+
+  const editingCard = useCustomActionsState('editingCard');
+  const categories = useMemo(() => editingCard?.categories, [editingCard]);
+
+  const handleCategoryChange = (id: keyof CustomCard['categories'], value: boolean) => {
+    dispatch(reducerActions.setCategories({id, value}));
   };
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      <Checkbox id="pinned" checked={categories.pinned} onChange={handleCategoryChange}>
+      <Checkbox
+        id="pinned"
+        isSelected={categories?.pinned}
+        onValueChange={value => handleCategoryChange('pinned', value)}>
         Pinned
       </Checkbox>
-      <Checkbox id="recentlyUsed" onChange={handleCategoryChange} checked={categories.recentlyUsed}>
+      <Checkbox
+        id="recentlyUsed"
+        isSelected={categories?.recentlyUsed}
+        onValueChange={value => handleCategoryChange('recentlyUsed', value)}>
         Recently Used
       </Checkbox>
-      <Checkbox id="all" checked={categories.all} onChange={handleCategoryChange}>
+      <Checkbox id="all" isSelected={categories?.all} onValueChange={value => handleCategoryChange('all', value)}>
         All
       </Checkbox>
-      <Checkbox id="image" checked={categories.image} onChange={handleCategoryChange}>
+      <Checkbox id="image" isSelected={categories?.image} onValueChange={value => handleCategoryChange('image', value)}>
         Image Generation
       </Checkbox>
-      <Checkbox id="text" checked={categories.text} onChange={handleCategoryChange}>
+      <Checkbox id="text" isSelected={categories?.text} onValueChange={value => handleCategoryChange('text', value)}>
         Text Generation
       </Checkbox>
-      <Checkbox id="audio" checked={categories.audio} onChange={handleCategoryChange}>
+      <Checkbox id="audio" isSelected={categories?.audio} onValueChange={value => handleCategoryChange('audio', value)}>
         Audio Generation
       </Checkbox>
     </div>

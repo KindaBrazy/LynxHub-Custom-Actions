@@ -10,6 +10,7 @@ const mockCards: CustomCard[] = [
     icon: 'image',
     accentColor: '#3b82f6',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
+    categories: {pinned: true},
   },
   {
     id: '2',
@@ -17,6 +18,7 @@ const mockCards: CustomCard[] = [
     icon: 'star',
     accentColor: '#10b981',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
+    categories: {pinned: true},
   },
   {
     id: '3',
@@ -24,6 +26,7 @@ const mockCards: CustomCard[] = [
     icon: 'folder',
     accentColor: '#f97316',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
+    categories: {pinned: true},
   },
   {
     id: '4',
@@ -31,6 +34,7 @@ const mockCards: CustomCard[] = [
     icon: 'code',
     accentColor: '#8b5cf6',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
+    categories: {pinned: true},
   },
 ];
 
@@ -83,6 +87,7 @@ const customActionsSlice = createSlice({
         title: '',
         accentColor: '#AA00FF',
         urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
+        categories: {pinned: true},
       };
       state.customCards = [...state.customCards, targetCard];
       state.editingCard = targetCard;
@@ -135,6 +140,9 @@ const customActionsSlice = createSlice({
     },
     setTimeoutValue: (state, action: PayloadAction<number>) => {
       if (state.editingCard) state.editingCard.urlConfig.timeout = action.payload;
+    },
+    setCategories: (state, action: PayloadAction<{id: keyof CustomCard['categories']; value: boolean}>) => {
+      if (state.editingCard) state.editingCard.categories[action.payload.id] = action.payload.value;
     },
   },
 });
