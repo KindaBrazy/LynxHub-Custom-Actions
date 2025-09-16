@@ -166,6 +166,9 @@ const customActionsSlice = createSlice({
         state.editingCard.actions = state.editingCard.actions.filter((_, index) => index !== action.payload);
       }
     },
+    addAction: (state, action: PayloadAction<CustomExecuteActions>) => {
+      if (state.editingCard) state.editingCard.actions = [...state.editingCard.actions, action.payload];
+    },
   },
 });
 

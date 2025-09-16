@@ -17,6 +17,7 @@ export function ExecuteActions() {
 
   const handleAddCommand = () => {
     if (commandInput.trim()) {
+      dispatch(reducerActions.addAction({action: commandInput, type: 'command'}));
       setCommandInput('');
     }
   };
