@@ -7,6 +7,7 @@ const mockCards: CustomCard[] = [
   {
     id: '1',
     title: 'Image Gen',
+    description: 'Generate images using AI models',
     icon: 'image',
     accentColor: '#3b82f6',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
@@ -20,6 +21,7 @@ const mockCards: CustomCard[] = [
   {
     id: '2',
     title: 'Start ComfyUI',
+    description: 'Launch the ComfyUI interface for AI image generation',
     icon: 'star',
     accentColor: '#10b981',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
@@ -38,6 +40,7 @@ const mockCards: CustomCard[] = [
   {
     id: '4',
     title: 'Code Editor',
+    description: 'Open the integrated development environment',
     icon: 'code',
     accentColor: '#8b5cf6',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
