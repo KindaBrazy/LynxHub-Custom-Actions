@@ -2,7 +2,7 @@ import {Checkbox} from '@heroui/react';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 
-import {CustomCard} from '../../../../cross/CrossTypes';
+import {CustomCategory} from '../../../../cross/CrossTypes';
 import {reducerActions, useCustomActionsState} from '../../../reducer';
 
 export function AddToCategories() {
@@ -11,7 +11,7 @@ export function AddToCategories() {
   const editingCard = useCustomActionsState('editingCard');
   const categories = useMemo(() => editingCard?.categories, [editingCard]);
 
-  const handleCategoryChange = (id: keyof CustomCard['categories'], value: boolean) => {
+  const handleCategoryChange = (id: CustomCategory, value: boolean) => {
     dispatch(reducerActions.setCategories({id, value}));
   };
 

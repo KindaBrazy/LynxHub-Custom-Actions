@@ -1,7 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {useSelector} from 'react-redux';
 
-import {CustomCard} from '../cross/CrossTypes';
+import {CustomCard, CustomCategory} from '../cross/CrossTypes';
 
 const mockCards: CustomCard[] = [
   {
@@ -146,7 +146,7 @@ const customActionsSlice = createSlice({
     setTimeoutValue: (state, action: PayloadAction<number>) => {
       if (state.editingCard) state.editingCard.urlConfig.timeout = action.payload;
     },
-    setCategories: (state, action: PayloadAction<{id: keyof CustomCard['categories']; value: boolean}>) => {
+    setCategories: (state, action: PayloadAction<{id: CustomCategory; value: boolean}>) => {
       if (state.editingCard) state.editingCard.categories[action.payload.id] = action.payload.value;
     },
   },
