@@ -31,7 +31,7 @@ export function CardDetails() {
         <Textarea
           maxRows={3}
           onValueChange={onDescChange}
-          value={editingCard?.description}
+          value={editingCard?.description || ''}
           placeholder="Card Description (optional)"
         />
       </div>
