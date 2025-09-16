@@ -2,13 +2,8 @@ import {Button, Code, Input} from '@heroui/react';
 import {AnimatePresence, motion, Reorder} from 'framer-motion';
 import {KeyboardEvent, useState} from 'react';
 
-import {
-  Add_Icon,
-  OpenFolder_Icon,
-  Play_Icon,
-  Terminal_Icon,
-} from '../../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
-import {FileCodeDuo_Icon, Grip_Icon, TrashDuo_Icon} from '../../SvgIcons';
+import {Add_Icon, Terminal_Icon} from '../../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
+import {FileCodeDuo_Icon, Grip_Icon, PlayDuo_Icon, TrashDuo_Icon} from '../../SvgIcons';
 
 export function ExecuteActions() {
   const [terminalCommandInput, setTerminalCommandInput] = useState('');
@@ -34,14 +29,11 @@ export function ExecuteActions() {
   return (
     <>
       <div className="w-full flex flex-row gap-x-4 items-center justify-center">
+        <Button startContent={<PlayDuo_Icon />} fullWidth>
+          Add Script or Executable
+        </Button>
         <Button startContent={<FileCodeDuo_Icon />} fullWidth>
-          Add Script
-        </Button>
-        <Button startContent={<Play_Icon />} fullWidth>
-          Add Executable
-        </Button>
-        <Button startContent={<OpenFolder_Icon />} fullWidth>
-          Add Executable
+          Add File or Folder
         </Button>
       </div>
       <div>
