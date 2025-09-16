@@ -9,6 +9,7 @@ import {
   RecentlyActions,
   TextActions,
 } from './Components/CardsContainer';
+import {CustomHook} from './Components/CustomHooks';
 import ModalManager from './Components/Modal/ModalManager';
 import ToolsPage from './Components/ToolsPage';
 import reducer from './reducer';
@@ -17,6 +18,8 @@ export let extRendererIpc;
 
 export function InitialExtensions(lynxAPI: ExtensionRendererApi, _extensionId: string) {
   extRendererIpc = lynxAPI.rendererIpc;
+
+  lynxAPI.addReducer([{name: 'extension', reducer}]);
 
   lynxAPI.customizePages.tools.addComponent(ToolsPage);
 
@@ -27,7 +30,7 @@ export function InitialExtensions(lynxAPI: ExtensionRendererApi, _extensionId: s
   lynxAPI.customizePages.text.add.cardsContainer(TextActions);
   lynxAPI.customizePages.audio.add.cardsContainer(AudioActions);
 
-  lynxAPI.addReducer([{name: 'extension', reducer}]);
+  lynxAPI.addCustomHook(CustomHook);
 
   lynxAPI.addModal(ModalManager);
 }

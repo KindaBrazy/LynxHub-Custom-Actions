@@ -1,8 +1,18 @@
+import {ipcMain} from 'electron';
+
 import {
   ExtensionMainApi,
   MainExtensionUtils,
 } from '../../../src/main/Managements/Plugin/Extensions/ExtensionTypes_Main';
+import {CustomCard} from '../cross/CrossTypes';
+import {customActionsChannels} from '../cross/CrossUtils';
+import {getCards, setCards} from './Methods/CardsManager';
 
-export async function initialExtension(_lynxApi: ExtensionMainApi, _utils: MainExtensionUtils) {
-  return;
+export async function initialExtension(lynxApi: ExtensionMainApi, utils: MainExtensionUtils) {
+  lynxApi.listenForChannels(() => {
+    utils.getStorageManager().then(storageManager => {
+      ipcMain.handle(customActionsChannels.getCards, () => getCards(storageManager));
+      ipcMain.on(customActionsChannels.setCards, (_, cards: CustomCard[]) => setCards(storageManager, cards));
+    });
+  });
 }
