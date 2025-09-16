@@ -1,4 +1,4 @@
-import {Button, Code, Input} from '@heroui/react';
+import {Button, ButtonGroup, Code, Input} from '@heroui/react';
 import {AnimatePresence, motion, Reorder} from 'framer-motion';
 import {KeyboardEvent, useMemo, useState} from 'react';
 import {useDispatch} from 'react-redux';
@@ -7,7 +7,15 @@ import {Add_Icon, Terminal_Icon} from '../../../../../../src/renderer/src/assets
 import {CustomExecuteActions} from '../../../../cross/CrossTypes';
 import {extRendererIpc} from '../../../Extension';
 import {reducerActions, useCustomActionsState} from '../../../reducer';
-import {FileCodeDuo_Icon, Grip_Icon, PlayDuo_Icon, TrashDuo_Icon} from '../../SvgIcons';
+import {
+  BookmarkOpenDuo_Icon,
+  CodeDuo_Icon,
+  FileCodeDuo_Icon,
+  FolderDuo_Icon,
+  Grip_Icon,
+  PlayDuo_Icon,
+  TrashDuo_Icon,
+} from '../../SvgIcons';
 
 export function ExecuteActions() {
   const dispatch = useDispatch();
@@ -15,6 +23,8 @@ export function ExecuteActions() {
   const editingCard = useCustomActionsState('editingCard');
 
   const [addingExe, setAddingExe] = useState<boolean>(false);
+  const [addingFile, setAddingFile] = useState<boolean>(false);
+  const [addingFolder, setAddingFolder] = useState<boolean>(false);
 
   const actions = useMemo(() => editingCard?.actions || [], [editingCard]);
 
@@ -50,6 +60,22 @@ export function ExecuteActions() {
     });
   };
 
+  const handleAddFile = () => {
+    setAddingFile(true);
+    extRendererIpc.file.openDlg({properties: ['openFile']}).then(action => {
+      if (action) dispatch(reducerActions.addAction({action, type: 'open'}));
+      setAddingFile(false);
+    });
+  };
+
+  const handleAddFolder = () => {
+    setAddingFolder(true);
+    extRendererIpc.file.openDlg({properties: ['openDirectory']}).then(action => {
+      if (action) dispatch(reducerActions.addAction({action, type: 'open'}));
+      setAddingFolder(false);
+    });
+  };
+
   const renderBody = (item: CustomExecuteActions, index: number) => {
     switch (item.type) {
       case 'execute':
@@ -69,7 +95,7 @@ export function ExecuteActions() {
         return (
           <>
             <span>{index + 1}.</span>
-            <FileCodeDuo_Icon />
+            <BookmarkOpenDuo_Icon />
             <Code radius="sm" className="w-full">
               {item.action}
             </Code>
@@ -82,7 +108,7 @@ export function ExecuteActions() {
         return (
           <>
             <span>{index + 1}.</span>
-            <Terminal_Icon />
+            <CodeDuo_Icon />
             <Code radius="sm" className="w-full">
               {item.action}
             </Code>
@@ -100,9 +126,14 @@ export function ExecuteActions() {
         <Button isLoading={addingExe} onPress={handleAddExe} startContent={!addingExe && <PlayDuo_Icon />} fullWidth>
           Add Script or Executable
         </Button>
-        <Button startContent={<FileCodeDuo_Icon />} fullWidth>
-          Add File or Folder
-        </Button>
+        <ButtonGroup fullWidth>
+          <Button isLoading={addingFile} onPress={handleAddFile} startContent={!addingFile && <FileCodeDuo_Icon />}>
+            Add File
+          </Button>
+          <Button isLoading={addingFolder} onPress={handleAddFolder} startContent={!addingFolder && <FolderDuo_Icon />}>
+            Add Folder
+          </Button>
+        </ButtonGroup>
       </div>
       <div>
         <div className="flex items-center gap-x-4">
