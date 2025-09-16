@@ -1,6 +1,7 @@
 import {motion, Variants} from 'framer-motion';
 import {ReactElement} from 'react';
 
+import {useAppState} from '../../../../src/renderer/src/App/Redux/Reducer/AppReducer';
 import {SvgProps} from '../../../../src/renderer/src/assets/icons/SvgIconsContainer';
 
 type Props = {
@@ -76,6 +77,8 @@ export default function ActionCard({
   accentColor = '#3B82F6',
   className = '',
 }: Props) {
+  const darkMode = useAppState('darkMode');
+
   return (
     <motion.div
       whileTap="tap"
@@ -128,7 +131,7 @@ export default function ActionCard({
         <div className="relative flex-1 text-center">
           <motion.h3
             variants={{
-              initial: {color: 'inherit'},
+              initial: {color: darkMode ? '#ffffff' : '#000000'},
               hover: {color: accentColor, transition: {duration: 0.3}},
             }}
             className="text-sm font-bold text-gray-900 dark:text-white mb-2">
