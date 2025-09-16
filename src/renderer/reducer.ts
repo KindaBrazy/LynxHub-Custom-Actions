@@ -82,15 +82,13 @@ const customActionsSlice = createSlice({
     },
 
     addCard: state => {
-      const targetCard = {
+      state.editingCard = {
         id: 'temp',
         title: '',
         accentColor: '#AA00FF',
         urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
         categories: {pinned: true},
       };
-      state.customCards = [...state.customCards, targetCard];
-      state.editingCard = targetCard;
       state.view = 'form';
     },
     removeCard: state => {
@@ -99,7 +97,7 @@ const customActionsSlice = createSlice({
       state.view = 'list';
     },
     saveCard: state => {
-      state.customCards = state.customCards.map(item => (item.id === state.editingCard?.id ? state.editingCard : item));
+      state.customCards = [...state.customCards, state.editingCard!];
       state.view = 'list';
       state.editingCard = undefined;
     },
