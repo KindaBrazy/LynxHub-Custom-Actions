@@ -5,6 +5,7 @@ import {useDispatch} from 'react-redux';
 
 import {Add_Icon, Terminal_Icon} from '../../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {CustomExecuteActions} from '../../../../cross/CrossTypes';
+import {extRendererIpc} from '../../../Extension';
 import {reducerActions, useCustomActionsState} from '../../../reducer';
 import {FileCodeDuo_Icon, Grip_Icon, PlayDuo_Icon, TrashDuo_Icon} from '../../SvgIcons';
 
@@ -12,6 +13,8 @@ export function ExecuteActions() {
   const dispatch = useDispatch();
   const [commandInput, setCommandInput] = useState<string>('');
   const editingCard = useCustomActionsState('editingCard');
+
+  const [addingExe, setAddingExe] = useState<boolean>(false);
 
   const actions = useMemo(() => editingCard?.actions || [], [editingCard]);
 
@@ -37,6 +40,14 @@ export function ExecuteActions() {
     if (newOrder.every(item => item !== undefined)) {
       dispatch(reducerActions.setActions(newOrder));
     }
+  };
+
+  const handleAddExe = () => {
+    setAddingExe(true);
+    extRendererIpc.file.openDlg({properties: ['openFile']}).then(action => {
+      if (action) dispatch(reducerActions.addAction({action, type: 'execute'}));
+      setAddingExe(false);
+    });
   };
 
   const renderBody = (item: CustomExecuteActions, index: number) => {
@@ -86,7 +97,7 @@ export function ExecuteActions() {
   return (
     <>
       <div className="w-full flex flex-row gap-x-4 items-center justify-center">
-        <Button startContent={<PlayDuo_Icon />} fullWidth>
+        <Button isLoading={addingExe} onPress={handleAddExe} startContent={!addingExe && <PlayDuo_Icon />} fullWidth>
           Add Script or Executable
         </Button>
         <Button startContent={<FileCodeDuo_Icon />} fullWidth>
