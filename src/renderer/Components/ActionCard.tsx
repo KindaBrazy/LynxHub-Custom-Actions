@@ -110,8 +110,8 @@ export default function ActionCard({
 
         {/* Icon container with floating animation */}
         <div className="relative mb-3 flex justify-center">
-          <motion.div variants={iconVariants}>
-            <Icon className="size-8" />
+          <motion.div className="mt-1" variants={iconVariants}>
+            <Icon className="size-10" />
           </motion.div>
 
           {/* Floating particles effect */}
@@ -128,17 +128,21 @@ export default function ActionCard({
         </div>
 
         {/* Content */}
-        <div className="relative flex-1 text-center">
+        <div className={`relative flex-1 text-center ${!description ? 'flex flex-col justify-center' : ''}`}>
           <motion.h3
             variants={{
               initial: {color: darkMode ? '#ffffff' : '#000000'},
               hover: {color: accentColor, transition: {duration: 0.3}},
             }}
-            className="text-sm font-bold text-gray-900 dark:text-white mb-2">
+            className={`text-sm font-bold text-gray-900 dark:text-white ${description ? 'mb-1' : 'mb-8'}`}>
             {title}
           </motion.h3>
 
-          <p className="text-gray-600 dark:text-gray-300 text-xs leading-relaxed line-clamp-3">{description}</p>
+          {description && (
+            <p className="text-gray-600 dark:text-gray-300 text-xs mt-1.5 leading-relaxed line-clamp-2">
+              {description}
+            </p>
+          )}
         </div>
 
         {/* Animated arrow */}
