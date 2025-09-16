@@ -64,7 +64,6 @@ export function CardDetails() {
             onChangeComplete={changeAccent}
             value={editingCard?.accentColor}
             showText
-            disabledAlpha
             disabledFormat
           />
         </div>
