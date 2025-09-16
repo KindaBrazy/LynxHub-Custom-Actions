@@ -25,6 +25,8 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
     [editingCard],
   );
 
+  const saveDisabled = useMemo(() => !editingCard?.title || !editingCard.icon, [editingCard]);
+
   const handleBackToList = () => {
     dispatch(reducerActions.setView('list'));
     dispatch(reducerActions.setEditingCard(undefined));
@@ -88,7 +90,12 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
                     Delete
                   </Button>
                   <div className="flex flex-row items-center gap-x-2">
-                    <Button color="success" variant="light" onPress={saveCard} startContent={<DiskDuo_Icon />}>
+                    <Button
+                      color="success"
+                      variant="light"
+                      onPress={saveCard}
+                      isDisabled={saveDisabled}
+                      startContent={<DiskDuo_Icon />}>
                       Save Card
                     </Button>
                     <Button color="warning" variant="light" onPress={handleBackToList}>
