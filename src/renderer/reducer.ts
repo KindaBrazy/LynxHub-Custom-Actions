@@ -111,6 +111,9 @@ const customActionsSlice = createSlice({
     setAccentColor: (state, action: PayloadAction<string>) => {
       if (state.editingCard) state.editingCard.accentColor = action.payload;
     },
+    setDescription: (state, action: PayloadAction<string>) => {
+      if (state.editingCard) state.editingCard.description = action.payload;
+    },
     setIcon: (state, action: PayloadAction<string>) => {
       if (state.editingCard) state.editingCard.icon = action.payload;
     },
