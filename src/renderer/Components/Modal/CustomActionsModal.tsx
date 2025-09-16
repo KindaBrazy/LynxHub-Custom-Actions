@@ -32,6 +32,11 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
     dispatch(reducerActions.setEditingCard(undefined));
   };
 
+  const cancel = () => {
+    dispatch(reducerActions.removeCard());
+    handleBackToList();
+  };
+
   const onOpenChange = (value: boolean) => {
     if (!value) {
       dispatch(reducerActions.closeModal({tabID: tabID}));
@@ -98,7 +103,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
                       startContent={<DiskDuo_Icon />}>
                       Save Card
                     </Button>
-                    <Button color="warning" variant="light" onPress={handleBackToList}>
+                    <Button color="warning" variant="light" onPress={cancel}>
                       Cancel
                     </Button>
                   </div>
