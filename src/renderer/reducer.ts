@@ -3,57 +3,12 @@ import {useSelector} from 'react-redux';
 
 import {CustomCard, CustomCategory, CustomExecuteActions} from '../cross/CrossTypes';
 
-const mockCards: CustomCard[] = [
-  {
-    id: '1',
-    title: 'Image Gen',
-    description: 'Generate images using AI models',
-    icon: 'image',
-    accentColor: '#3b82f6',
-    urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
-    categories: {pinned: true},
-    actions: [
-      {action: 'npm install lodash', type: 'command'},
-      {action: 'some/folder/dest', type: 'open'},
-      {action: 'path/to/exe/file.exe', type: 'execute'},
-    ],
-  },
-  {
-    id: '2',
-    title: 'Start ComfyUI',
-    description: 'Launch the ComfyUI interface for AI image generation',
-    icon: 'star',
-    accentColor: '#10b981',
-    urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
-    categories: {pinned: true},
-    actions: [],
-  },
-  {
-    id: '3',
-    title: 'Project Folder',
-    icon: 'folder',
-    accentColor: '#f97316',
-    urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
-    categories: {pinned: true},
-    actions: [],
-  },
-  {
-    id: '4',
-    title: 'Code Editor',
-    description: 'Open the integrated development environment',
-    icon: 'code',
-    accentColor: '#8b5cf6',
-    urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
-    categories: {pinned: true},
-    actions: [],
-  },
-];
-
 export type CustomActionsState = {
   modals: {isOpen: boolean; tabID: string}[];
   customCards: CustomCard[];
   view: 'list' | 'form';
   editingCard?: CustomCard;
+  saveCards?: boolean;
 };
 
 type CustomActionsStateTypes = {
@@ -62,9 +17,10 @@ type CustomActionsStateTypes = {
 
 const initialState: CustomActionsState = {
   modals: [],
-  customCards: mockCards,
+  customCards: [],
   view: 'list',
   editingCard: undefined,
+  saveCards: false,
 };
 
 const customActionsSlice = createSlice({
@@ -119,6 +75,7 @@ const customActionsSlice = createSlice({
 
       state.view = 'list';
       state.editingCard = undefined;
+      state.saveCards = true;
     },
     setTitle: (state, action: PayloadAction<string>) => {
       if (state.editingCard) {
@@ -171,6 +128,9 @@ const customActionsSlice = createSlice({
     },
     addAction: (state, action: PayloadAction<CustomExecuteActions>) => {
       if (state.editingCard) state.editingCard.actions = [...state.editingCard.actions, action.payload];
+    },
+    clearSaveCards: state => {
+      state.saveCards = false;
     },
   },
 });
