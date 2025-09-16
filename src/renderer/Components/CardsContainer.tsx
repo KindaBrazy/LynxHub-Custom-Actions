@@ -23,14 +23,16 @@ function CardsContainer({cards}: ContainerProps) {
     const opens = card.actions.filter(action => action.type === 'open');
     opens.forEach(open => extRendererIpc.file.openPath(open.action));
 
-    const executes = card.actions.filter(action => action.type === 'execute' || action.type === 'command');
-    executes.forEach(action => {
-      if (action.type === 'execute') {
-        // TODO: spawn process
-      } else {
-        extRendererIpc.pty.customCommands(card.id, 'start', action.action);
-      }
+    const commands = card.actions.filter(action => action.type === 'command').map(action => action.action);
+
+    if (commands.length > 0) {
+      extRendererIpc.pty.customCommands(card.id, 'start', commands);
       dispatch(cardsActions.addRunningCard({tabId: activeTab, id: card.id}));
+    }
+
+    const executes = card.actions.filter(action => action.type === 'execute');
+    executes.forEach(_action => {
+      // TODO: spawn process
     });
   };
 
