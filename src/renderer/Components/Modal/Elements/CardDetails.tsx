@@ -26,7 +26,7 @@ export function CardDetails() {
   return (
     <div className="flex flex-col gap-y-4">
       <div className="md:col-span-2 space-y-4">
-        <Input value={editingCard?.title} onValueChange={onTitleChange} placeholder="Card Title (required)" />
+        <Input onValueChange={onTitleChange} value={editingCard?.title || ''} placeholder="Card Title (required)" />
 
         <Textarea
           maxRows={3}

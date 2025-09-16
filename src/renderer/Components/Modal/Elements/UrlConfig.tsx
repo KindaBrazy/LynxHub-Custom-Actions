@@ -29,7 +29,7 @@ export function UrlConfig() {
           placeholder="Enter custom URL..."
           isClearable
         />
-        <Checkbox id="auto-catch" className="w-64" isSelected={useAutoCatch} onValueChange={setUseAutoCatch}>
+        <Checkbox className="w-64" onValueChange={setUseAutoCatch} isSelected={useAutoCatch || false}>
           Auto Catch Address
         </Checkbox>
       </div>
