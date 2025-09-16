@@ -11,6 +11,8 @@ export type CustomCategory = keyof CustomCategories;
 
 export type CustomUrlConfig = {customUrl?: string; useAutoCatch: boolean; openImmediately?: boolean; timeout?: number};
 
+export type CustomExecuteActions = {action: string; type: 'execute' | 'open' | 'command'};
+
 export type CustomCard = {
   id: string;
   title: string;
@@ -19,4 +21,5 @@ export type CustomCard = {
   accentColor: string;
   categories: CustomCategories;
   urlConfig: CustomUrlConfig;
+  actions: CustomExecuteActions[];
 };

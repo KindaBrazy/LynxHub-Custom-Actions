@@ -1,7 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {useSelector} from 'react-redux';
 
-import {CustomCard, CustomCategory} from '../cross/CrossTypes';
+import {CustomCard, CustomCategory, CustomExecuteActions} from '../cross/CrossTypes';
 
 const mockCards: CustomCard[] = [
   {
@@ -11,6 +11,11 @@ const mockCards: CustomCard[] = [
     accentColor: '#3b82f6',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
     categories: {pinned: true},
+    actions: [
+      {action: 'npm install lodash', type: 'command'},
+      {action: 'some/folder/dest', type: 'open'},
+      {action: 'path/to/exe/file.exe', type: 'execute'},
+    ],
   },
   {
     id: '2',
@@ -19,6 +24,7 @@ const mockCards: CustomCard[] = [
     accentColor: '#10b981',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
     categories: {pinned: true},
+    actions: [],
   },
   {
     id: '3',
@@ -27,6 +33,7 @@ const mockCards: CustomCard[] = [
     accentColor: '#f97316',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
     categories: {pinned: true},
+    actions: [],
   },
   {
     id: '4',
@@ -35,6 +42,7 @@ const mockCards: CustomCard[] = [
     accentColor: '#8b5cf6',
     urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
     categories: {pinned: true},
+    actions: [],
   },
 ];
 
@@ -88,6 +96,7 @@ const customActionsSlice = createSlice({
         accentColor: '#AA00FF',
         urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
         categories: {pinned: true},
+        actions: [],
       };
       state.view = 'form';
     },
@@ -148,6 +157,14 @@ const customActionsSlice = createSlice({
     },
     setCategories: (state, action: PayloadAction<{id: CustomCategory; value: boolean}>) => {
       if (state.editingCard) state.editingCard.categories[action.payload.id] = action.payload.value;
+    },
+    setActions: (state, action: PayloadAction<CustomExecuteActions[]>) => {
+      if (state.editingCard) state.editingCard.actions = action.payload;
+    },
+    removeAction: (state, action: PayloadAction<number>) => {
+      if (state.editingCard) {
+        state.editingCard.actions = state.editingCard.actions.filter((_, index) => index !== action.payload);
+      }
     },
   },
 });

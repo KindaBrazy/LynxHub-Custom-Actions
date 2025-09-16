@@ -1,18 +1,23 @@
 import {Button, Code, Input} from '@heroui/react';
 import {AnimatePresence, motion, Reorder} from 'framer-motion';
-import {KeyboardEvent, useState} from 'react';
+import {KeyboardEvent, useMemo, useState} from 'react';
+import {useDispatch} from 'react-redux';
 
 import {Add_Icon, Terminal_Icon} from '../../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
+import {CustomExecuteActions} from '../../../../cross/CrossTypes';
+import {reducerActions, useCustomActionsState} from '../../../reducer';
 import {FileCodeDuo_Icon, Grip_Icon, PlayDuo_Icon, TrashDuo_Icon} from '../../SvgIcons';
 
 export function ExecuteActions() {
-  const [terminalCommandInput, setTerminalCommandInput] = useState('');
-  const [terminalCommandsList, setTerminalCommandsList] = useState<string[]>(['npm install', 'npm run dev']);
+  const dispatch = useDispatch();
+  const [commandInput, setCommandInput] = useState<string>('');
+  const editingCard = useCustomActionsState('editingCard');
+
+  const actions = useMemo(() => editingCard?.actions || [], [editingCard]);
 
   const handleAddCommand = () => {
-    if (terminalCommandInput.trim()) {
-      setTerminalCommandsList(prev => [...prev, terminalCommandInput.trim()]);
-      setTerminalCommandInput('');
+    if (commandInput.trim()) {
+      setCommandInput('');
     }
   };
   const handleCommandKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -23,7 +28,58 @@ export function ExecuteActions() {
   };
 
   const handleRemoveCommand = (indexToRemove: number) => {
-    setTerminalCommandsList(prev => prev.filter((_, index) => index !== indexToRemove));
+    dispatch(reducerActions.removeAction(indexToRemove));
+  };
+
+  const onReorder = (items: string[]) => {
+    const newOrder = items.map(actionName => actions.find(action => action.action === actionName));
+    if (newOrder.every(item => item !== undefined)) {
+      dispatch(reducerActions.setActions(newOrder));
+    }
+  };
+
+  const renderBody = (item: CustomExecuteActions, index: number) => {
+    switch (item.type) {
+      case 'execute':
+        return (
+          <>
+            <span>{index + 1}.</span>
+            <PlayDuo_Icon />
+            <Code radius="sm" className="w-full">
+              {item.action}
+            </Code>
+            <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
+              <TrashDuo_Icon className="size-4" />
+            </Button>
+          </>
+        );
+      case 'open':
+        return (
+          <>
+            <span>{index + 1}.</span>
+            <FileCodeDuo_Icon />
+            <Code radius="sm" className="w-full">
+              {item.action}
+            </Code>
+            <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
+              <TrashDuo_Icon className="size-4" />
+            </Button>
+          </>
+        );
+      case 'command':
+        return (
+          <>
+            <span>{index + 1}.</span>
+            <Terminal_Icon />
+            <Code radius="sm" className="w-full">
+              {item.action}
+            </Code>
+            <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
+              <TrashDuo_Icon className="size-4" />
+            </Button>
+          </>
+        );
+    }
   };
 
   return (
@@ -39,10 +95,10 @@ export function ExecuteActions() {
       <div>
         <div className="flex items-center gap-x-4">
           <Input
-            value={terminalCommandInput}
+            value={commandInput}
+            onValueChange={setCommandInput}
             startContent={<Terminal_Icon />}
             onKeyDown={handleCommandKeyDown}
-            onValueChange={setTerminalCommandInput}
             placeholder="Enter command and press Enter..."
           />
           <Button variant="flat" onPress={handleAddCommand} startContent={<Add_Icon />}>
@@ -51,7 +107,7 @@ export function ExecuteActions() {
         </div>
 
         <AnimatePresence>
-          {terminalCommandsList.length > 0 && (
+          {actions.length > 0 && (
             <motion.div
               className="overflow-hidden"
               exit={{opacity: 0, height: 0, marginTop: 0}}
@@ -60,28 +116,18 @@ export function ExecuteActions() {
               <Reorder.Group
                 axis="y"
                 className="space-y-2"
-                values={terminalCommandsList}
-                onReorder={setTerminalCommandsList}>
-                {terminalCommandsList.map((command, index) => (
+                onReorder={onReorder}
+                values={actions.map(item => item.action)}>
+                {actions.map((item, index) => (
                   <Reorder.Item
                     className={
                       'rounded-medium bg-foreground-100 cursor-grab active:cursor-grabbing' +
                       ' flex items-center gap-x-2 p-2'
                     }
-                    key={command}
-                    value={command}>
+                    key={item.action}
+                    value={item.action}>
                     <Grip_Icon className="text-foreground-500" />
-                    <Code radius="sm" className="w-full">
-                      {command}
-                    </Code>
-                    <Button
-                      size="sm"
-                      color="danger"
-                      variant="light"
-                      onPress={() => handleRemoveCommand(index)}
-                      isIconOnly>
-                      <TrashDuo_Icon className="size-4" />
-                    </Button>
+                    {renderBody(item, index)}
                   </Reorder.Item>
                 ))}
               </Reorder.Group>
