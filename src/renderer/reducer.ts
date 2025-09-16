@@ -97,7 +97,14 @@ const customActionsSlice = createSlice({
       state.view = 'list';
     },
     saveCard: state => {
-      state.customCards = [...state.customCards, state.editingCard!];
+      if (state.customCards.some(card => card.id === state.editingCard?.id)) {
+        state.customCards = state.customCards.map(card =>
+          card.id === state.editingCard?.id ? state.editingCard : card,
+        );
+      } else {
+        state.customCards = [...state.customCards, state.editingCard!];
+      }
+
       state.view = 'list';
       state.editingCard = undefined;
     },
@@ -108,7 +115,7 @@ const customActionsSlice = createSlice({
           item.id === state.editingCard!.id ? {...item, id: targetId} : item,
         );
         state.editingCard.title = action.payload;
-        state.editingCard.id = `${action.payload}_custom_action`;
+        state.editingCard.id = targetId;
       }
     },
     setAccentColor: (state, action: PayloadAction<string>) => {
