@@ -58,8 +58,8 @@ export const particle1Variants: Variants = {
   initial: {opacity: 0, x: 0, y: 0},
   hover: {
     opacity: 0.6,
-    x: 4,
-    y: -4,
+    x: 3,
+    y: -3,
     transition: {duration: 0.7, ease: 'easeOut'},
   },
 };
@@ -68,9 +68,30 @@ export const particle2Variants: Variants = {
   initial: {opacity: 0, x: 0, y: 0},
   hover: {
     opacity: 0.4,
-    x: -4,
-    y: 4,
-    transition: {duration: 0.5, delay: 0.1, ease: 'easeOut'},
+    // Keyframes define a looping path. The first value is the target for the initial move,
+    // and the start/end values are the same for a seamless loop.
+    x: [-4, -5, -3.5, -4],
+    y: [4, 5.5, 3, 4],
+    transition: {
+      // Opacity animates once on hover and then stays.
+      opacity: {duration: 0.5, delay: 0.1, ease: 'easeOut'},
+      // X and Y axes loop infinitely with different durations, creating a natural,
+      // de-synchronized floating effect.
+      x: {
+        duration: 3,
+        repeat: Infinity,
+        repeatType: 'loop',
+        ease: 'easeInOut',
+        delay: 0.1,
+      },
+      y: {
+        duration: 2.4,
+        repeat: Infinity,
+        repeatType: 'loop',
+        ease: 'easeInOut',
+        delay: 0.1,
+      },
+    },
   },
 };
 
