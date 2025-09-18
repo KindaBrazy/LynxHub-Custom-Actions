@@ -51,7 +51,8 @@ export function CardType() {
         label="Select Card Type"
         selectedKeys={[cardType]}
         startContent={startContent}
-        onSelectionChange={onSelectionChange}>
+        onSelectionChange={onSelectionChange}
+        disallowEmptySelection>
         <SelectItem key="executable" startContent={<Play_Icon />} description="Run and manage a program">
           Executable
         </SelectItem>
