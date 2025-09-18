@@ -18,7 +18,7 @@ export function UrlConfig() {
   const setTimeoutValue = (value: number) => dispatch(reducerActions.setTimeoutValue(value));
 
   return (
-    <>
+    <div className="flex flex-col gap-y-3">
       <span className="text-foreground-600">Set and customize how to open url after card start:</span>
       <div className="flex flex-row gap-x-4 items-center justify-center">
         <Input value={customUrl} onValueChange={setCustomUrl} placeholder="Enter custom URL..." isClearable />
@@ -30,7 +30,7 @@ export function UrlConfig() {
             exit={{opacity: 0, height: 0}}
             initial={{opacity: 0, height: 0}}
             animate={{opacity: 1, height: 'auto'}}>
-            <div className="flex items-center space-x-4 border-t border-gray-700 pt-4 mt-4">
+            <div className="flex items-center space-x-4 border-t border-gray-700 pt-4 mt-2">
               <span className="text-sm text-gray-300">Open URL:</span>
               <div className="flex items-center space-x-2">
                 <Button
@@ -64,6 +64,6 @@ export function UrlConfig() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }
