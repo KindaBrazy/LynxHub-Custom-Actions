@@ -1,4 +1,5 @@
 import {motion} from 'framer-motion';
+import {compact} from 'lodash';
 import {ReactElement, useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 
@@ -33,7 +34,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   const activeTab = useTabsState('activeTab');
   const darkMode = useAppState('darkMode');
 
-  const {id, title, description, accentColor, actions, iconColor} = useMemo(
+  const {title, description, accentColor, actions, cardType, urlConfig, iconColor} = useMemo(
     () => ({...card, iconColor: getContrastingTextColor(card.accentColor)}),
     [card],
   );
@@ -42,17 +43,61 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
     const opens = actions.filter(action => action.type === 'open');
     opens.forEach(open => extRendererIpc.file.openPath(open.action));
 
-    const commands = actions.filter(action => action.type === 'command').map(action => action.action);
+    const manageUrls = (onDone?: () => void) => {
+      if (urlConfig.customUrl) {
+        const openUrl = () => {
+          dispatch(cardsActions.setRunningCardCustomAddress({tabId: activeTab, address: urlConfig.customUrl!}));
+          if (onDone) onDone();
+        };
 
-    if (commands.length > 0) {
-      extRendererIpc.pty.customCommands(id, 'start', commands);
-      dispatch(cardsActions.addRunningCard({tabId: activeTab, id}));
+        if (urlConfig.openImmediately) {
+          openUrl();
+        } else {
+          setTimeout(() => openUrl(), (urlConfig.timeout || 0) * 1000);
+        }
+      }
+    };
+
+    const runCustomCommands = (ptyId: string) => {
+      const commands = compact(
+        actions.map(action => {
+          if (action.type === 'command') {
+            return action.action;
+          } else if (action.type === 'script') {
+            return window.osPlatform === 'win32' ? `& "${action.action}"` : `"${action.action}"`;
+          } else {
+            return null;
+          }
+        }),
+      );
+      extRendererIpc.pty.customCommands(ptyId, 'start', commands);
+    };
+
+    switch (cardType) {
+      case 'executable':
+        // TODO: Add support for executable cards
+        break;
+      case 'browser': {
+        dispatch(cardsActions.addRunningEmpty({tabId: activeTab, type: 'browser'}));
+        manageUrls();
+        break;
+      }
+      case 'terminal': {
+        const ptyID = `${activeTab}_terminal`;
+        runCustomCommands(ptyID);
+        dispatch(cardsActions.addRunningEmpty({tabId: activeTab, type: 'terminal'}));
+        break;
+      }
+      case 'terminal_browser': {
+        const ptyID = `${activeTab}_both`;
+        runCustomCommands(ptyID);
+        dispatch(cardsActions.addRunningEmpty({tabId: activeTab, type: 'both'}));
+        manageUrls(() => {
+          dispatch(cardsActions.setRunningCardView({tabId: activeTab, view: 'browser'}));
+        });
+        break;
+      }
     }
-
-    const executes = actions.filter(action => action.type === 'exe');
-    executes.forEach(_action => {
-      // TODO: spawn process
-    });
   };
 
   return (
