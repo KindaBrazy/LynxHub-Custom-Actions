@@ -31,6 +31,7 @@ export default function CustomActionsManager() {
   };
 
   const cardType = useMemo(() => editingCard?.cardType, [editingCard]);
+  const haveExeUI = useMemo(() => editingCard?.haveExeUI, [editingCard]);
 
   return (
     <div className="size-full flex items-center justify-center">
@@ -79,7 +80,9 @@ export default function CustomActionsManager() {
                     <CardType />
                   </FormSection>
 
-                  {cardType !== 'terminal' && (
+                  {(cardType === 'terminal_browser' ||
+                    cardType === 'browser' ||
+                    (cardType === 'executable' && haveExeUI)) && (
                     <FormSection title="URL Configuration">
                       <UrlConfig />
                     </FormSection>

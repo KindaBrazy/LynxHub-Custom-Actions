@@ -18,6 +18,7 @@ export type CustomExecuteActions = {action: string; type: 'bash' | 'exe' | 'open
 export type CustomCard = {
   id: string;
   cardType: CustomCardType;
+  haveExeUI: boolean;
   urlConfig: CustomUrlConfig;
   title: string;
   description?: string;

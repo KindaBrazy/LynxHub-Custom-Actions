@@ -1,4 +1,4 @@
-import {Select, SelectItem, SharedSelection} from '@heroui/react';
+import {Checkbox, Select, SelectItem, SharedSelection} from '@heroui/react';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 
@@ -11,6 +11,7 @@ export function CardType() {
   const editingCard = useCustomActionsState('editingCard');
 
   const cardType = useMemo(() => editingCard?.cardType || 'terminal_browser', [editingCard]);
+  const haveExeUI = useMemo(() => editingCard?.haveExeUI, [editingCard]);
 
   const onSelectionChange = (selected: SharedSelection) => {
     if (selected !== 'all') {
@@ -38,8 +39,12 @@ export function CardType() {
     }
   }, [cardType]);
 
+  const onHaveExeChange = (value: boolean) => {
+    dispatch(reducerActions.setHaveExe(value));
+  };
+
   return (
-    <div className="flex flex-col gap-y-2">
+    <div className="flex flex-col gap-y-3">
       <span className="text-foreground-600">Select the card type that fits your needs:</span>
       <Select
         selectionMode="single"
@@ -71,6 +76,12 @@ export function CardType() {
           Terminal
         </SelectItem>
       </Select>
+
+      {cardType === 'executable' && (
+        <Checkbox isSelected={haveExeUI} onValueChange={onHaveExeChange}>
+          Add Browser and Url
+        </Checkbox>
+      )}
     </div>
   );
 }

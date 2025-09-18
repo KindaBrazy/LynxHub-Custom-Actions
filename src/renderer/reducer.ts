@@ -53,6 +53,7 @@ const customActionsSlice = createSlice({
         id: 'temp',
         title: '',
         accentColor: '#AA00FF',
+        haveExeUI: true,
         cardType: 'terminal_browser',
         urlConfig: {openImmediately: true, timeout: 5},
         categories: {pinned: true},
@@ -93,6 +94,9 @@ const customActionsSlice = createSlice({
     },
     setCardType: (state, action: PayloadAction<CustomCardType>) => {
       if (state.editingCard) state.editingCard.cardType = action.payload;
+    },
+    setHaveExe: (state, action: PayloadAction<boolean>) => {
+      if (state.editingCard) state.editingCard.haveExeUI = action.payload;
     },
     setDescription: (state, action: PayloadAction<string>) => {
       if (state.editingCard) state.editingCard.description = action.payload;
