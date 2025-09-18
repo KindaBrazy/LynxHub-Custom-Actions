@@ -1,5 +1,5 @@
 import {AnimatePresence, motion} from 'framer-motion';
-import {useRef} from 'react';
+import {useMemo, useRef} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {CustomCard} from '../../../cross/CrossTypes';
@@ -20,6 +20,7 @@ export default function CustomActionsManager() {
   const dispatch = useDispatch();
 
   const cards = useCustomActionsState('customCards');
+  const editingCard = useCustomActionsState('editingCard');
   const view = useCustomActionsState('view');
 
   const modalRef = useRef<HTMLDivElement>(null);
@@ -28,6 +29,8 @@ export default function CustomActionsManager() {
     dispatch(reducerActions.setEditingCard(card));
     dispatch(reducerActions.setView('form'));
   };
+
+  const cardType = useMemo(() => editingCard?.cardType, [editingCard]);
 
   return (
     <div className="size-full flex items-center justify-center">
@@ -76,9 +79,11 @@ export default function CustomActionsManager() {
                     <CardType />
                   </FormSection>
 
-                  <FormSection title="URL Configuration">
-                    <UrlConfig />
-                  </FormSection>
+                  {cardType !== 'terminal' && (
+                    <FormSection title="URL Configuration">
+                      <UrlConfig />
+                    </FormSection>
+                  )}
 
                   <FormSection title="Execute Actions">
                     <ExecuteActions />
