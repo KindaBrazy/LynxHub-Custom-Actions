@@ -1,7 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {useSelector} from 'react-redux';
 
-import {CustomCard, CustomCategory, CustomExecuteActions} from '../cross/CrossTypes';
+import {CustomCard, CustomCardType, CustomCategory, CustomExecuteActions} from '../cross/CrossTypes';
 
 export type CustomActionsState = {
   modals: {isOpen: boolean; tabID: string}[];
@@ -90,6 +90,9 @@ const customActionsSlice = createSlice({
     },
     setAccentColor: (state, action: PayloadAction<string>) => {
       if (state.editingCard) state.editingCard.accentColor = action.payload;
+    },
+    setCardType: (state, action: PayloadAction<CustomCardType>) => {
+      if (state.editingCard) state.editingCard.cardType = action.payload;
     },
     setDescription: (state, action: PayloadAction<string>) => {
       if (state.editingCard) state.editingCard.description = action.payload;

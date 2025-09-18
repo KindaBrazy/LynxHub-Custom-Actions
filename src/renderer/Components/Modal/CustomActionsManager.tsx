@@ -7,6 +7,7 @@ import {reducerActions, useCustomActionsState} from '../../reducer';
 import {CardIconById} from '../CardIcons';
 import {AddToCategories} from './Elements/AddToCategories';
 import {CardDetails} from './Elements/CardDetails';
+import {CardType} from './Elements/CardType';
 import {ExecuteActions} from './Elements/ExecuteActions';
 import FormSection from './Elements/FormSection';
 import {NewCard} from './Elements/NewCard';
@@ -71,6 +72,10 @@ export default function CustomActionsManager() {
                 transition={{duration: 0.3}}
                 initial={{opacity: 0, x: 50}}>
                 <div className="space-y-8 pr-2 pb-4">
+                  <FormSection title="Card Type">
+                    <CardType />
+                  </FormSection>
+
                   <FormSection title="URL Configuration">
                     <UrlConfig />
                   </FormSection>
