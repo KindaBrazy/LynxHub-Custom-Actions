@@ -46,7 +46,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
 
     if (commands.length > 0) {
       extRendererIpc.pty.customCommands(id, 'start', commands);
-      dispatch(cardsActions.addRunningCard({tabId: activeTab, id: id}));
+      dispatch(cardsActions.addRunningCard({tabId: activeTab, id}));
     }
 
     const executes = actions.filter(action => action.type === 'exe');
@@ -73,8 +73,9 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
       {/* Main card */}
       <motion.div
         className={
-          'relative bg-white dark:bg-gray-900 rounded-2xl p-4 border border-gray-200' +
-          ' dark:border-gray-700 shadow-lg shadow-gray-100 dark:shadow-gray-900/50 w-full h-full flex flex-col'
+          'relative bg-white dark:bg-gray-900 rounded-2xl p-4 border border-foreground-100 transition-colors' +
+          ' duration-300 hover:border-foreground-200 shadow-lg shadow-gray-100 dark:shadow-gray-900/50 w-full' +
+          ' h-full flex flex-col'
         }
         variants={cardVariants}>
         {/* Animated background gradient */}

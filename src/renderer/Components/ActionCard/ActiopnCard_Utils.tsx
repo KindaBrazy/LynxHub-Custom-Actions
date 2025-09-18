@@ -97,5 +97,5 @@ export const particle2Variants: Variants = {
 
 export const arrowVariants: Variants = {
   initial: {opacity: 0.6, x: 0},
-  hover: {opacity: 1, x: 2, transition: {duration: 0.3, ease: 'easeOut'}},
+  hover: {opacity: 1, x: 3, transition: {duration: 0.3, ease: 'easeOut'}},
 };
