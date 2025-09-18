@@ -24,7 +24,6 @@ export function ExecuteActions() {
   const [commandInput, setCommandInput] = useState<string>('');
   const editingCard = useCustomActionsState('editingCard');
 
-  const [addingExe, setAddingExe] = useState<boolean>(false);
   const [addingFile, setAddingFile] = useState<boolean>(false);
   const [addingFolder, setAddingFolder] = useState<boolean>(false);
 
@@ -53,14 +52,6 @@ export function ExecuteActions() {
     if (newOrder.every(item => item !== undefined)) {
       dispatch(reducerActions.setActions(newOrder));
     }
-  };
-
-  const handleAddExe = () => {
-    setAddingExe(true);
-    extRendererIpc.file.openDlg({properties: ['openFile']}).then(action => {
-      if (action) dispatch(reducerActions.addAction({action, type: 'exe'}));
-      setAddingExe(false);
-    });
   };
 
   const handleAddFile = () => {
