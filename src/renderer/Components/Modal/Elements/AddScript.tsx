@@ -14,7 +14,7 @@ export function AddScript() {
   const handleAdd = () => {
     setIsLoading(true);
     extRendererIpc.file.openDlg({properties: ['openFile']}).then(action => {
-      if (action) dispatch(reducerActions.addAction({action, type: 'bash'}));
+      if (action) dispatch(reducerActions.addAction({action, type: 'script'}));
       setIsLoading(false);
     });
   };

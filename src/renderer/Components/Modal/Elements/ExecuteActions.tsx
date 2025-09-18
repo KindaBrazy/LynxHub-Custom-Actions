@@ -73,7 +73,7 @@ export function ExecuteActions() {
   const renderBody = (item: CustomExecuteActions, index: number) => {
     switch (item.type) {
       case 'exe':
-      case 'bash':
+      case 'script':
         return (
           <>
             <span>{index + 1}.</span>

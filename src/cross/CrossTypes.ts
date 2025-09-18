@@ -13,7 +13,7 @@ export type CustomCardType = 'executable' | 'browser' | 'terminal' | 'terminal_b
 
 export type CustomUrlConfig = {customUrl?: string; openImmediately?: boolean; timeout?: number};
 
-export type CustomExecuteActions = {action: string; type: 'bash' | 'exe' | 'open' | 'command'};
+export type CustomExecuteActions = {action: string; type: 'script' | 'exe' | 'open' | 'command'};
 
 export type CustomCard = {
   id: string;
