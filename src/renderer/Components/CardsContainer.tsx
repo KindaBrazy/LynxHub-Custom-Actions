@@ -7,7 +7,7 @@ import {useTabsState} from '../../../../src/renderer/src/App/Redux/Reducer/TabsR
 import {CustomCard} from '../../cross/CrossTypes';
 import {extRendererIpc} from '../Extension';
 import {useCustomActionsState} from '../reducer';
-import ActionCard from './ActionCard';
+import ActionCard from './ActionCard/ActionCard';
 import {CardIconById} from './CardIcons';
 
 type ContainerProps = {
@@ -30,7 +30,7 @@ function CardsContainer({cards}: ContainerProps) {
       dispatch(cardsActions.addRunningCard({tabId: activeTab, id: card.id}));
     }
 
-    const executes = card.actions.filter(action => action.type === 'execute');
+    const executes = card.actions.filter(action => action.type === 'exe');
     executes.forEach(_action => {
       // TODO: spawn process
     });

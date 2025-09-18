@@ -1,8 +1,19 @@
-import {motion, Variants} from 'framer-motion';
-import {ReactElement} from 'react';
+import {motion} from 'framer-motion';
+import {ReactElement, useMemo} from 'react';
 
-import {useAppState} from '../../../../src/renderer/src/App/Redux/Reducer/AppReducer';
-import {SvgProps} from '../../../../src/renderer/src/assets/icons/SvgIconsContainer';
+import {useAppState} from '../../../../../src/renderer/src/App/Redux/Reducer/AppReducer';
+import {SvgProps} from '../../../../../src/renderer/src/assets/icons/SvgIconsContainer';
+import {ArrowLine_Icon} from '../SvgIcons';
+import {
+  arrowVariants,
+  backgroundVariants,
+  cardVariants,
+  getContrastingTextColor,
+  glowVariants,
+  iconVariants,
+  particle1Variants,
+  particle2Variants,
+} from './ActiopnCard_Utils';
 
 type Props = {
   title: string;
@@ -11,62 +22,6 @@ type Props = {
   onClick?: () => void;
   accentColor?: string;
   className?: string;
-};
-
-// Framer Motion Variants for cleaner animation definitions
-const cardVariants: Variants = {
-  initial: {
-    scale: 1,
-    y: 0,
-  },
-  hover: {
-    scale: 1.05,
-    y: -2,
-    transition: {type: 'spring', stiffness: 300, damping: 15},
-  },
-  tap: {
-    scale: 0.95,
-  },
-};
-
-const glowVariants: Variants = {
-  initial: {opacity: 0},
-  hover: {opacity: 0.2, transition: {duration: 0.5, ease: 'easeOut'}},
-};
-
-const backgroundVariants: Variants = {
-  initial: {opacity: 0},
-  hover: {opacity: 0.05, transition: {duration: 0.3}},
-};
-
-const iconVariants: Variants = {
-  initial: {scale: 1, rotate: 0},
-  hover: {scale: 1.2, rotate: -2, transition: {duration: 0.5, ease: 'easeOut'}},
-};
-
-const particle1Variants: Variants = {
-  initial: {opacity: 0, x: 0, y: 0},
-  hover: {
-    opacity: 0.6,
-    x: 4,
-    y: -4,
-    transition: {duration: 0.7, ease: 'easeOut'},
-  },
-};
-
-const particle2Variants: Variants = {
-  initial: {opacity: 0, x: 0, y: 0},
-  hover: {
-    opacity: 0.4,
-    x: -4,
-    y: 4,
-    transition: {duration: 0.5, delay: 0.1, ease: 'easeOut'},
-  },
-};
-
-const arrowVariants: Variants = {
-  initial: {opacity: 0.6, x: 0},
-  hover: {opacity: 1, x: 2, transition: {duration: 0.3, ease: 'easeOut'}},
 };
 
 export default function ActionCard({
@@ -78,6 +33,8 @@ export default function ActionCard({
   className = '',
 }: Props) {
   const darkMode = useAppState('darkMode');
+
+  const iconColor = useMemo(() => getContrastingTextColor(accentColor), [accentColor]);
 
   return (
     <motion.div
@@ -149,10 +106,8 @@ export default function ActionCard({
         <motion.div variants={arrowVariants} className="absolute bottom-3 right-3">
           <div
             style={{backgroundColor: accentColor}}
-            className="w-6 h-6 rounded-full flex items-center justify-center shadow-sm">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-3 h-3 text-white">
-              <path strokeWidth={2} d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            className="size-6 rounded-full flex items-center justify-center shadow-sm">
+            <ArrowLine_Icon style={{color: iconColor}} />
           </div>
         </motion.div>
 
