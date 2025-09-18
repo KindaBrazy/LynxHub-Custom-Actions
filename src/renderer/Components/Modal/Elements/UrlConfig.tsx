@@ -19,6 +19,7 @@ export function UrlConfig() {
 
   return (
     <>
+      <span className="text-foreground-600">Set and customize how to open url after card start:</span>
       <div className="flex flex-row gap-x-4 items-center justify-center">
         <Input value={customUrl} onValueChange={setCustomUrl} placeholder="Enter custom URL..." isClearable />
       </div>
