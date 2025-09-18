@@ -53,7 +53,8 @@ const customActionsSlice = createSlice({
         id: 'temp',
         title: '',
         accentColor: '#AA00FF',
-        urlConfig: {useAutoCatch: true, openImmediately: true, timeout: 5},
+        cardType: 'terminal_browser',
+        urlConfig: {openImmediately: true, timeout: 5},
         categories: {pinned: true},
         actions: [],
       };
@@ -105,9 +106,6 @@ const customActionsSlice = createSlice({
     },
     setCustomUrl: (state, action: PayloadAction<string>) => {
       if (state.editingCard) state.editingCard.urlConfig.customUrl = action.payload;
-    },
-    setUseAutoCatch: (state, action: PayloadAction<boolean>) => {
-      if (state.editingCard) state.editingCard.urlConfig.useAutoCatch = action.payload;
     },
     setOpenImmediately: (state, action: PayloadAction<boolean>) => {
       if (state.editingCard) state.editingCard.urlConfig.openImmediately = action.payload;

@@ -55,7 +55,7 @@ export function ExecuteActions() {
   const handleAddExe = () => {
     setAddingExe(true);
     extRendererIpc.file.openDlg({properties: ['openFile']}).then(action => {
-      if (action) dispatch(reducerActions.addAction({action, type: 'execute'}));
+      if (action) dispatch(reducerActions.addAction({action, type: 'exe'}));
       setAddingExe(false);
     });
   };
@@ -78,7 +78,8 @@ export function ExecuteActions() {
 
   const renderBody = (item: CustomExecuteActions, index: number) => {
     switch (item.type) {
-      case 'execute':
+      case 'exe':
+      case 'bash':
         return (
           <>
             <span>{index + 1}.</span>

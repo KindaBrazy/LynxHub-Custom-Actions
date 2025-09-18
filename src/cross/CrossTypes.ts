@@ -9,17 +9,20 @@ export type CustomCategories = {
 
 export type CustomCategory = keyof CustomCategories;
 
-export type CustomUrlConfig = {customUrl?: string; useAutoCatch: boolean; openImmediately?: boolean; timeout?: number};
+export type CustomCardType = 'executable' | 'browser' | 'terminal' | 'terminal_browser';
 
-export type CustomExecuteActions = {action: string; type: 'execute' | 'open' | 'command'};
+export type CustomUrlConfig = {customUrl?: string; openImmediately?: boolean; timeout?: number};
+
+export type CustomExecuteActions = {action: string; type: 'bash' | 'exe' | 'open' | 'command'};
 
 export type CustomCard = {
   id: string;
+  cardType: CustomCardType;
+  urlConfig: CustomUrlConfig;
   title: string;
   description?: string;
   icon?: string;
   accentColor: string;
   categories: CustomCategories;
-  urlConfig: CustomUrlConfig;
   actions: CustomExecuteActions[];
 };

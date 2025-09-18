@@ -1,4 +1,4 @@
-import {Button, Checkbox, Input, NumberInput} from '@heroui/react';
+import {Button, Input, NumberInput} from '@heroui/react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
@@ -10,31 +10,20 @@ export function UrlConfig() {
   const editingCard = useCustomActionsState('editingCard');
 
   const customUrl = useMemo(() => editingCard?.urlConfig.customUrl, [editingCard]);
-  const useAutoCatch = useMemo(() => editingCard?.urlConfig.useAutoCatch, [editingCard]);
   const openImmediately = useMemo(() => editingCard?.urlConfig.openImmediately, [editingCard]);
   const timeout = useMemo(() => editingCard?.urlConfig.timeout, [editingCard]);
 
   const setCustomUrl = (value: string) => dispatch(reducerActions.setCustomUrl(value));
-  const setUseAutoCatch = (value: boolean) => dispatch(reducerActions.setUseAutoCatch(value));
   const setOpenImmediately = (value: boolean) => dispatch(reducerActions.setOpenImmediately(value));
   const setTimeoutValue = (value: number) => dispatch(reducerActions.setTimeoutValue(value));
 
   return (
     <>
       <div className="flex flex-row gap-x-4 items-center justify-center">
-        <Input
-          value={customUrl}
-          isDisabled={useAutoCatch}
-          onValueChange={setCustomUrl}
-          placeholder="Enter custom URL..."
-          isClearable
-        />
-        <Checkbox className="w-64" onValueChange={setUseAutoCatch} isSelected={useAutoCatch || false}>
-          Auto Catch Address
-        </Checkbox>
+        <Input value={customUrl} onValueChange={setCustomUrl} placeholder="Enter custom URL..." isClearable />
       </div>
       <AnimatePresence>
-        {(customUrl || useAutoCatch) && (
+        {customUrl && (
           <motion.div
             className="overflow-hidden"
             exit={{opacity: 0, height: 0}}
