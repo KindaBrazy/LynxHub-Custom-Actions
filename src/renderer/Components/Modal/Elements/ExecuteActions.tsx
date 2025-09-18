@@ -78,9 +78,7 @@ export function ExecuteActions() {
           <>
             <span>{index + 1}.</span>
             <PlayDuo_Icon />
-            <Code radius="sm" className="w-full">
-              {item.action}
-            </Code>
+            <span className="w-full text-small ml-1.5 truncate">{item.action}</span>
             <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
               <TrashDuo_Icon className="size-4" />
             </Button>
@@ -91,9 +89,7 @@ export function ExecuteActions() {
           <>
             <span>{index + 1}.</span>
             <BookmarkOpenDuo_Icon />
-            <Code radius="sm" className="w-full">
-              {item.action}
-            </Code>
+            <span className="w-full text-small ml-1.5 truncate">{item.action}</span>
             <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
               <TrashDuo_Icon className="size-4" />
             </Button>
