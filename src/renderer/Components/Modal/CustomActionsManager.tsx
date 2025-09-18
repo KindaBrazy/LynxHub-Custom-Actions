@@ -1,4 +1,4 @@
-import {AnimatePresence, motion} from 'framer-motion';
+import {AnimatePresence, LayoutGroup, motion} from 'framer-motion';
 import {useMemo, useRef} from 'react';
 import {useDispatch} from 'react-redux';
 
@@ -76,29 +76,33 @@ export default function CustomActionsManager() {
                 transition={{duration: 0.3}}
                 initial={{opacity: 0, x: 50}}>
                 <div className="space-y-8 pr-2 pb-4">
-                  <FormSection title="Card Type">
-                    <CardType />
-                  </FormSection>
-
-                  {(cardType === 'terminal_browser' ||
-                    cardType === 'browser' ||
-                    (cardType === 'executable' && haveExeUI)) && (
-                    <FormSection title="URL Configuration">
-                      <UrlConfig />
+                  <LayoutGroup>
+                    <FormSection title="Card Type">
+                      <CardType />
                     </FormSection>
-                  )}
 
-                  <FormSection title="Execute Actions">
-                    <ExecuteActions />
-                  </FormSection>
+                    <AnimatePresence>
+                      {(cardType === 'terminal_browser' ||
+                        cardType === 'browser' ||
+                        (cardType === 'executable' && haveExeUI)) && (
+                        <FormSection title="URL Configuration">
+                          <UrlConfig />
+                        </FormSection>
+                      )}
+                    </AnimatePresence>
 
-                  <FormSection title="Card Details">
-                    <CardDetails />
-                  </FormSection>
+                    <FormSection title="Execute Actions">
+                      <ExecuteActions />
+                    </FormSection>
 
-                  <FormSection title="Add To Categories">
-                    <AddToCategories />
-                  </FormSection>
+                    <FormSection title="Card Details">
+                      <CardDetails />
+                    </FormSection>
+
+                    <FormSection title="Add To Categories">
+                      <AddToCategories />
+                    </FormSection>
+                  </LayoutGroup>
                 </div>
               </motion.div>
             )}
