@@ -51,11 +51,12 @@ export function UrlConfig() {
                   <NumberInput
                     size="sm"
                     minValue={1}
-                    maxValue={50}
+                    maxValue={999}
                     value={timeout}
                     aria-label="Timeout Seconds"
                     placeholder="Timeout Seconds"
                     onValueChange={setTimeoutValue}
+                    classNames={{inputWrapper: 'max-h-10'}}
                     endContent={<span className="text-xs text-foreground-500">Seconds</span>}
                   />
                 </div>
