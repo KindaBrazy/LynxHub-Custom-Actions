@@ -1,11 +1,7 @@
 import {compact} from 'lodash';
 import {useMemo} from 'react';
-import {useDispatch} from 'react-redux';
 
-import {cardsActions} from '../../../../src/renderer/src/App/Redux/Reducer/CardsReducer';
-import {useTabsState} from '../../../../src/renderer/src/App/Redux/Reducer/TabsReducer';
 import {CustomCard} from '../../cross/CrossTypes';
-import {extRendererIpc} from '../Extension';
 import {useCustomActionsState} from '../reducer';
 import ActionCard from './ActionCard/ActionCard';
 import {CardIconById} from './CardIcons';
@@ -15,43 +11,12 @@ type ContainerProps = {
 };
 
 function CardsContainer({cards}: ContainerProps) {
-  const dispatch = useDispatch();
-
-  const activeTab = useTabsState('activeTab');
-
-  const onActionPress = (card: CustomCard) => {
-    const opens = card.actions.filter(action => action.type === 'open');
-    opens.forEach(open => extRendererIpc.file.openPath(open.action));
-
-    const commands = card.actions.filter(action => action.type === 'command').map(action => action.action);
-
-    if (commands.length > 0) {
-      extRendererIpc.pty.customCommands(card.id, 'start', commands);
-      dispatch(cardsActions.addRunningCard({tabId: activeTab, id: card.id}));
-    }
-
-    const executes = card.actions.filter(action => action.type === 'exe');
-    executes.forEach(_action => {
-      // TODO: spawn process
-    });
-  };
-
   return (
     <div className="grid grid-cols-2 gap-2">
       {cards.map((card, index) => {
         const icon = CardIconById(card.icon);
 
-        return (
-          <ActionCard
-            key={index}
-            icon={icon}
-            title={card.title}
-            className="h-full"
-            accentColor={card.accentColor}
-            onClick={() => onActionPress(card)}
-            description={card.description || ''}
-          />
-        );
+        return <ActionCard card={card} key={index} icon={icon} className="h-full" />;
       })}
     </div>
   );

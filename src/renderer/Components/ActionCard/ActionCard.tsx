@@ -1,8 +1,13 @@
 import {motion} from 'framer-motion';
 import {ReactElement, useMemo} from 'react';
+import {useDispatch} from 'react-redux';
 
 import {useAppState} from '../../../../../src/renderer/src/App/Redux/Reducer/AppReducer';
+import {cardsActions} from '../../../../../src/renderer/src/App/Redux/Reducer/CardsReducer';
+import {useTabsState} from '../../../../../src/renderer/src/App/Redux/Reducer/TabsReducer';
 import {SvgProps} from '../../../../../src/renderer/src/assets/icons/SvgIconsContainer';
+import {CustomCard} from '../../../cross/CrossTypes';
+import {extRendererIpc} from '../../Extension';
 import {ArrowLine_Icon} from '../SvgIcons';
 import {
   arrowVariants,
@@ -16,25 +21,39 @@ import {
 } from './ActiopnCard_Utils';
 
 type Props = {
-  title: string;
-  description: string;
   icon: (props: SvgProps) => ReactElement;
   onClick?: () => void;
-  accentColor?: string;
   className?: string;
+  card: CustomCard;
 };
 
-export default function ActionCard({
-  title,
-  description,
-  icon: Icon,
-  onClick,
-  accentColor = '#3B82F6',
-  className = '',
-}: Props) {
+export default function ActionCard({icon: Icon, card, className = ''}: Props) {
+  const dispatch = useDispatch();
+
+  const activeTab = useTabsState('activeTab');
   const darkMode = useAppState('darkMode');
 
-  const iconColor = useMemo(() => getContrastingTextColor(accentColor), [accentColor]);
+  const {id, title, description, accentColor, actions, iconColor} = useMemo(
+    () => ({...card, iconColor: getContrastingTextColor(card.accentColor)}),
+    [card],
+  );
+
+  const onClick = () => {
+    const opens = actions.filter(action => action.type === 'open');
+    opens.forEach(open => extRendererIpc.file.openPath(open.action));
+
+    const commands = actions.filter(action => action.type === 'command').map(action => action.action);
+
+    if (commands.length > 0) {
+      extRendererIpc.pty.customCommands(id, 'start', commands);
+      dispatch(cardsActions.addRunningCard({tabId: activeTab, id: id}));
+    }
+
+    const executes = actions.filter(action => action.type === 'exe');
+    executes.forEach(_action => {
+      // TODO: spawn process
+    });
+  };
 
   return (
     <motion.div
