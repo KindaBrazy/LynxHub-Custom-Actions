@@ -142,7 +142,7 @@ export function ExecuteActions() {
         </ButtonGroup>
       </div>
       <div>
-        {(cardType === 'executable' || cardType === 'terminal_browser' || cardType === 'terminal') && (
+        {(cardType === 'terminal_browser' || cardType === 'terminal') && (
           <div className="flex items-center gap-x-4">
             <Input
               value={commandInput}
