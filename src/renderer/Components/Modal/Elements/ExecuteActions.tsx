@@ -16,6 +16,8 @@ import {
   PlayDuo_Icon,
   TrashDuo_Icon,
 } from '../../SvgIcons';
+import {AddExe} from './AddExe';
+import {AddScript} from './AddScript';
 
 export function ExecuteActions() {
   const dispatch = useDispatch();
@@ -27,6 +29,7 @@ export function ExecuteActions() {
   const [addingFolder, setAddingFolder] = useState<boolean>(false);
 
   const actions = useMemo(() => editingCard?.actions || [], [editingCard]);
+  const cardType = useMemo(() => editingCard?.cardType || [], [editingCard]);
 
   const handleAddCommand = () => {
     if (commandInput.trim()) {
@@ -124,9 +127,11 @@ export function ExecuteActions() {
   return (
     <>
       <div className="w-full flex flex-row gap-x-4 items-center justify-center">
-        <Button isLoading={addingExe} onPress={handleAddExe} startContent={!addingExe && <PlayDuo_Icon />} fullWidth>
-          Add Script or Executable
-        </Button>
+        {cardType === 'executable' ? (
+          <AddExe />
+        ) : cardType === 'terminal_browser' || cardType === 'terminal' ? (
+          <AddScript />
+        ) : null}
         <ButtonGroup fullWidth>
           <Button isLoading={addingFile} onPress={handleAddFile} startContent={!addingFile && <FileCodeDuo_Icon />}>
             Add File
@@ -137,18 +142,20 @@ export function ExecuteActions() {
         </ButtonGroup>
       </div>
       <div>
-        <div className="flex items-center gap-x-4">
-          <Input
-            value={commandInput}
-            onValueChange={setCommandInput}
-            startContent={<Terminal_Icon />}
-            onKeyDown={handleCommandKeyDown}
-            placeholder="Enter command and press Enter..."
-          />
-          <Button variant="flat" onPress={handleAddCommand} startContent={<Add_Icon />}>
-            Add
-          </Button>
-        </div>
+        {(cardType === 'executable' || cardType === 'terminal_browser' || cardType === 'terminal') && (
+          <div className="flex items-center gap-x-4">
+            <Input
+              value={commandInput}
+              onValueChange={setCommandInput}
+              startContent={<Terminal_Icon />}
+              onKeyDown={handleCommandKeyDown}
+              placeholder="Enter command and press Enter..."
+            />
+            <Button variant="flat" onPress={handleAddCommand} startContent={<Add_Icon />}>
+              Add
+            </Button>
+          </div>
+        )}
 
         <AnimatePresence>
           {actions.length > 0 && (
