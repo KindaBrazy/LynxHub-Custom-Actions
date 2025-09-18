@@ -127,3 +127,17 @@ export function BookmarkOpenDuo_Icon(props: SvgProps): ReactElement {
     </svg>
   );
 }
+
+export function ArrowLine_Icon(props: SvgProps): ReactElement {
+  return (
+    <svg {...props} width="1em" height="1em" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path
+        fill="none"
+        strokeWidth={1.5}
+        d="m9 5l6 7l-6 7"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"></path>
+    </svg>
+  );
+}
