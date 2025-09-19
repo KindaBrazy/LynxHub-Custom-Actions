@@ -1,5 +1,4 @@
 import {motion} from 'framer-motion';
-import {compact} from 'lodash';
 import {ReactElement, useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 
@@ -8,6 +7,7 @@ import {cardsActions} from '../../../../../src/renderer/src/App/Redux/Reducer/Ca
 import {useTabsState} from '../../../../../src/renderer/src/App/Redux/Reducer/TabsReducer';
 import {SvgProps} from '../../../../../src/renderer/src/assets/icons/SvgIconsContainer';
 import {CustomCard} from '../../../cross/CrossTypes';
+import {customActionsChannels} from '../../../cross/CrossUtils';
 import {extRendererIpc} from '../../Extension';
 import {ArrowLine_Icon} from '../SvgIcons';
 import {
@@ -34,7 +34,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   const activeTab = useTabsState('activeTab');
   const darkMode = useAppState('darkMode');
 
-  const {title, description, accentColor, actions, cardType, urlConfig, iconColor} = useMemo(
+  const {title, description, accentColor, haveExeUI, actions, cardType, urlConfig, iconColor} = useMemo(
     () => ({...card, iconColor: getContrastingTextColor(card.accentColor)}),
     [card],
   );
@@ -59,24 +59,37 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
     };
 
     const runCustomCommands = (ptyId: string) => {
-      const commands = compact(
-        actions.map(action => {
-          if (action.type === 'command') {
-            return action.action;
-          } else if (action.type === 'script') {
-            return window.osPlatform === 'win32' ? `& "${action.action}"` : `"${action.action}"`;
-          } else {
-            return null;
-          }
-        }),
-      );
-      extRendererIpc.pty.customCommands(ptyId, 'start', commands);
+      actions.forEach(action => {
+        if (action.type === 'command') {
+          extRendererIpc.pty.write(ptyId, action.action);
+        } else if (action.type === 'script') {
+          const command = window.osPlatform === 'win32' ? `& "${action.action}"` : `"${action.action}"`;
+          extRendererIpc.pty.write(ptyId, command);
+        } else {
+          return;
+        }
+      });
     };
 
     switch (cardType) {
-      case 'executable':
-        // TODO: Add support for executable cards
+      case 'executable': {
+        const pathToExe = actions.find(action => action.type === 'exe')?.action;
+        if (!pathToExe) return;
+
+        const ptyID = `${activeTab}_both`;
+        window.electron.ipcRenderer.send(customActionsChannels.startExe, ptyID, pathToExe);
+
+        if (haveExeUI) {
+          dispatch(cardsActions.addRunningCard({tabId: activeTab, id: ptyID}));
+          manageUrls(() => {
+            dispatch(cardsActions.setRunningCardView({tabId: activeTab, view: 'browser'}));
+          });
+        } else {
+          dispatch(cardsActions.addRunningCard({tabId: activeTab, id: ptyID}));
+        }
+
         break;
+      }
       case 'browser': {
         dispatch(cardsActions.addRunningEmpty({tabId: activeTab, type: 'browser'}));
         manageUrls();
