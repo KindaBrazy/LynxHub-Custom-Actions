@@ -1,6 +1,7 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {useSelector} from 'react-redux';
 
+import {formatWebAddress} from '../../../src/cross/CrossUtils';
 import {CustomCard, CustomCardType, CustomCategory, CustomExecuteActions} from '../cross/CrossTypes';
 
 export type CustomActionsState = {
@@ -66,12 +67,18 @@ const customActionsSlice = createSlice({
       state.view = 'list';
     },
     saveCard: state => {
-      if (state.customCards.some(card => card.id === state.editingCard?.id)) {
-        state.customCards = state.customCards.map(card =>
-          card.id === state.editingCard?.id ? state.editingCard : card,
-        );
+      const targetCard = state.editingCard!;
+
+      let targetUrl = targetCard.urlConfig.customUrl;
+      if (targetUrl) {
+        targetUrl = formatWebAddress(targetUrl);
+        targetCard.urlConfig.customUrl = targetUrl;
+      }
+
+      if (state.customCards.some(card => card.id === targetCard.id)) {
+        state.customCards = state.customCards.map(card => (card.id === targetCard.id ? targetCard : card));
       } else {
-        state.customCards = [...state.customCards, state.editingCard!];
+        state.customCards = [...state.customCards, targetCard!];
       }
 
       state.view = 'list';
