@@ -18,7 +18,6 @@ export type CustomExecuteActions = {action: string; type: 'script' | 'exe' | 'op
 export type CustomCard = {
   id: string;
   cardType: CustomCardType;
-  haveExeUI: boolean;
   urlConfig: CustomUrlConfig;
   title: string;
   description?: string;

@@ -29,7 +29,6 @@ export default function CustomActionsManager() {
   };
 
   const cardType = useMemo(() => editingCard?.cardType, [editingCard]);
-  const haveExeUI = useMemo(() => editingCard?.haveExeUI, [editingCard]);
 
   return (
     <motion.div
@@ -78,9 +77,7 @@ export default function CustomActionsManager() {
                   </FormSection>
 
                   <AnimatePresence>
-                    {(cardType === 'terminal_browser' ||
-                      cardType === 'browser' ||
-                      (cardType === 'executable' && haveExeUI)) && (
+                    {cardType !== 'terminal' && (
                       <FormSection title="URL Configuration">
                         <UrlConfig />
                       </FormSection>

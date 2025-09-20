@@ -36,7 +36,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   const activeTab = useTabsState('activeTab');
   const darkMode = useAppState('darkMode');
 
-  const {title, description, accentColor, haveExeUI, actions, cardType, urlConfig, iconColor} = useMemo(
+  const {title, description, accentColor, actions, cardType, urlConfig, iconColor} = useMemo(
     () => ({...card, iconColor: getContrastingTextColor(card.accentColor)}),
     [card],
   );
@@ -82,14 +82,10 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
         const ptyID = `${activeTab}_both`;
         window.electron.ipcRenderer.send(customActionsChannels.startExe, ptyID, pathToExe);
 
-        if (haveExeUI) {
-          dispatch(cardsActions.addRunningCard({tabId: activeTab, id: ptyID}));
-          manageUrls(() => {
-            dispatch(cardsActions.setRunningCardView({tabId: activeTab, view: 'browser'}));
-          });
-        } else {
-          dispatch(cardsActions.addRunningCard({tabId: activeTab, id: ptyID}));
-        }
+        dispatch(cardsActions.addRunningCard({tabId: activeTab, id: ptyID}));
+        manageUrls(() => {
+          dispatch(cardsActions.setRunningCardView({tabId: activeTab, view: 'browser'}));
+        });
 
         break;
       }
