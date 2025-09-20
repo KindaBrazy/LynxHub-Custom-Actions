@@ -1,0 +1,56 @@
+{
+  "$schema": "./lynxExtension.schema.json",
+  "id": "lynx_custom_actions",
+  "title": "Custom Actions",
+  "description": "Create, customize, and manage custom cards with powerful actions.",
+  "publishDate": "2025-09-20",
+  "repoUrl": "https://github.com/KindaBrazy/LynxHub-Custom-Actions",
+  "version": "0.1.0",
+  "updateDate": "2025-09-20",
+  "requireAppBuild": 29,
+  "tag": "tools",
+  "platforms": ["win32"],
+  "engines": {"extensionApi": "^1.0.0"},
+  "changeLog": [
+    {
+      "title": "Version 0.1.0 - Initial Release",
+      "items": [
+        {
+          "label": "🚀 Features",
+          "subitems": [
+            {
+              "label": "Create custom action cards with unique icons and accent colors."
+            },
+            {
+              "label": "Configure cards to run executables, open browsers, and execute terminal commands."
+            },
+            {
+              "label": "Chain multiple actions such as running scripts, opening files, and launching applications."
+            },
+            {
+              "label": "Organize and categorize cards for easy access across different sections."
+            }
+          ]
+        },
+        {
+          "label": "⚙️ Customization",
+          "subitems": [
+            {
+              "label": "Personalize card appearance with a variety of icons and a full-spectrum color picker."
+            },
+            {
+              "label": "Define custom URLs to open automatically with options for immediate or delayed launch."
+            },
+            {
+              "label": "Assign cards to multiple categories including Pinned, Recently Used, and generation-specific tabs."
+            },
+            {
+              "label": "Reorder and manage execution sequences with a drag-and-drop interface."
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "avatarUrl": "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Custom-Actions/refs/heads/source/src/renderer/icon.png"
+}
