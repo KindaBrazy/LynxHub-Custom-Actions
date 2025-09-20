@@ -2,7 +2,7 @@
   "$schema": "./lynxExtension.schema.json",
   "id": "lynx_custom_actions",
   "title": "Custom Actions",
-  "description": "Create, customize and manage custom cards with custom scripts, actions.",
+  "description": "Create, customize, and manage custom cards with powerful actions.",
   "publishDate": "2025-09-20",
   "repoUrl": "https://github.com/KindaBrazy/LynxHub-Custom-Actions",
   "version": "0.1.0",
