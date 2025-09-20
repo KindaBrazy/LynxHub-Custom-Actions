@@ -138,7 +138,7 @@ const customActionsSlice = createSlice({
 
 export const useCustomActionsState = <T extends keyof CustomActionsState>(
   propertyName: T,
-): CustomActionsStateTypes[T] => useSelector((state: any) => state.extension[propertyName]);
+): CustomActionsStateTypes[T] => useSelector((state: any) => state.customActions[propertyName]);
 
 export const reducerActions = customActionsSlice.actions;
 
