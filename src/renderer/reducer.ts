@@ -25,7 +25,7 @@ const initialState: CustomActionsState = {
 
 const customActionsSlice = createSlice({
   initialState,
-  name: 'systemMonitor',
+  name: 'customActions',
   reducers: {
     updateState: <K extends keyof CustomActionsState>(
       state: CustomActionsState,
