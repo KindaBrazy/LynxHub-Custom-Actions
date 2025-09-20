@@ -14,9 +14,9 @@ export async function initialExtension(lynxApi: ExtensionMainApi, utils: MainExt
     utils.getStorageManager().then(storageManager => {
       ipcMain.handle(customActionsChannels.getCards, () => getCards(storageManager));
       ipcMain.on(customActionsChannels.setCards, (_, cards: CustomCard[]) => setCards(storageManager, cards));
-      utils.getAppManager().then(appManager => {
-        startExecute(storageManager, appManager);
-      });
+    });
+    utils.getAppManager().then(appManager => {
+      startExecute(appManager);
     });
   });
 }
