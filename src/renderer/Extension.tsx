@@ -19,7 +19,7 @@ export let extRendererIpc;
 export function InitialExtensions(lynxAPI: ExtensionRendererApi, _extensionId: string) {
   extRendererIpc = lynxAPI.rendererIpc;
 
-  lynxAPI.addReducer([{name: 'extension', reducer}]);
+  lynxAPI.addReducer([{name: 'customActions', reducer}]);
 
   lynxAPI.customizePages.tools.addComponent(ToolsPage);
 
