@@ -8,7 +8,6 @@ import treeKill from 'tree-kill';
 
 import {ptyChannels} from '../../../../src/cross/IpcChannelAndTypes';
 import ElectronAppManager from '../../../../src/main/Managements/ElectronAppManager';
-import {determineShell} from '../../../../src/main/Utilities/Utils';
 
 /** Manages child processes for executables, using Node's built-in child_process module. */
 export default class ExeManager {
@@ -20,18 +19,22 @@ export default class ExeManager {
   constructor(id: string, exePath: string, appManager: ElectronAppManager) {
     this.id = id;
 
-    let validatedExe: string;
+    let validatedExe: string | undefined = undefined;
     if (exePath && exePath.length > 0) {
       try {
         fs.accessSync(exePath, fs.constants.R_OK);
         validatedExe = path.resolve(exePath);
       } catch (error) {
-        validatedExe = determineShell();
-        console.warn(`Exe File ${exePath} is not accessible, fallback to shell.`);
+        console.warn(`Exe File ${exePath} is not accessible.`);
       }
     } else {
-      validatedExe = determineShell();
-      console.warn(`Exe path is empty, fallback to shell.`);
+      console.warn(`Exe path is empty.`);
+    }
+
+    if (!validatedExe) {
+      appManager?.getWebContent()?.send(ptyChannels.onExit, this.id);
+      this.isRunning = false;
+      return;
     }
 
     let commandToRun = validatedExe;
