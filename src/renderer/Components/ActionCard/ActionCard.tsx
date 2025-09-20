@@ -28,6 +28,8 @@ type Props = {
   card: CustomCard;
 };
 
+const LINE_ENDING = window.osPlatform === 'win32' ? '\r' : '\n';
+
 export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   const dispatch = useDispatch();
 
@@ -61,9 +63,10 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
     const runCustomCommands = (ptyId: string) => {
       actions.forEach(action => {
         if (action.type === 'command') {
-          extRendererIpc.pty.write(ptyId, action.action);
+          extRendererIpc.pty.write(ptyId, `${action.action}${LINE_ENDING}`);
         } else if (action.type === 'script') {
-          const command = window.osPlatform === 'win32' ? `& "${action.action}"` : `"${action.action}"`;
+          const command =
+            window.osPlatform === 'win32' ? `& "${action.action}"${LINE_ENDING}` : `"${action.action}"${LINE_ENDING}`;
           extRendererIpc.pty.write(ptyId, command);
         } else {
           return;
@@ -96,18 +99,22 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
         break;
       }
       case 'terminal': {
-        const ptyID = `${activeTab}_terminal`;
-        runCustomCommands(ptyID);
         dispatch(cardsActions.addRunningEmpty({tabId: activeTab, type: 'terminal'}));
+        const ptyID = `${activeTab}_terminal`;
+        setTimeout(() => {
+          runCustomCommands(ptyID);
+        }, 100);
         break;
       }
       case 'terminal_browser': {
         const ptyID = `${activeTab}_both`;
-        runCustomCommands(ptyID);
         dispatch(cardsActions.addRunningEmpty({tabId: activeTab, type: 'both'}));
         manageUrls(() => {
           dispatch(cardsActions.setRunningCardView({tabId: activeTab, view: 'browser'}));
         });
+        setTimeout(() => {
+          runCustomCommands(ptyID);
+        }, 100);
         break;
       }
     }
