@@ -10,15 +10,28 @@ type ContainerProps = {
   cards: CustomCard[];
 };
 
-function CardsContainer({cards}: ContainerProps) {
-  return (
-    <div className="grid grid-cols-2 gap-2">
-      {cards.map((card, index) => {
-        const icon = CardIconById(card.icon);
+const chunkArray = (array: CustomCard[], size: number) => {
+  const chunkedArr: CustomCard[][] = [];
+  for (let i = 0; i < array.length; i += size) {
+    chunkedArr.push(array.slice(i, i + size));
+  }
+  return chunkedArr;
+};
 
-        return <ActionCard card={card} key={index} icon={icon} className="h-full" />;
-      })}
-    </div>
+function CardsContainer({cards}: ContainerProps) {
+  const cardChunks = chunkArray(cards, 4);
+
+  return (
+    <>
+      {cardChunks.map((chunk, chunkIndex) => (
+        <div key={chunkIndex} className="grid grid-cols-2 gap-2">
+          {chunk.map((card, cardIndex) => {
+            const icon = CardIconById(card.icon);
+            return <ActionCard card={card} icon={icon} key={cardIndex} className="h-full" />;
+          })}
+        </div>
+      ))}
+    </>
   );
 }
 
