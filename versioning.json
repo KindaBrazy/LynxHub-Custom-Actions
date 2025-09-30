@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Statics/refs/heads/schema/plugins/versioning.schema.json",
+  "versions": [
+    {
+      "version": "0.1.0",
+      "commit": "e3297c4",
+      "engines": {
+        "extensionApi": "^1.0.0"
+      },
+      "stage": ["public"]
+    }
+  ],
+  "changes": [
+    {
+      "version": "0.1.0",
+      "date": "2025-09-20",
+      "items": [
+        {
+          "⚡ Improvements": ["Support LynxHub Version 3.2.0"]
+        }
+      ]
+    }
+  ]
+}
