@@ -3,6 +3,5 @@
   "id": "custom_actions",
   "title": "Custom Actions",
   "description": "Create and manage cards with custom actions.",
-  "platforms": ["win32"],
   "type": "extension"
 }
