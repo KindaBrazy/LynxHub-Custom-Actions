@@ -3,11 +3,11 @@
   "versions": [
     {
       "version": "0.1.0",
-      "commit": "e3297c4",
+      "commit": "ac6c1d2",
       "engines": {
         "extensionApi": "^1.0.0"
       },
-      "stage": ["public"],
+      "stage": "early_access",
       "platforms": ["win32"]
     }
   ],
