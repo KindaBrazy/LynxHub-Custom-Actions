@@ -1,6 +1,6 @@
 import {ipcMain} from 'electron';
 
-import {ptyChannels, PtyProcessOpt} from '../../../../src/cross/IpcChannelAndTypes';
+import {ptyChannels} from '../../../../src/cross/IpcChannelAndTypes';
 import ElectronAppManager from '../../../../src/main/Managements/ElectronAppManager';
 import {customActionsChannels} from '../../cross/CrossUtils';
 import ExeManager from './ExeManager';
@@ -14,8 +14,8 @@ export default function startExecute(appManager: ElectronAppManager) {
     ptyManager = new ExeManager(id, exePath, appManager);
   });
 
-  ipcMain.on(ptyChannels.process, (_, id: string, opt: PtyProcessOpt) => {
-    if (ptyManager && targetID && opt === 'stop' && id === targetID) {
+  ipcMain.on(ptyChannels.stopProcess, (_, id: string) => {
+    if (ptyManager && targetID && id === targetID) {
       ptyManager.stop();
       ptyManager = undefined;
       targetID = undefined;
