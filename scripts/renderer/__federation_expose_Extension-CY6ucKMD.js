@@ -1,7 +1,7 @@
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
-import { j as jsxRuntimeExports, A as AnimatePresence, k as LayoutGroup } from './layout-CgtnS14T.js';
+import { j as jsxRuntimeExports, A as AnimatePresence, L as LayoutGroup } from './create-proxy-BAEgznKV.js';
 import { c as commonjsGlobal, g as getDefaultExportFromCjs } from './_commonjsHelpers-BFTU3MAI.js';
-import { m as motion, R as ReorderGroup, a as ReorderItem } from './Item-Cn0ihBth.js';
+import { m as motion, R as ReorderGroup, a as ReorderItem } from './Item-BZ7AGVf_.js';
 
 function isPlainObject$2(obj) {
   if (typeof obj !== "object" || obj === null)
@@ -131,11 +131,16 @@ function freeze(obj, deep = false) {
   if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj))
     return obj;
   if (getArchtype(obj) > 1) {
-    obj.set = obj.add = obj.clear = obj.delete = dontMutateFrozenCollections;
+    Object.defineProperties(obj, {
+      set: { value: dontMutateFrozenCollections },
+      add: { value: dontMutateFrozenCollections },
+      clear: { value: dontMutateFrozenCollections },
+      delete: { value: dontMutateFrozenCollections }
+    });
   }
   Object.freeze(obj);
   if (deep)
-    Object.entries(obj).forEach(([key, value]) => freeze(value, true));
+    Object.values(obj).forEach((value) => freeze(value, true));
   return obj;
 }
 function dontMutateFrozenCollections() {
@@ -288,7 +293,7 @@ function finalizeProperty(rootScope, parentState, targetObject, prop, childValue
       return;
     }
     finalize(rootScope, childValue);
-    if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && Object.prototype.propertyIsEnumerable.call(targetObject, prop))
+    if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && (isMap(targetObject) ? targetObject.has(prop) : Object.prototype.propertyIsEnumerable.call(targetObject, prop)))
       maybeFreeze(rootScope, childValue);
   }
 }
@@ -633,14 +638,6 @@ function currentImpl(value) {
 }
 var immer = new Immer2();
 var produce = immer.produce;
-immer.produceWithPatches.bind(
-  immer
-);
-immer.setAutoFreeze.bind(immer);
-immer.setUseStrictShallowCopy.bind(immer);
-immer.applyPatches.bind(immer);
-immer.createDraft.bind(immer);
-immer.finishDraft.bind(immer);
 
 function createAction(type, prepareAction) {
   function actionCreator(...args) {
@@ -1042,19 +1039,11 @@ function extractGitUrl(url) {
     throw new Error(`Invalid Git repository URL: ${url}`);
   }
   const [, , , platform, owner, repo] = match;
-  return { owner, repo, platform };
-}
-function formatSizeKB(sizeKB) {
-  if (!sizeKB) return "0 KB";
-  if (sizeKB < 1024) {
-    return `${sizeKB.toFixed(2)} KB`;
-  } else if (sizeKB < 1024 * 1024) {
-    return `${(sizeKB / 1024).toFixed(2)} MB`;
-  } else {
-    return `${(sizeKB / (1024 * 1024)).toFixed(2)} GB`;
-  }
+  const avatarUrl = `https://github.com/${owner}.png`;
+  return { owner, repo, platform, avatarUrl };
 }
 function validateGitRepoUrl(url) {
+  if (!url) return "";
   const githubMatch = url.toLowerCase().match(/^(?:https?:\/\/)?(?:www\.)?github\.com\/([^/]+)\/([^/]+?)(\.git)?(\/)?$/i);
   if (githubMatch) {
     return `https://github.com/${githubMatch[1]}/${githubMatch[2]}`;
@@ -1521,8 +1510,8 @@ const fileChannels = {
   isEmptyDir: "app:isEmptyDir"
 };
 const gitChannels = {
-  cloneShallow: "git:clone-shallow",
-  cloneShallowPromise: "git:clone-shallow-promise",
+  shallowClone: "git:clone-shallow",
+  shallowClonePromise: "git:clone-shallow-promise",
   stashDrop: "git:stash-drop",
   validateGitDir: "git:validateGitDir",
   getRepoInfo: "git:get-repo-info",
@@ -1548,40 +1537,28 @@ const utilsChannels = {
 };
 const modulesChannels = {
   cardUpdateAvailable: "modules:card-update-available",
-  installModule: "modules:install-module",
-  uninstallModule: "modules:uninstall-module",
   uninstallCardByID: "modules:uninstall-card-by-id",
-  isUpdateAvailable: "modules:is-update-available",
-  updateAvailableList: "modules:update-available-list",
-  updateModule: "modules:update-module",
-  updateAllModules: "modules:update-all-modules",
-  checkEa: "modules:check-ea",
   checkCardsUpdateInterval: "modules:cards_update_interval",
-  onCardsUpdateAvailable: "modules:on_cards_update_available",
-  onReload: "modules:on-reload",
-  onUpdatedModules: "modules:on-updated-modules",
-  getModulesData: "modules:get-modules-data",
-  getInstalledModulesInfo: "modules:get-installed-modules-info",
-  getSkipped: "modules:get-skipped"
+  onCardsUpdateAvailable: "modules:on_cards_update_available"
 };
-const extensionsChannels = {
-  installExtension: "extensions:install-extensions",
-  uninstallExtension: "extensions:uninstall-extensions",
-  isUpdateAvailable: "extensions:is-update-available",
-  updateAvailableList: "extensions:any-update-available",
-  updateExtension: "extensions:update-extensions",
-  updateAllExtensions: "extensions:update-all-extensions",
-  checkEa: "extensions:check-ea",
-  onReload: "extensions:on-reload",
-  onUpdatedExtensions: "extensions:on-updated-extensions",
-  getExtensionsData: "extensions:get-extensions-data",
-  getInstalledExtensionsInfo: "extensions:get-installed-extensions-info",
-  getSkipped: "extensions:get-skipped"
+const pluginChannels = {
+  onSyncAvailable: "plugins:on-sync-available",
+  getList: "plugins:get-list",
+  getAddresses: "plugins:get-addresses",
+  getInstalledList: "plugins:get-installed-list",
+  getUnloadedList: "plugins:get-unloaded-list",
+  install: "plugins:install",
+  uninstall: "plugins:uninstall",
+  sync: "plugins:sync",
+  syncAll: "plugins:sync-all",
+  checkForSync: "plugins:check-for-sync",
+  updateSyncList: "plugins:update-sync-list"
 };
 const ptyChannels = {
   process: "pty-process",
   customProcess: "pty-custom-process",
   emptyProcess: "pty-custom-process",
+  stopProcess: "pty-stop-process",
   customCommands: "pty-custom-commands",
   write: "pty-write",
   clear: "pty-clear",
@@ -1715,7 +1692,9 @@ const browserChannels = {
   getUserAgent: "browser:get-user-agent",
   updateUserAgent: "browser:update-user-agent",
   addOffset: "browser:add-offset",
-  clearHistory: "browser:clear-history"
+  clearHistory: "browser:clear-history",
+  onFailedLoadUrl: "browser:on-failed-load-url",
+  onClearFailed: "browser:on-clear-failed"
 };
 const staticsChannels = {
   pull: "statics:pull",
@@ -1727,8 +1706,19 @@ const staticsChannels = {
   getExtensionsEA: "statics:getExtensionsEA",
   getPatrons: "statics:getPatrons"
 };
+const initChannels = {
+  checkGitInstalled: "init:checkGitInstalled",
+  checkPwsh7Installed: "init:checkPwsh7Installed"
+};
 const eventsChannels = {
   card_PreCommandUninstall: "events:card_PreCommandUninstall"
+};
+const patreonChannels = {
+  getInfo: "patreon:getInfo",
+  login: "patreon:login",
+  logout: "patreon:logout",
+  updateChannel: "patreon:updateChannel",
+  onReleaseChannel: "patreon:onReleaseChannel"
 };
 
 function mitt(n){return {all:n=n||new Map,on:function(t,e){var i=n.get(t);i?i.push(e):n.set(t,[e]);},off:function(t,e){var i=n.get(t);i&&(e?i.splice(i.indexOf(e)>>>0,1):n.set(t,[]));},emit:function(t,e){var i=n.get(t);i&&i.slice().map(function(n){n(e);}),(i=n.get("*"))&&i.slice().map(function(n){n(t,e);});}}}
@@ -1794,14 +1784,30 @@ const extensionsData = {
     },
     tools: {
       addComponent: []
-    }},
+    },
+    agents: {
+      add: {
+        top: [],
+        bottom: [],
+        scrollTop: [],
+        scrollBottom: [],
+        cardsContainer: []
+      }
+    },
+    others: {
+      add: {
+        top: [],
+        bottom: [],
+        scrollTop: [],
+        scrollBottom: [],
+        cardsContainer: []
+      }
+    }
+  },
   cards: {
     replace: void 0,
     replaceComponent: void 0,
     customize: {
-      header: void 0,
-      body: void 0,
-      footer: void 0,
       menu: {
         replace: void 0,
         addSection: []
@@ -1918,20 +1924,8 @@ const rendererIpc = {
   },
   /** Git operations */
   git: {
-    cloneShallow: (url, directory, singleBranch, depth, branch) => {
-      extensionRendererApi.events_ipc.emit("git_clone_shallow", { url, directory, singleBranch, depth, branch });
-      ipc.send(gitChannels.cloneShallow, url, directory, singleBranch, depth, branch);
-    },
-    cloneShallowPromise: (url, directory, singleBranch, depth, branch) => {
-      extensionRendererApi.events_ipc.emit("git_clone_shallow_promise", {
-        url,
-        directory,
-        singleBranch,
-        depth,
-        branch
-      });
-      return ipc.invoke(gitChannels.cloneShallowPromise, url, directory, singleBranch, depth, branch);
-    },
+    cloneShallow: (options) => ipc.send(gitChannels.shallowClone, options),
+    cloneShallowPromise: (options) => ipc.invoke(gitChannels.shallowClonePromise, options),
     getRepoInfo: (dir) => {
       extensionRendererApi.events_ipc.emit("git_get_repo_info", { dir });
       return ipc.invoke(gitChannels.getRepoInfo, dir);
@@ -1953,7 +1947,6 @@ const rendererIpc = {
       return ipc.invoke(gitChannels.validateGitDir, dir, url);
     },
     onProgress: (callback) => ipc.on(gitChannels.onProgress, callback),
-    offProgress: () => ipc.removeAllListeners(gitChannels.onProgress),
     pull: (repoDir, id) => {
       extensionRendererApi.events_ipc.emit("git_pull", { repoDir, id });
       ipc.send(gitChannels.pull, repoDir, id);
@@ -1969,52 +1962,10 @@ const rendererIpc = {
       extensionRendererApi.events_ipc.emit("module_card_update_available", { card, updateType });
       return ipc.invoke(modulesChannels.cardUpdateAvailable, card, updateType);
     },
-    getModulesData: () => {
-      extensionRendererApi.events_ipc.emit("module_get_modules_data", {});
-      return ipc.invoke(modulesChannels.getModulesData);
-    },
-    getInstalledModulesInfo: () => {
-      extensionRendererApi.events_ipc.emit("module_get_installed_modules_info", {});
-      return ipc.invoke(modulesChannels.getInstalledModulesInfo);
-    },
-    getSkipped: () => {
-      extensionRendererApi.events_ipc.emit("module_get_skipped", {});
-      return ipc.invoke(modulesChannels.getSkipped);
-    },
-    checkEa: (isEA, isInsider) => {
-      extensionRendererApi.events_ipc.emit("module_check_ea", { isEA, isInsider });
-      return ipc.invoke(modulesChannels.checkEa, isEA, isInsider);
-    },
-    installModule: (url) => {
-      extensionRendererApi.events_ipc.emit("module_install_module", { url });
-      return ipc.invoke(modulesChannels.installModule, url);
-    },
-    uninstallModule: (id) => {
-      extensionRendererApi.events_ipc.emit("module_uninstall_module", { id });
-      return ipc.invoke(modulesChannels.uninstallModule, id);
-    },
     uninstallCardByID: (id) => {
       extensionRendererApi.events_ipc.emit("module_uninstall_card_by_id", { id });
       return ipc.invoke(modulesChannels.uninstallCardByID, id);
     },
-    isUpdateAvailable: (id) => {
-      extensionRendererApi.events_ipc.emit("module_is_update_available", { id });
-      return ipc.invoke(modulesChannels.isUpdateAvailable, id);
-    },
-    updateAvailableList: () => {
-      extensionRendererApi.events_ipc.emit("module_update_available_list", {});
-      return ipc.invoke(modulesChannels.updateAvailableList);
-    },
-    updateModule: (id) => {
-      extensionRendererApi.events_ipc.emit("module_update_module", { id });
-      return ipc.invoke(modulesChannels.updateModule, id);
-    },
-    updateAllModules: () => {
-      extensionRendererApi.events_ipc.emit("module_update_all_modules", {});
-      return ipc.invoke(modulesChannels.updateAllModules);
-    },
-    onReload: (result) => ipc.on(modulesChannels.onReload, result),
-    onUpdatedModules: (result) => ipc.on(modulesChannels.onUpdatedModules, result),
     checkCardsUpdateInterval: (updateType) => {
       extensionRendererApi.events_ipc.emit("module_check_cards_update_interval", { updateType });
       ipc.send(modulesChannels.checkCardsUpdateInterval, updateType);
@@ -2035,50 +1986,18 @@ const rendererIpc = {
       return ipc.invoke(moduleApiChannels.getCurrentReleaseTag, dir);
     }
   },
-  /** Managing app extensions */
-  extension: {
-    getExtensionsData: () => {
-      extensionRendererApi.events_ipc.emit("extension_get_extensions_data", {});
-      return ipc.invoke(extensionsChannels.getExtensionsData);
-    },
-    getInstalledExtensionsInfo: () => {
-      extensionRendererApi.events_ipc.emit("extension_get_installed_extensions_info", {});
-      return ipc.invoke(extensionsChannels.getInstalledExtensionsInfo);
-    },
-    getSkipped: () => {
-      extensionRendererApi.events_ipc.emit("extension_get_skipped", {});
-      return ipc.invoke(extensionsChannels.getSkipped);
-    },
-    installExtension: (url) => {
-      extensionRendererApi.events_ipc.emit("extension_install_extension", { url });
-      return ipc.invoke(extensionsChannels.installExtension, url);
-    },
-    uninstallExtension: (id) => {
-      extensionRendererApi.events_ipc.emit("extension_uninstall_extension", { id });
-      return ipc.invoke(extensionsChannels.uninstallExtension, id);
-    },
-    isUpdateAvailable: (id) => {
-      extensionRendererApi.events_ipc.emit("extension_is_update_available", { id });
-      return ipc.invoke(extensionsChannels.isUpdateAvailable, id);
-    },
-    updateAvailableList: () => {
-      extensionRendererApi.events_ipc.emit("extension_update_available_list", {});
-      return ipc.invoke(extensionsChannels.updateAvailableList);
-    },
-    updateExtension: (id) => {
-      extensionRendererApi.events_ipc.emit("extension_update_extension", { id });
-      return ipc.invoke(extensionsChannels.updateExtension, id);
-    },
-    checkEa: (isEA, isInsider) => {
-      extensionRendererApi.events_ipc.emit("extension_check_ea", { isEA, isInsider });
-      return ipc.invoke(extensionsChannels.checkEa, isEA, isInsider);
-    },
-    updateAllExtensions: () => {
-      extensionRendererApi.events_ipc.emit("extension_update_all_extensions", {});
-      return ipc.invoke(extensionsChannels.updateAllExtensions);
-    },
-    onReload: (result) => ipc.on(extensionsChannels.onReload, result),
-    onUpdatedExtensions: (result) => ipc.on(extensionsChannels.onUpdatedExtensions, result)
+  plugins: {
+    getList: (stage) => ipc.invoke(pluginChannels.getList, stage),
+    getAddresses: () => ipc.invoke(pluginChannels.getAddresses),
+    getInstalledList: () => ipc.invoke(pluginChannels.getInstalledList),
+    getUnloadedList: () => ipc.invoke(pluginChannels.getUnloadedList),
+    install: (url, commitHash) => ipc.invoke(pluginChannels.install, url, commitHash),
+    uninstall: (id) => ipc.invoke(pluginChannels.uninstall, id),
+    sync: (id, commit) => ipc.invoke(pluginChannels.sync, id, commit),
+    updateSyncList: (id, commit) => ipc.invoke(pluginChannels.updateSyncList, id, commit),
+    syncAll: (items) => ipc.invoke(pluginChannels.syncAll, items),
+    checkForSync: (stage) => ipc.invoke(pluginChannels.checkForSync, stage),
+    onSyncAvailable: (result) => ipc.on(pluginChannels.onSyncAvailable, result)
   },
   /** Utilities methods for working with app storage data */
   storageUtils: {
@@ -2119,17 +2038,12 @@ const rendererIpc = {
       return ipc.invoke(storageUtilsChannels.preCommands, opt, data);
     },
     onPreCommands: (result) => ipc.on(storageUtilsChannels.onPreCommands, result),
-    offPreCommands: () => ipc.removeAllListeners(storageUtilsChannels.onPreCommands),
     customRun: (opt, data) => {
       extensionRendererApi.events_ipc.emit("storage_utils_custom_run", { opt, data });
       return ipc.invoke(storageUtilsChannels.customRun, opt, data);
     },
     onCustomRun: (result) => ipc.on(storageUtilsChannels.onCustomRun, result),
-    offCustomRun: () => ipc.removeAllListeners(storageUtilsChannels.onCustomRun),
-    updateCustomRunBehavior: (data) => {
-      extensionRendererApi.events_ipc.emit("storage_utils_update_custom_run_behavior", { data });
-      ipc.send(storageUtilsChannels.customRunBehavior, data);
-    },
+    updateCustomRunBehavior: (data) => ipc.send(storageUtilsChannels.customRunBehavior, data),
     preOpen: (opt, open) => {
       extensionRendererApi.events_ipc.emit("storage_utils_pre_open", { opt, open });
       return ipc.invoke(storageUtilsChannels.preOpen, opt, open);
@@ -2214,7 +2128,6 @@ const rendererIpc = {
       ipc.send(utilsChannels.updateAllExtensions, data);
     },
     onUpdateAllExtensions: (result) => ipc.on(utilsChannels.onUpdateAllExtensions, result),
-    offUpdateAllExtensions: () => ipc.removeAllListeners(utilsChannels.onUpdateAllExtensions),
     getExtensionsDetails: (dir) => {
       extensionRendererApi.events_ipc.emit("utils_get_extensions_details", { dir });
       return ipc.invoke(utilsChannels.extensionsDetails, dir);
@@ -2240,7 +2153,6 @@ const rendererIpc = {
       ipc.send(utilsChannels.cancelDownload);
     },
     onDownloadFile: (result) => ipc.on(utilsChannels.onDownloadFile, result),
-    offDownloadFile: () => ipc.removeAllListeners(utilsChannels.onDownloadFile),
     decompressFile: (filePath) => {
       extensionRendererApi.events_ipc.emit("utils_decompress_file", { filePath });
       return ipc.invoke(utilsChannels.decompressFile, filePath);
@@ -2256,21 +2168,25 @@ const rendererIpc = {
   },
   /** Managing and using node_pty(Pseudo Terminal ) */
   pty: {
-    process: (id, opt, cardId) => {
-      extensionRendererApi.events_ipc.emit("terminal_process", { id, opt, cardId });
-      ipc.send(ptyChannels.process, id, opt, cardId);
+    process: (id, cardId) => {
+      extensionRendererApi.events_ipc.emit("terminal_process", { id, cardId });
+      ipc.send(ptyChannels.process, id, cardId);
     },
-    customProcess: (id, opt, dir, file) => {
-      extensionRendererApi.events_ipc.emit("terminal_process_custom", { id, opt, dir, file });
-      ipc.send(ptyChannels.customProcess, id, opt, dir, file);
+    customProcess: (id, dir, file) => {
+      extensionRendererApi.events_ipc.emit("terminal_process_custom", { id, dir, file });
+      ipc.send(ptyChannels.customProcess, id, dir, file);
     },
-    emptyProcess: (id, opt, dir) => {
-      extensionRendererApi.events_ipc.emit("terminal_process_empty", { id, opt, dir });
-      ipc.send(ptyChannels.emptyProcess, id, opt, dir);
+    emptyProcess: (id, dir) => {
+      extensionRendererApi.events_ipc.emit("terminal_process_empty", { id, dir });
+      ipc.send(ptyChannels.emptyProcess, id, dir);
     },
-    customCommands: (id, opt, commands, dir) => {
-      extensionRendererApi.events_ipc.emit("terminal_process_custom_command", { id, opt, commands, dir });
-      ipc.send(ptyChannels.customCommands, id, opt, commands, dir);
+    customCommands: (id, commands, dir) => {
+      extensionRendererApi.events_ipc.emit("terminal_process_custom_command", { id, commands, dir });
+      ipc.send(ptyChannels.customCommands, id, commands, dir);
+    },
+    stop: (id) => {
+      extensionRendererApi.events_ipc.emit("terminal_process_stop", { id });
+      ipc.send(ptyChannels.stopProcess, id);
     },
     write: (id, data) => {
       extensionRendererApi.events_ipc.emit("terminal_write", { id, data });
@@ -2286,17 +2202,12 @@ const rendererIpc = {
     },
     onData: (result) => ipc.on(ptyChannels.onData, result),
     onTitle: (result) => ipc.on(ptyChannels.onTitle, result),
-    onExit: (result) => ipc.on(ptyChannels.onExit, result),
-    offData: () => ipc.removeAllListeners(ptyChannels.onData),
-    offTitle: () => ipc.removeAllListeners(ptyChannels.onTitle),
-    offExit: () => ipc.removeAllListeners(ptyChannels.onExit)
+    onExit: (result) => ipc.on(ptyChannels.onExit, result)
   },
   /** Managing app automatic updates */
   appUpdate: {
     statusError: (result) => ipc.on(appUpdateChannels.statusError, result),
-    offStatusError: () => ipc.removeAllListeners(appUpdateChannels.statusError),
     status: (result) => ipc.on(appUpdateChannels.status, result),
-    offStatus: () => ipc.removeAllListeners(appUpdateChannels.status),
     download: () => {
       extensionRendererApi.events_ipc.emit("app_update_download", {});
       ipc.send(appUpdateChannels.download);
@@ -2354,14 +2265,12 @@ const rendererIpc = {
   },
   appWindow: {
     onHotkeysChange: (result) => ipc.on(appWindowChannels.hotkeysChange, result),
-    offHotkeysChange: () => ipc.removeAllListeners(appWindowChannels.hotkeysChange),
-    onShowToast: (result) => ipc.on(appWindowChannels.showToast, result),
-    offShowToast: () => ipc.removeAllListeners(appWindowChannels.showToast)
+    onShowToast: (result) => ipc.on(appWindowChannels.showToast, result)
   },
   contextMenu: {
-    resizeWindow: (dimensions) => {
-      extensionRendererApi.events_ipc.emit("context_menu_resize_window", { dimensions });
-      ipc.send(contextMenuChannels.resizeWindow, dimensions);
+    resizeWindow: (data) => {
+      extensionRendererApi.events_ipc.emit("context_menu_resize_window", { data });
+      ipc.send(contextMenuChannels.resizeWindow, data);
     },
     showWindow: () => {
       extensionRendererApi.events_ipc.emit("context_menu_show_window", {});
@@ -2372,7 +2281,6 @@ const rendererIpc = {
       ipc.send(contextMenuChannels.hideWindow);
     },
     onInitView: (result) => ipc.on(contextMenuChannels.onInitView, result),
-    offInitView: () => ipc.removeAllListeners(contextMenuChannels.onInitView),
     openTerminateAI: (id) => {
       extensionRendererApi.events_ipc.emit("context_menu_open_terminate_ai", { id });
       ipc.send(contextMenuChannels.openTerminateAI, id);
@@ -2386,37 +2294,28 @@ const rendererIpc = {
       ipc.send(contextMenuChannels.openCloseApp);
     },
     onFind: (result) => ipc.on(contextMenuChannels.onFind, result),
-    offFind: () => ipc.removeAllListeners(contextMenuChannels.onFind),
     onTerminateAI: (result) => ipc.on(contextMenuChannels.onTerminateAI, result),
-    offTerminateAI: () => ipc.removeAllListeners(contextMenuChannels.onTerminateAI),
     onTerminateTab: (result) => ipc.on(contextMenuChannels.onTerminateTab, result),
-    offTerminateTab: () => ipc.removeAllListeners(contextMenuChannels.onTerminateTab),
     onCloseApp: (result) => ipc.on(contextMenuChannels.onCloseApp, result),
-    offCloseApp: () => ipc.removeAllListeners(contextMenuChannels.onCloseApp),
     onZoom: (result) => ipc.on(contextMenuChannels.onZoom, result),
-    offZoom: () => ipc.removeAllListeners(contextMenuChannels.onZoom),
     relaunchAI: (id) => {
       extensionRendererApi.events_ipc.emit("context_menu_relaunch_ai", { id });
       ipc.send(contextMenuChannels.relaunchAI, id);
     },
     onRelaunchAI: (result) => ipc.on(contextMenuChannels.onRelaunchAI, result),
-    offRelaunchAI: () => ipc.removeAllListeners(contextMenuChannels.onRelaunchAI),
     stopAI: (id) => {
       extensionRendererApi.events_ipc.emit("context_menu_stop_ai", { id });
       ipc.send(contextMenuChannels.stopAI, id);
     },
     onStopAI: (result) => ipc.on(contextMenuChannels.onStopAI, result),
-    offStopAI: () => ipc.removeAllListeners(contextMenuChannels.onStopAI),
     removeTab: (tabID) => {
       extensionRendererApi.events_ipc.emit("context_menu_remove_tab", { tabID });
       ipc.send(contextMenuChannels.removeTab, tabID);
     },
-    onRemoveTab: (result) => ipc.on(contextMenuChannels.onRemoveTab, result),
-    offRemoveTab: () => ipc.removeAllListeners(contextMenuChannels.onRemoveTab)
+    onRemoveTab: (result) => ipc.on(contextMenuChannels.onRemoveTab, result)
   },
   tab: {
-    onNewTab: (result) => ipc.on(tabsChannels.onNewTab, result),
-    offNewTab: () => ipc.removeAllListeners(tabsChannels.onNewTab)
+    onNewTab: (result) => ipc.on(tabsChannels.onNewTab, result)
   },
   contextItems: {
     copy: (id) => {
@@ -2522,17 +2421,11 @@ const rendererIpc = {
       ipc.send(browserChannels.goForward, id);
     },
     onCanGo: (result) => ipc.on(browserChannels.onCanGo, result),
-    offCanGo: () => ipc.removeAllListeners(browserChannels.onCanGo),
     onIsLoading: (result) => ipc.on(browserChannels.isLoading, result),
-    offIsLoading: () => ipc.removeAllListeners(browserChannels.isLoading),
     onTitleChange: (result) => ipc.on(browserChannels.onTitleChange, result),
-    offTitleChange: () => ipc.removeAllListeners(browserChannels.onTitleChange),
     onFavIconChange: (result) => ipc.on(browserChannels.onFavIconChange, result),
-    offFavIconChange: () => ipc.removeAllListeners(browserChannels.onFavIconChange),
     onUrlChange: (result) => ipc.on(browserChannels.onUrlChange, result),
-    offUrlChange: () => ipc.removeAllListeners(browserChannels.onUrlChange),
     onDomReady: (result) => ipc.on(browserChannels.onDomReady, result),
-    offDomReady: () => ipc.removeAllListeners(browserChannels.onDomReady),
     getUserAgent: (type) => {
       extensionRendererApi.events_ipc.emit("browser_get_user_agent", { type });
       return ipc.invoke(browserChannels.getUserAgent, type);
@@ -2545,7 +2438,9 @@ const rendererIpc = {
       extensionRendererApi.events_ipc.emit("browser_add_offset", { id, offset });
       ipc.send(browserChannels.addOffset, id, offset);
     },
-    clearHistory: (selected) => ipc.send(browserChannels.clearHistory, selected)
+    clearHistory: (selected) => ipc.send(browserChannels.clearHistory, selected),
+    onFailedLoadUrl: (result) => ipc.on(browserChannels.onFailedLoadUrl, result),
+    onClearFailed: (result) => ipc.on(browserChannels.onClearFailed, result)
   },
   statics: {
     pull: () => {
@@ -2586,13 +2481,9 @@ const rendererIpc = {
   },
   downloadManager: {
     onDownloadCount: (result) => ipc.on(browserDownloadChannels.mainDownloadCount, result),
-    offDownloadCount: () => ipc.removeAllListeners(browserDownloadChannels.mainDownloadCount),
     onDlStart: (result) => ipc.on(browserDownloadChannels.onDlStart, result),
-    offDlStart: () => ipc.removeAllListeners(browserDownloadChannels.onDlStart),
     onProgress: (result) => ipc.on(browserDownloadChannels.onProgress, result),
-    offProgress: () => ipc.removeAllListeners(browserDownloadChannels.onProgress),
     onDone: (result) => ipc.on(browserDownloadChannels.onDone, result),
-    offDone: () => ipc.removeAllListeners(browserDownloadChannels.onDone),
     openMenu: () => ipc.send(browserDownloadChannels.openDownloadsMenu),
     openItem: (name, action) => ipc.send(browserDownloadChannels.openItem, name, action),
     cancel: (name) => ipc.send(browserDownloadChannels.cancel, name),
@@ -2603,15 +2494,26 @@ const rendererIpc = {
   customNotification: {
     onOpen: (result) => ipc.on(customNotifChannels.onOpen, result),
     onClose: (result) => ipc.on(customNotifChannels.onClose, result),
-    btnPress: (btnId, notifKey) => ipc.send(customNotifChannels.onBtnPress, btnId, notifKey),
-    offOpen: () => ipc.removeAllListeners(customNotifChannels.onOpen),
-    offClose: () => ipc.removeAllListeners(customNotifChannels.onClose)
+    btnPress: (btnId, notifKey) => ipc.send(customNotifChannels.onBtnPress, btnId, notifKey)
+  },
+  init: {
+    checkGitInstalled: () => ipc.invoke(initChannels.checkGitInstalled),
+    checkPwsh7Installed: () => ipc.invoke(initChannels.checkPwsh7Installed)
+  },
+  patreon: {
+    getInfo: () => ipc.invoke(patreonChannels.getInfo),
+    login: () => ipc.invoke(patreonChannels.login),
+    logout: () => ipc.invoke(patreonChannels.logout),
+    updateChannel: (channel) => ipc.send(patreonChannels.updateChannel, channel),
+    onReleaseChannel: (result) => ipc.on(patreonChannels.onReleaseChannel, result)
   }
 };
 
 const {useSelector: useSelector$2} = await importShared('react-redux');
 const storageData = await rendererIpc.storage.get("app");
-let darkMode = true;
+let darkMode;
+let showWizard;
+let isUpgradeFlow = false;
 if (storageData.darkMode === "dark") {
   darkMode = true;
 } else if (storageData.darkMode === "light") {
@@ -2619,6 +2521,20 @@ if (storageData.darkMode === "dark") {
 } else {
   const systemDark = await rendererIpc.win.getSystemDarkMode();
   darkMode = systemDark === "dark";
+}
+const oldSetupDone = storageData.initialized;
+const newSetupDone = storageData.inited;
+const isWindows = window.osPlatform === "win32";
+if (newSetupDone) {
+  showWizard = false;
+} else {
+  if (oldSetupDone && !isWindows) {
+    rendererIpc.storage.update("app", { inited: true });
+    showWizard = false;
+  } else {
+    isUpgradeFlow = oldSetupDone;
+    showWizard = true;
+  }
 }
 const initialState$2 = {
   darkMode,
@@ -2628,7 +2544,8 @@ const initialState$2 = {
   onFocus: true,
   navBar: true,
   appTitle: void 0,
-  toastPlacement: "top-center"
+  toastPlacement: "top-center",
+  initializer: { showWizard, isUpgradeFlow }
 };
 const appSlice = createSlice({
   name: "app",
@@ -2680,7 +2597,8 @@ const initialState$1 = {
   updatingExtensions: void 0,
   duplicates: duplicated,
   checkUpdateInterval,
-  activeTab: ""
+  activeTab: "",
+  browserDomReadyIds: []
 };
 const cardsSlice = createSlice({
   initialState: initialState$1,
@@ -2733,6 +2651,11 @@ const cardsSlice = createSlice({
     setDuplicates: (state, action) => {
       state.duplicates = action.payload;
     },
+    addDomReady: (state, action) => {
+      if (!state.browserDomReadyIds.includes(action.payload)) {
+        state.browserDomReadyIds = [...state.browserDomReadyIds, action.payload];
+      }
+    },
     addRunningEmpty: (state, action) => {
       const { tabId, type } = action.payload;
       const id = `${tabId}_${type}`;
@@ -2753,7 +2676,7 @@ const cardsSlice = createSlice({
         }
       ];
       if (type !== "terminal") rendererIpc.browser.createBrowser(id);
-      if (type !== "browser") rendererIpc.pty.emptyProcess(id, "start");
+      if (type !== "browser") rendererIpc.pty.emptyProcess(id);
     },
     addRunningCard: (state, action) => {
       const { tabId, id } = action.payload;
@@ -2819,13 +2742,74 @@ const cardsSlice = createSlice({
     },
     stopRunningCard: (state, action) => {
       const id = state.runningCard.find((card) => card.tabId === action.payload.tabId)?.id;
-      if (id) rendererIpc.browser.removeBrowser(id);
+      if (id) {
+        rendererIpc.browser.removeBrowser(id);
+        state.browserDomReadyIds = state.browserDomReadyIds.filter((item) => item !== id);
+      }
       state.runningCard = state.runningCard.filter((card) => card.tabId !== action.payload.tabId);
     }
   }
 });
 const useCardsState = (name) => useSelector$1((state) => state.cards[name]);
 const cardsActions = cardsSlice.actions;
+
+const version = "3.3.0";
+const author = {"name":"KindaBrazy","email":"kindofbrazy@gmail.com"};
+const repository = {"url":"https://github.com/KindaBrazy/LynxHub"};
+const license = "AGPL-3.0";
+const appDetails = {"title":"LynxHub","buildNumber":32,"detailedDescription":"Open-source, cross-platform terminal and browser, designed for managing AI. Highly modular and extensible, it's the all-in-one environment for AI power users."};
+const packageJson = {
+  version,
+  author,
+  repository,
+  license,
+  appDetails};
+
+const {capitalize} = await importShared('lodash');
+const APP_NAME = packageJson.appDetails.title;
+const APP_VERSION = packageJson.version;
+const APP_BUILD_NUMBER = packageJson.appDetails.buildNumber;
+const APP_AUTHOR_NAME = packageJson.author.name;
+const APP_DETAILED_DESCRIPTION = packageJson.appDetails.detailedDescription;
+const EMAIL = packageJson.author.email;
+const ISSUE_PAGE = `${packageJson.repository.url}/issues`;
+const LICENSE_PAGE = `${packageJson.repository.url}/blob/master/LICENSE`;
+const LICENSE_NAME = packageJson.license;
+const APP_VERSION_V = `V${APP_VERSION}`;
+const APP_VERSION_FORMAT = APP_VERSION_V.split("-").map((v) => capitalize(v)).join(" ");
+const APP_ICON_TRANSPARENT = "LynxHub.png";
+const DISCORD_SERVER = "https://discord.gg/e8rBzhtcnK";
+const X_URL = "https://x.com/LynxHubAI";
+const PATREON_URL = "https://www.patreon.com/LynxHub";
+const GITHUB_URL = "https://github.com/KindaBrazy/LynxHub";
+const REDDIT_URL = "https://www.reddit.com/r/LynxHubAI";
+const YOUTUBE_URL = "https://www.youtube.com/@LynxHubAI";
+const PageID = {
+  home: "home_page",
+  imageGen: "imageGen_page",
+  textGen: "textGen_page",
+  audioGen: "audioGen_page",
+  tools: "tools_page",
+  games: "games_page",
+  others: "others_page",
+  agents: "agents_page",
+  dashboard: "dashboard_page",
+  plugins: "plugins_page",
+  settings: "settings_page"
+};
+const PageTitles = {
+  home: "Home",
+  imageGen: "Image Generation",
+  textGen: "Text Generation",
+  audioGen: "Audio Generation",
+  tools: "Tools",
+  games: "Games",
+  others: "Others",
+  agents: "Agents",
+  dashboard: "Dashboard",
+  plugins: "Plugins",
+  settings: "Settings"
+};
 
 function Add_Icon(props) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("g", { fill: "none", children: [
@@ -2924,7 +2908,7 @@ function Download2_Icon(props) {
     )
   ] });
 }
-function Extensions_Icon(props) {
+function Plugins_Icon(props) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "path",
@@ -2972,15 +2956,6 @@ function ExternalLink_Icon(props) {
       }
     )
   ] }) });
-}
-function Fork_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "path",
-    {
-      fill: "currentColor",
-      d: "M5.559 8.855c.166 1.183.789 3.207 3.087 4.079C11 13.829 11 14.534 11 15v.163c-1.44.434-2.5 1.757-2.5 3.337c0 1.93 1.57 3.5 3.5 3.5s3.5-1.57 3.5-3.5c0-1.58-1.06-2.903-2.5-3.337V15c0-.466 0-1.171 2.354-2.065c2.298-.872 2.921-2.896 3.087-4.079C19.912 8.441 21 7.102 21 5.5C21 3.57 19.43 2 17.5 2S14 3.57 14 5.5c0 1.552 1.022 2.855 2.424 3.313c-.146.735-.565 1.791-1.778 2.252c-1.192.452-2.053.953-2.646 1.536c-.593-.583-1.453-1.084-2.646-1.536c-1.213-.461-1.633-1.517-1.778-2.252C8.978 8.355 10 7.052 10 5.5C10 3.57 8.43 2 6.5 2S3 3.57 3 5.5c0 1.602 1.088 2.941 2.559 3.355M17.5 4c.827 0 1.5.673 1.5 1.5S18.327 7 17.5 7S16 6.327 16 5.5S16.673 4 17.5 4m-4 14.5c0 .827-.673 1.5-1.5 1.5s-1.5-.673-1.5-1.5s.673-1.5 1.5-1.5s1.5.673 1.5 1.5M6.5 4C7.327 4 8 4.673 8 5.5S7.327 7 6.5 7S5 6.327 5 5.5S5.673 4 6.5 4"
-    }
-  ) });
 }
 function GitHub_Icon(props) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, height: "1em", viewBox: "0 0 16 16", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -3051,11 +3026,11 @@ function MenuDots_Icon(props) {
   ) });
 }
 function Pin_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
     "path",
     {
       fill: "currentColor",
-      d: "m19.184 7.805l-2.965-2.967c-2.027-2.03-3.04-3.043-4.129-2.803c-1.088.24-1.581 1.587-2.568 4.28l-.668 1.823c-.263.718-.395 1.077-.632 1.355a2.035 2.035 0 0 1-.36.332c-.296.213-.664.314-1.4.517c-1.66.458-2.491.687-2.804 1.23a1.528 1.528 0 0 0-.204.773c.004.627.613 1.236 1.83 2.455L6.7 16.216l-4.476 4.48a.764.764 0 0 0 1.08 1.08l4.475-4.48l1.466 1.468c1.226 1.226 1.839 1.84 2.47 1.84c.265 0 .526-.068.757-.2c.548-.313.778-1.149 1.239-2.822c.202-.735.303-1.102.515-1.399c.093-.129.201-.247.322-.352c.275-.238.632-.372 1.345-.64l1.844-.693c2.664-1 3.996-1.501 4.23-2.586c.235-1.086-.77-2.093-2.783-4.107"
+      d: "m19.184 7.805l-2.965-2.967c-2.027-2.03-3.04-3.043-4.129-2.803s-1.581 1.587-2.568 4.28l-.668 1.823c-.263.718-.395 1.077-.632 1.355a2 2 0 0 1-.36.332c-.296.213-.664.314-1.4.517c-1.66.458-2.491.687-2.804 1.23a1.53 1.53 0 0 0-.204.773c.004.627.613 1.236 1.83 2.455L6.7 16.216l-4.476 4.48a.764.764 0 0 0 1.08 1.08l4.475-4.48l1.466 1.468c1.226 1.226 1.839 1.84 2.47 1.84c.265 0 .526-.068.757-.2c.548-.313.778-1.149 1.239-2.822c.202-.735.303-1.102.515-1.399q.14-.194.322-.352c.275-.238.632-.372 1.345-.64l1.844-.693c2.664-1 3.996-1.501 4.23-2.586c.235-1.086-.77-2.093-2.783-4.107"
     }
   ) });
 }
@@ -3155,15 +3130,6 @@ function SettingsMinimal_Icon(props) {
       clipRule: "evenodd",
       fill: "currentColor",
       d: "M12.428 2c-1.114 0-2.129.6-4.157 1.802l-.686.406C5.555 5.41 4.542 6.011 3.985 7c-.557.99-.557 2.19-.557 4.594v.812c0 2.403 0 3.605.557 4.594c.557.99 1.57 1.59 3.6 2.791l.686.407C10.299 21.399 11.314 22 12.428 22c1.114 0 2.128-.6 4.157-1.802l.686-.407c2.028-1.2 3.043-1.802 3.6-2.791c.557-.99.557-2.19.557-4.594v-.812c0-2.403 0-3.605-.557-4.594c-.557-.99-1.572-1.59-3.6-2.792l-.686-.406C14.555 2.601 13.542 2 12.428 2m-3.75 10a3.75 3.75 0 1 1 7.5 0a3.75 3.75 0 0 1-7.5 0"
-    }
-  ) });
-}
-function Star_Icon$1(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "path",
-    {
-      fill: "currentColor",
-      d: "M9.153 5.408C10.42 3.136 11.053 2 12 2c.947 0 1.58 1.136 2.847 3.408l.328.588c.36.646.54.969.82 1.182c.28.213.63.292 1.33.45l.636.144c2.46.557 3.689.835 3.982 1.776c.292.94-.546 1.921-2.223 3.882l-.434.507c-.476.557-.715.836-.822 1.18c-.107.345-.071.717.001 1.46l.066.677c.253 2.617.38 3.925-.386 4.506c-.766.582-1.918.051-4.22-1.009l-.597-.274c-.654-.302-.981-.452-1.328-.452c-.347 0-.674.15-1.328.452l-.596.274c-2.303 1.06-3.455 1.59-4.22 1.01c-.767-.582-.64-1.89-.387-4.507l.066-.676c.072-.744.108-1.116 0-1.46c-.106-.345-.345-.624-.821-1.18l-.434-.508c-1.677-1.96-2.515-2.941-2.223-3.882c.293-.941 1.523-1.22 3.983-1.776l.636-.144c.699-.158 1.048-.237 1.329-.45c.28-.213.46-.536.82-1.182z"
     }
   ) });
 }
@@ -3357,7 +3323,7 @@ function EditCard_Icon(props) {
     )
   ] });
 }
-function Refresh3_Icon(props) {
+function RefreshDuo_Icon(props) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "path",
@@ -3448,27 +3414,6 @@ function ShieldWarning_Icon(props) {
       {
         fill: "currentColor",
         d: "M12 7.25a.75.75 0 0 1 .75.75v4a.75.75 0 0 1-1.5 0V8a.75.75 0 0 1 .75-.75M12 16a1 1 0 1 0 0-2a1 1 0 0 0 0 2"
-      }
-    )
-  ] });
-}
-function Clock_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, height: "1rem", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        opacity: "0.5",
-        fill: "currentColor",
-        d: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2S2 6.477 2 12s4.477 10 10 10"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        fillRule: "evenodd",
-        clipRule: "evenodd",
-        fill: "currentColor",
-        d: "M12 7.25a.75.75 0 0 1 .75.75v3.69l2.28 2.28a.75.75 0 1 1-1.06 1.06l-2.5-2.5a.75.75 0 0 1-.22-.53V8a.75.75 0 0 1 .75-.75"
       }
     )
   ] });
@@ -3671,19 +3616,147 @@ function MinusSquareDuo_Icon(props) {
     /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M15 12.75a.75.75 0 0 0 0-1.5H9a.75.75 0 0 0 0 1.5z" })
   ] });
 }
+function DownloadDuo_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("g", { fillRule: "evenodd", clipRule: "evenodd", fill: "currentColor", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        d: "M3 14.25a.75.75 0 0 1 .75.75c0 1.435.002 2.436.103 3.192c.099.734.28 1.122.556 1.399c.277.277.665.457 1.4.556c.754.101 1.756.103 3.191.103h6c1.435 0 2.436-.002 3.192-.103c.734-.099 1.122-.28 1.399-.556c.277-.277.457-.665.556-1.4c.101-.755.103-1.756.103-3.191a.75.75 0 0 1 1.5 0v.055c0 1.367 0 2.47-.116 3.337c-.122.9-.38 1.658-.982 2.26s-1.36.86-2.26.982c-.867.116-1.97.116-3.337.116h-6.11c-1.367 0-2.47 0-3.337-.116c-.9-.122-1.658-.38-2.26-.982s-.86-1.36-.981-2.26c-.117-.867-.117-1.97-.117-3.337V15a.75.75 0 0 1 .75-.75"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 16.75a.75.75 0 0 0 .553-.244l4-4.375a.75.75 0 1 0-1.107-1.012l-2.696 2.95V3a.75.75 0 0 0-1.5 0v11.068l-2.696-2.95a.75.75 0 0 0-1.108 1.013l4 4.375a.75.75 0 0 0 .554.244" })
+  ] }) });
+}
+function TrashDuo_Icon$1(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fill: "currentColor",
+        d: "M2.75 6.167c0-.46.345-.834.771-.834h2.665c.529-.015.996-.378 1.176-.916l.03-.095l.115-.372c.07-.228.131-.427.217-.605c.338-.702.964-1.189 1.687-1.314c.184-.031.377-.031.6-.031h3.478c.223 0 .417 0 .6.031c.723.125 1.35.612 1.687 1.314c.086.178.147.377.217.605l.115.372l.03.095c.18.538.74.902 1.27.916h2.57c.427 0 .772.373.772.834S20.405 7 19.979 7H3.52c-.426 0-.771-.373-.771-.833"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "M11.607 22h.787c2.707 0 4.06 0 4.941-.863c.88-.864.97-2.28 1.15-5.111l.26-4.081c.098-1.537.147-2.305-.295-2.792s-1.187-.487-2.679-.487H8.23c-1.491 0-2.237 0-2.679.487s-.392 1.255-.295 2.792l.26 4.08c.18 2.833.27 4.248 1.15 5.112S8.9 22 11.607 22"
+      }
+    )
+  ] });
+}
+function Robot_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "path",
+    {
+      fill: "currentColor",
+      d: "M22.078 8.347a1.4 1.4 0 0 0-.488-.325V4.647a.717.717 0 0 0-.717-.717a.727.727 0 0 0-.717.717V7.85h-.21a5.48 5.48 0 0 0-5.25-3.92H9.427a5.48 5.48 0 0 0-5.25 3.92H3.9V4.647a.717.717 0 1 0-1.434 0v3.385a1.5 1.5 0 0 0-.469.315A1.72 1.72 0 0 0 1.5 9.552v4.896a1.7 1.7 0 0 0 1.702 1.702h.956a5.48 5.48 0 0 0 5.25 3.92h5.183a5.48 5.48 0 0 0 5.25-3.92h.955a1.7 1.7 0 0 0 1.702-1.702V9.552c.02-.44-.131-.872-.42-1.205M3.996 14.716H3.24a.27.27 0 0 1-.191-.077a.3.3 0 0 1-.076-.191V9.552a.26.26 0 0 1 .248-.268h.775a.6.6 0 0 0 0 .125v5.182a.6.6 0 0 0 0 .125m4.303-3.232V8.902a.813.813 0 1 1 1.616 0v2.582a.813.813 0 1 1-1.616 0m5.737 4.78h-3.92a.812.812 0 1 1 0-1.625h3.92a.813.813 0 0 1 0 1.626m1.788-4.78a.813.813 0 1 1-1.626 0V8.902a.813.813 0 0 1 1.626 0zm5.345 2.964c0 .07-.028.14-.076.191a.27.27 0 0 1-.192.077h-.755a.6.6 0 0 0 0-.125v-5.22a.6.6 0 0 0 0-.125h.765a.25.25 0 0 1 .182.077c.048.052.075.12.076.19z"
+    }
+  ) });
+}
+function MagicStickDuo_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "M3.845 3.845a2.883 2.883 0 0 0 0 4.077L5.432 9.51c.012-.014.555.503.568.49l4-4c.013-.013-.504-.556-.49-.568L7.922 3.845a2.883 2.883 0 0 0-4.077 0m1.288 11.462a.483.483 0 0 1 .9 0l.157.4a.48.48 0 0 0 .272.273l.398.157a.486.486 0 0 1 0 .903l-.398.158a.48.48 0 0 0-.272.273l-.157.4a.483.483 0 0 1-.9 0l-.157-.4a.48.48 0 0 0-.272-.273l-.398-.158a.486.486 0 0 1 0-.903l.398-.157a.48.48 0 0 0 .272-.274z"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.2,
+        fill: "currentColor",
+        d: "M19.967 9.13a.483.483 0 0 1 .9 0l.156.399c.05.125.148.224.273.273l.398.158a.486.486 0 0 1 0 .902l-.398.158a.5.5 0 0 0-.273.273l-.156.4a.483.483 0 0 1-.9 0l-.157-.4a.5.5 0 0 0-.272-.273l-.398-.158a.486.486 0 0 1 0-.902l.398-.158a.5.5 0 0 0 .272-.273z"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.7,
+        fill: "currentColor",
+        d: "M16.1 2.307a.483.483 0 0 1 .9 0l.43 1.095a.48.48 0 0 0 .272.274l1.091.432a.486.486 0 0 1 0 .903l-1.09.432a.5.5 0 0 0-.273.273L17 6.81a.483.483 0 0 1-.9 0l-.43-1.095a.5.5 0 0 0-.273-.273l-1.09-.432a.486.486 0 0 1 0-.903l1.09-.432a.5.5 0 0 0 .273-.274z"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fill: "currentColor",
+        d: "M10.568 6.49c-.012.014-.555-.503-.568-.49l-4 4c-.013.013.504.556.49.568l9.588 9.587a2.883 2.883 0 1 0 4.078-4.077z"
+      }
+    )
+  ] });
+}
+function QuestionCircle_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "path",
+    {
+      fillRule: "evenodd",
+      clipRule: "evenodd",
+      fill: "currentColor",
+      d: "M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12S6.477 2 12 2s10 4.477 10 10M12 7.75c-.621 0-1.125.504-1.125 1.125a.75.75 0 0 1-1.5 0a2.625 2.625 0 1 1 4.508 1.829q-.138.142-.264.267a7 7 0 0 0-.571.617c-.22.282-.298.489-.298.662V13a.75.75 0 0 1-1.5 0v-.75c0-.655.305-1.186.614-1.583c.229-.294.516-.58.75-.814q.106-.105.193-.194A1.125 1.125 0 0 0 12 7.75M12 17a1 1 0 1 0 0-2a1 1 0 0 0 0 2"
+    }
+  ) });
+}
+function PinLine_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fill: "currentColor",
+        d: "m15.99 4.95l.53-.53zm3.082 3.086l-.53.53zM8.738 19.429l-.53.53zm-4.116-4.12l.53-.53zm12.945-.315l-.264-.702zm-1.917.72l.264.703zM8.332 8.383l-.704-.258zm.695-1.896l.704.258zm-3.182 4.188l.2.723zm1.457-.539l-.438-.609zm.374-.345l.57.487zm6.575 6.59l.491.568zm-.87 1.821l-.723-.199zm.536-1.454l-.61-.438zM2.719 12.755l-.75.005zm.212-.803l-.65-.374zm8.374 9.391l.001-.75zm.788-.208l-.371-.652zm-.396-19.099l.162.732zM15.46 5.48l3.082 3.086l1.061-1.06L16.52 4.42zM9.269 18.9l-4.117-4.12l-1.06 1.06l4.116 4.12zm8.034-4.607l-1.917.72l.528 1.405l1.917-.72zM9.036 8.64l.695-1.896l-1.408-.516l-.695 1.896zm-2.992 2.756c.712-.196 1.253-.334 1.696-.652l-.876-1.218c-.173.125-.398.198-1.218.424zm1.584-3.272c-.293.8-.385 1.018-.523 1.18l1.142.973c.353-.415.535-.944.79-1.637zm.112 2.62q.281-.203.507-.467l-1.142-.973a1.4 1.4 0 0 1-.241.222zm7.646 4.268c-.689.26-1.214.445-1.626.801l.982 1.135c.16-.14.377-.233 1.172-.531zM14.104 18.4c.225-.819.298-1.043.422-1.216l-1.218-.875c-.318.443-.455.983-.65 1.693zm-.344-2.586q-.256.22-.452.495l1.218.875q.095-.132.216-.236zm-8.608-1.036c-.646-.647-1.084-1.087-1.368-1.444c-.286-.359-.315-.514-.315-.583l-1.5.009c.003.582.292 1.07.641 1.508c.35.44.861.95 1.481 1.57zm.494-4.828c-.845.234-1.542.424-2.063.634c-.52.208-1.012.49-1.302.994l1.3.748c.034-.06.136-.18.56-.35s1.022-.337 1.903-.58zm-2.177 2.8a.84.84 0 0 1 .111-.424l-1.3-.748a2.34 2.34 0 0 0-.311 1.182zm4.739 7.21c.624.624 1.137 1.139 1.579 1.49c.44.352.931.642 1.517.643l.002-1.5c-.069 0-.224-.029-.585-.316c-.36-.286-.802-.727-1.452-1.378zm4.45-1.958c-.245.888-.412 1.49-.583 1.917c-.172.428-.293.53-.353.564l.743 1.303c.51-.29.792-.786 1.002-1.309c.21-.524.402-1.225.637-2.077zm-1.354 4.091c.407 0 .807-.105 1.161-.307l-.743-1.303a.84.84 0 0 1-.416.11zm7.237-13.527c1.064 1.064 1.8 1.803 2.25 2.413c.444.598.495.917.441 1.167l1.466.317c.19-.878-.16-1.647-.701-2.377c-.533-.72-1.366-1.551-2.395-2.58zm-.71 7.13c1.361-.511 2.463-.923 3.246-1.358c.795-.44 1.431-.996 1.621-1.875l-1.466-.317c-.054.25-.232.52-.883.88c-.663.369-1.638.737-3.046 1.266zM16.52 4.42c-1.036-1.037-1.872-1.876-2.595-2.414c-.734-.544-1.508-.897-2.39-.702l.324 1.464c.25-.055.569-.005 1.172.443c.612.455 1.357 1.197 2.428 2.27zM9.731 6.744c.522-1.423.885-2.41 1.25-3.08c.36-.66.628-.84.878-.896l-.323-1.464c-.882.194-1.435.84-1.872 1.642c-.431.792-.837 1.906-1.341 3.282z"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "M1.47 21.47a.75.75 0 0 0 1.06 1.06zm5.714-3.598a.75.75 0 0 0-1.061-1.06zM2.53 22.53l4.653-4.658l-1.061-1.06l-4.654 4.658z"
+      }
+    )
+  ] });
+}
+function PlayDuo_Icon$1(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fillRule: "evenodd",
+        clipRule: "evenodd",
+        fill: "currentColor",
+        d: "M23 12c0-1.035-.53-2.07-1.591-2.647L8.597 2.385C6.534 1.264 4 2.724 4 5.033V12z"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "m8.597 21.615l12.812-6.968A2.99 2.99 0 0 0 23 12H4v6.967c0 2.31 2.534 3.769 4.597 2.648"
+      }
+    )
+  ] });
+}
 
 const {addToast,Button: Button$6} = await importShared('@heroui/react');
 
 const {isEmpty,isNil} = await importShared('lodash');
 
-const {Fragment: Fragment$1,useEffect: useEffect$2,useMemo: useMemo$8,useState: useState$4} = await importShared('react');
+const {Fragment: Fragment$1,useCallback: useCallback$1,useEffect: useEffect$2,useMemo: useMemo$8,useState: useState$4} = await importShared('react');
+
+const {useDispatch: useDispatch$e} = await importShared('react-redux');
 function useInstalledCard(cardId) {
   const installedCards = useCardsState("installedCards");
   return useMemo$8(() => installedCards.find((card) => card.id === cardId), [installedCards, cardId]);
 }
 function useUpdatingCard(cardId) {
   const updatingCards = useCardsState("updatingCards");
-  return useMemo$8(() => updatingCards.find((card) => card.id === cardId), [updatingCards, cardId]);
+  return useMemo$8(() => updatingCards.some((card) => card.id === cardId), [updatingCards, cardId]);
 }
 function useUpdateAvailable(cardId) {
   const updateAvailable = useCardsState("updateAvailable");
@@ -6589,30 +6662,6 @@ function LynxScroll({ children, className, overflow = { x: "hidden", y: "scroll"
   );
 }
 
-const PageID = {
-  home: "home_page",
-  imageGen: "imageGen_page",
-  textGen: "textGen_page",
-  audioGen: "audioGen_page",
-  tools: "tools_page",
-  games: "games_page",
-  dashboard: "dashboard_page",
-  extensions: "extension_page",
-  modules: "modules_page",
-  settings: "settings_page"
-};
-const PageTitles = {
-  home: "Home",
-  imageGen: "Image Generation",
-  textGen: "Text Generation",
-  audioGen: "Audio Generation",
-  tools: "Tools",
-  games: "Games",
-  dashboard: "Dashboard",
-  extensions: "Extensions",
-  modules: "Modules",
-  settings: "Settings"
-};
 const defaultTabItem = {
   id: "tab",
   title: "Home",

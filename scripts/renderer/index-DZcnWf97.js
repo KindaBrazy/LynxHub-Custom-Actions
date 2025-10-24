@@ -1,9 +1,12 @@
-import { m as clamp, n as isEasingArray, N as NativeAnimation, s as supportsLinearEasing, o as supportedWaapiEasing, p as isBezierDefinition, q as memo, r as resolveElements, v as getValueAsType, w as numberValueTypes, x as frame, y as cancelFrame, z as transformPropOrder, t as transformProps, B as isHTMLElement, h as MotionValue, C as isCSSVar, D as px, E as isSVGElement, F as statsBuffer, G as frameData, H as activeAnimations, I as easingDefinitionToFunction, J as collectMotionValues, K as motionValue, O as isMotionValue, P as JSAnimation, Q as getValueTransition$1, R as secondsToMilliseconds, S as applyGeneratorOptions, T as mapEasingToNativeEasing, U as microtask, V as removeItem, W as noop, X as stepsOrder, b as animations, d as createDomVisualElement, Y as progress, Z as velocityPerSecond, _ as interpolate, $ as defaultOffset$1, a0 as supportsScrollTimeline, u as useConstant, a1 as useIsomorphicLayoutEffect, a2 as invariant, M as MotionConfigContext, a3 as hasReducedMotionListener, a4 as initPrefersReducedMotion, a5 as prefersReducedMotion, a6 as animateVisualElement, a7 as setTarget, a8 as mixNumber, a9 as createGeneratorEasing, aa as fillOffset, ab as isGenerator, ac as VisualElement, ad as createBox, ae as isSVGSVGElement, af as SVGVisualElement, ag as HTMLVisualElement, ah as visualElementStore, ai as animateSingleValue, aj as animateTarget, ak as spring, al as fillWildcards, am as PresenceContext, an as addDomEvent, ao as motionComponentSymbol, ap as rootProjectionNode, i as MotionGlobalConfig, aq as useForceUpdate, ar as optimizedAppearDataId, as as startWaapiAnimation, at as getOptimisedAppearId, au as makeUseVisualState, j as jsxRuntimeExports, k as LayoutGroup, av as MotionContext } from './layout-CgtnS14T.js';
-export { A as AnimatePresence, b9 as AsyncMotionValueAnimation, bm as DOMKeyframesResolver, aL as DeprecatedLayoutGroupContext, aK as FlatTree, bn as KeyframeResolver, aI as LayoutGroupContext, bb as NativeAnimationExtended, aW as SubscriptionManager, aJ as SwitchLayoutGroupContext, aw as addPointerEvent, ax as addPointerInfo, aF as addScaleCorrector, aP as addUniqueItem, c4 as alpha, bZ as analyseComplexValue, ba as animateValue, aY as anticipate, aZ as backIn, a_ as backInOut, a$ as backOut, aG as buildTransform, bk as calcGeneratorDuration, ay as calcLength, bu as cancelMicrotask, b0 as circIn, b1 as circInOut, b2 as circOut, bT as color, b_ as complex, bp as convertOffsetToTimes, bt as createRenderBatcher, b3 as cubicBezier, bq as cubicBezierAsString, bi as defaultEasing, bD as defaultTransformValue, c1 as defaultValueTypes, c7 as degrees, aM as delay, b$ as dimensionValueTypes, aN as distance, aO as distance2D, b4 as easeIn, b5 as easeInOut, b6 as easeOut, az as filterProps, c0 as findDimensionValueType, ce as findValueType, bo as flushKeyframeResolvers, cf as frameSteps, bs as generateLinearEasing, cd as getAnimatableNone, c2 as getDefaultValueType, bL as getMixer, bc as getVariableValue, bU as hex, bz as hover, bV as hsla, bW as hslaToRgba, bh as inertia, bQ as invisibleValues, aA as isBrowser, be as isCSSVariableName, bf as isCSSVariableToken, bw as isDragActive, bx as isDragging, bB as isNodeOrChild, aS as isNumericalString, aT as isObject, bC as isPrimaryPointer, aE as isValidMotionProp, aU as isZeroValueString, bj as keyframes, bg as makeAnimationInstant, bl as maxGeneratorDuration, aX as millisecondsToSeconds, b7 as mirrorEasing, bI as mix, bM as mixArray, bJ as mixColor, bN as mixComplex, bP as mixImmediate, bK as mixLinearColor, bO as mixObject, bR as mixVisibility, aQ as moveItem, c5 as number, aH as optimizedAppearDataAttribute, bd as parseCSSVariable, bE as parseValueFromTransform, c8 as percent, aV as pipe, bH as positionalKeys, bA as press, c9 as progressPercentage, bF as readTransformValue, aB as resolveMotionValue, b8 as reverseEasing, bX as rgbUnit, bY as rgba, c6 as scale, by as setDragLock, bG as setStyle, br as supportsBrowserAnimation, bS as supportsFlags, cc as testValueType, bv as time, c3 as transformValueTypes, aC as useIsPresent, aD as usePresence, ca as vh, cb as vw, aR as warning } from './layout-CgtnS14T.js';
-export { L as LazyMotion, M as MotionConfig, W as WillChangeMotionValue, b as acceleratedValues, d as domAnimation, a as domMax, m, u as useWillChange } from './index-BYi2VIyD.js';
-import { t as transform, u as useCombineMotionValues, b as useTransform, c as useMotionValue, R as ReorderGroup, a as ReorderItem } from './Item-Cn0ihBth.js';
-export { m as motion } from './Item-Cn0ihBth.js';
+import { u as useConstant, a as useIsomorphicLayoutEffect, M as MotionConfigContext, P as PresenceContext, m as motionComponentSymbol, b as useForceUpdate, c as makeUseVisualState, j as jsxRuntimeExports, L as LayoutGroup, d as MotionContext } from './create-proxy-BAEgznKV.js';
+export { A as AnimatePresence, D as DeprecatedLayoutGroupContext, n as LayoutGroupContext, e as PopChild, f as PresenceChild, S as SwitchLayoutGroupContext, g as filterProps, l as isValidMotionProp, r as resolveMotionValue, h as useComposedRefs, i as useIsPresent, k as usePresence } from './create-proxy-BAEgznKV.js';
+export { L as LazyMotion, M as MotionConfig, W as WillChangeMotionValue, a as acceleratedValues, m, u as useWillChange } from './index-Bc0G4AFR.js';
+import { i as isSVGElement, t as transform, l as layout, d as drag, u as useCombineMotionValues, b as useTransform, c as useMotionValue, e as isSVGSVGElement, f as animateSingleValue, r as rootProjectionNode, R as ReorderGroup, a as ReorderItem } from './Item-BZ7AGVf_.js';
+export { g as addPointerEvent, h as calcLength, j as delay, k as distance, n as distance2D, m as motion, s as setDragLock } from './Item-BZ7AGVf_.js';
+import { c as clamp, i as isEasingArray, N as NativeAnimation, s as supportsLinearEasing, a as supportedWaapiEasing, b as isBezierDefinition, m as memo, r as resolveElements, g as getValueAsType, n as numberValueTypes, f as frame, d as cancelFrame, t as transformPropOrder, e as transformProps, h as isHTMLElement, j as MotionValue, k as isCSSVar, p as px, l as statsBuffer, o as frameData, q as activeAnimations, u as easingDefinitionToFunction, v as collectMotionValues, w as motionValue, x as isMotionValue, J as JSAnimation, y as getValueTransition$1, z as secondsToMilliseconds, A as applyGeneratorOptions, B as mapEasingToNativeEasing, C as microtask, D as removeItem, E as noop, F as stepsOrder, G as animations, H as createDomVisualElement, I as progress, K as velocityPerSecond, L as interpolate, O as defaultOffset$1, P as supportsScrollTimeline, Q as invariant, R as hasReducedMotionListener, S as initPrefersReducedMotion, T as prefersReducedMotion, U as animateVisualElement, V as setTarget, W as mixNumber, X as createGeneratorEasing, Y as fillOffset, Z as isGenerator, _ as VisualElement, $ as createBox, a0 as SVGVisualElement, a1 as HTMLVisualElement, a2 as visualElementStore, a3 as animateTarget, a4 as spring, a5 as fillWildcards, a6 as addDomEvent, M as MotionGlobalConfig, a7 as optimizedAppearDataId, a8 as startWaapiAnimation, a9 as getOptimisedAppearId } from './gestures-WYWBo3Uv.js';
+export { aB as AsyncMotionValueAnimation, aO as DOMKeyframesResolver, aP as KeyframeResolver, aD as NativeAnimationExtended, am as SubscriptionManager, aa as addPointerInfo, ac as addScaleCorrector, af as addUniqueItem, bv as alpha, bo as analyseComplexValue, aC as animateValue, ao as anticipate, ap as backIn, aq as backInOut, ar as backOut, ad as buildTransform, aM as calcGeneratorDuration, aW as cancelMicrotask, as as circIn, at as circInOut, au as circOut, bi as color, bp as complex, aR as convertOffsetToTimes, aV as createRenderBatcher, av as cubicBezier, aS as cubicBezierAsString, aK as defaultEasing, b2 as defaultTransformValue, bs as defaultValueTypes, by as degrees, bq as dimensionValueTypes, aw as easeIn, ax as easeInOut, ay as easeOut, br as findDimensionValueType, bF as findValueType, aQ as flushKeyframeResolvers, bG as frameSteps, aU as generateLinearEasing, bE as getAnimatableNone, bt as getDefaultValueType, ba as getMixer, aE as getVariableValue, bj as hex, a_ as hover, bk as hsla, bl as hslaToRgba, aJ as inertia, bf as invisibleValues, ab as isBrowser, aG as isCSSVariableName, aH as isCSSVariableToken, aY as isDragActive, aZ as isDragging, b0 as isNodeOrChild, ai as isNumericalString, aj as isObject, b1 as isPrimaryPointer, ak as isZeroValueString, aL as keyframes, aI as makeAnimationInstant, aN as maxGeneratorDuration, an as millisecondsToSeconds, az as mirrorEasing, b7 as mix, bb as mixArray, b8 as mixColor, bc as mixComplex, be as mixImmediate, b9 as mixLinearColor, bd as mixObject, bg as mixVisibility, ag as moveItem, bw as number, ae as optimizedAppearDataAttribute, aF as parseCSSVariable, b3 as parseValueFromTransform, bz as percent, al as pipe, b6 as positionalKeys, a$ as press, bA as progressPercentage, b4 as readTransformValue, aA as reverseEasing, bm as rgbUnit, bn as rgba, bx as scale, b5 as setStyle, aT as supportsBrowserAnimation, bh as supportsFlags, bD as testValueType, aX as time, bu as transformValueTypes, bB as vh, bC as vw, ah as warning } from './gestures-WYWBo3Uv.js';
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
+import { d as domAnimation } from './features-animation-equanif0.js';
 
 function formatErrorMessage(message, errorCode) {
     return errorCode
@@ -91,11 +94,10 @@ class GroupAnimation {
         return this.getAll("startTime");
     }
     get duration() {
-        let max = 0;
-        for (let i = 0; i < this.animations.length; i++) {
-            max = Math.max(max, this.animations[i].duration);
-        }
-        return max;
+        return getMax(this.animations, "duration");
+    }
+    get iterationDuration() {
+        return getMax(this.animations, "iterationDuration");
     }
     runAll(methodName) {
         this.animations.forEach((controls) => controls[methodName]());
@@ -112,6 +114,16 @@ class GroupAnimation {
     complete() {
         this.runAll("complete");
     }
+}
+function getMax(animations, propName) {
+    let max = 0;
+    for (let i = 0; i < animations.length; i++) {
+        const value = animations[i][propName];
+        if (value !== null && value > max) {
+            max = value;
+        }
+    }
+    return max;
 }
 
 class GroupAnimationWithThen extends GroupAnimation {
@@ -818,7 +830,6 @@ function attachSpring(value, source, options) {
         latestValue = v;
         latestSetter = (latest) => set(parseValue(latest, unit));
         frame.postRender(startAnimation);
-        return value.get();
     }, stopAnimation);
     if (isMotionValue(source)) {
         const removeSourceOnChange = source.on("change", (v) => value.set(parseValue(v, unit)));
@@ -1170,6 +1181,15 @@ const {useEffect: useEffect$6} = await importShared('react');
 function useUnmountEffect(callback) {
     return useEffect$6(() => () => callback(), []);
 }
+
+/**
+ * @public
+ */
+const domMax = {
+    ...domAnimation,
+    ...drag,
+    ...layout,
+};
 
 /**
  * @public
@@ -1559,7 +1579,8 @@ function attachToAnimation(animation, options) {
         observe: (valueAnimation) => {
             valueAnimation.pause();
             return observeTimeline((progress) => {
-                valueAnimation.time = valueAnimation.duration * progress;
+                valueAnimation.time =
+                    valueAnimation.iterationDuration * progress;
             }, timeline);
         },
     });
@@ -2326,13 +2347,22 @@ function createScopedAnimate(scope) {
      */
     function scopedAnimate(subjectOrSequence, optionsOrKeyframes, options) {
         let animations = [];
+        let animationOnComplete;
         if (isSequence(subjectOrSequence)) {
             animations = animateSequence(subjectOrSequence, optionsOrKeyframes, scope);
         }
         else {
-            animations = animateSubject(subjectOrSequence, optionsOrKeyframes, options, scope);
+            // Extract top-level onComplete so it doesn't get applied per-value
+            const { onComplete, ...rest } = options || {};
+            if (typeof onComplete === "function") {
+                animationOnComplete = onComplete;
+            }
+            animations = animateSubject(subjectOrSequence, optionsOrKeyframes, rest, scope);
         }
         const animation = new GroupAnimationWithThen(animations);
+        if (animationOnComplete) {
+            animation.finished.then(animationOnComplete);
+        }
         if (scope) {
             scope.animations.push(animation);
             animation.finished.then(() => {
@@ -3192,4 +3222,4 @@ const namespace = /*#__PURE__*/Object.freeze(/*#__PURE__*/Object.defineProperty(
     Item: ReorderItem
 }, Symbol.toStringTag, { value: 'Module' }));
 
-export { AnimateSharedLayout, DragControls, GroupAnimation, GroupAnimationWithThen, JSAnimation, LayoutGroup, MotionConfigContext, MotionContext, MotionGlobalConfig, MotionValue, NativeAnimation, NativeAnimationWrapper, PresenceContext, namespace as Reorder, ViewTransitionBuilder, VisualElement, activeAnimations, addAttrValue, addStyleValue, animate, animateMini, animateView, animateVisualElement, animationControls, animationMapKey, animations, applyGeneratorOptions, applyPxDefaults, attachSpring, attrEffect, cancelFrame, cancelSync, clamp, collectMotionValues, createBox, createGeneratorEasing, createScopedAnimate, defaultOffset$1 as defaultOffset, disableInstantTransitions, domMin, easingDefinitionToFunction, fillOffset, fillWildcards, frame, frameData, getAnimationMap, getComputedStyle$1 as getComputedStyle, getEasingForSegment, getOriginIndex, getValueAsType, getValueTransition$1 as getValueTransition, getViewAnimationLayerInfo, getViewAnimations, hasWarned, inView, interpolate, invariant, isBezierDefinition, isEasingArray, isGenerator, isHTMLElement, isMotionComponent, isMotionValue, isSVGElement, isSVGSVGElement, isWaapiSupportedEasing, makeUseVisualState, mapEasingToNativeEasing, mapValue, memo, microtask, mixNumber, motionValue, noop, numberValueTypes, observeTimeline, progress, propEffect, px, recordStats, removeItem, resize, resolveElements, scroll, scrollInfo, secondsToMilliseconds, spring, springValue, stagger, startOptimizedAppearAnimation, startWaapiAnimation, statsBuffer, steps, styleEffect, supportedWaapiEasing, supportsLinearEasing, supportsPartialKeyframes, supportsScrollTimeline, svgEffect, sync, transform, transformPropOrder, transformProps, transformValue, unwrapMotionComponent, useAnimate, useAnimateMini, useAnimation, useAnimationControls, useAnimationFrame, useCycle, useAnimatedState as useDeprecatedAnimatedState, useInvertedScale as useDeprecatedInvertedScale, useDomEvent, useDragControls, useElementScroll, useForceUpdate, useInView, useInstantLayoutTransition, useInstantTransition, useIsomorphicLayoutEffect, useMotionTemplate, useMotionValue, useMotionValueEvent, usePageInView, usePresenceData, useReducedMotion, useReducedMotionConfig, useResetProjection, useScroll, useSpring, useTime, useTransform, useUnmountEffect, useVelocity, useViewportScroll, velocityPerSecond, visualElementStore, warnOnce, wrap };
+export { AnimateSharedLayout, DragControls, GroupAnimation, GroupAnimationWithThen, JSAnimation, LayoutGroup, MotionConfigContext, MotionContext, MotionGlobalConfig, MotionValue, NativeAnimation, NativeAnimationWrapper, PresenceContext, namespace as Reorder, ViewTransitionBuilder, VisualElement, activeAnimations, addAttrValue, addStyleValue, animate, animateMini, animateView, animateVisualElement, animationControls, animationMapKey, animations, applyGeneratorOptions, applyPxDefaults, attachSpring, attrEffect, cancelFrame, cancelSync, clamp, collectMotionValues, createBox, createGeneratorEasing, createScopedAnimate, defaultOffset$1 as defaultOffset, disableInstantTransitions, domAnimation, domMax, domMin, easingDefinitionToFunction, fillOffset, fillWildcards, frame, frameData, getAnimationMap, getComputedStyle$1 as getComputedStyle, getEasingForSegment, getOriginIndex, getValueAsType, getValueTransition$1 as getValueTransition, getViewAnimationLayerInfo, getViewAnimations, hasWarned, inView, interpolate, invariant, isBezierDefinition, isEasingArray, isGenerator, isHTMLElement, isMotionComponent, isMotionValue, isSVGElement, isSVGSVGElement, isWaapiSupportedEasing, makeUseVisualState, mapEasingToNativeEasing, mapValue, memo, microtask, mixNumber, motionValue, noop, numberValueTypes, observeTimeline, progress, propEffect, px, recordStats, removeItem, resize, resolveElements, scroll, scrollInfo, secondsToMilliseconds, spring, springValue, stagger, startOptimizedAppearAnimation, startWaapiAnimation, statsBuffer, steps, styleEffect, supportedWaapiEasing, supportsLinearEasing, supportsPartialKeyframes, supportsScrollTimeline, svgEffect, sync, transform, transformPropOrder, transformProps, transformValue, unwrapMotionComponent, useAnimate, useAnimateMini, useAnimation, useAnimationControls, useAnimationFrame, useCycle, useAnimatedState as useDeprecatedAnimatedState, useInvertedScale as useDeprecatedInvertedScale, useDomEvent, useDragControls, useElementScroll, useForceUpdate, useInView, useInstantLayoutTransition, useInstantTransition, useIsomorphicLayoutEffect, useMotionTemplate, useMotionValue, useMotionValueEvent, usePageInView, usePresenceData, useReducedMotion, useReducedMotionConfig, useResetProjection, useScroll, useSpring, useTime, useTransform, useUnmountEffect, useVelocity, useViewportScroll, velocityPerSecond, visualElementStore, warnOnce, wrap };

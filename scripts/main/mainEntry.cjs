@@ -1,9 +1,11 @@
-import { ipcMain } from "electron";
-import { spawn } from "node:child_process";
-import fs from "node:fs";
-import { platform } from "node:os";
-import path from "node:path";
-import require$$0 from "child_process";
+"use strict";
+Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
+const electron = require("electron");
+const node_child_process = require("node:child_process");
+const fs = require("node:fs");
+const node_os = require("node:os");
+const path = require("node:path");
+const require$$0 = require("child_process");
 const customActionsChannels = {
   setCards: "customActions_setCards",
   getCards: "customActions_getCards",
@@ -19,7 +21,7 @@ function setCards(storageManager, cards) {
   storageManager.setCustomData(storageKeys.customActions, cards);
 }
 const ptyChannels = {
-  process: "pty-process",
+  stopProcess: "pty-stop-process",
   onData: "pty-on-data",
   onTitle: "pty-on-title",
   onExit: "pty-on-exit-code"
@@ -33,7 +35,7 @@ function requireTreeKill() {
   if (hasRequiredTreeKill) return treeKill$1;
   hasRequiredTreeKill = 1;
   var childProcess = require$$0;
-  var spawn2 = childProcess.spawn;
+  var spawn = childProcess.spawn;
   var exec = childProcess.exec;
   treeKill$1 = function(pid, signal, callback) {
     if (typeof signal === "function" && callback === void 0) {
@@ -58,7 +60,7 @@ function requireTreeKill() {
         break;
       case "darwin":
         buildProcessTree(pid, tree, pidsToProcess, function(parentPid) {
-          return spawn2("pgrep", ["-P", parentPid]);
+          return spawn("pgrep", ["-P", parentPid]);
         }, function() {
           killAll(tree, signal, callback);
         });
@@ -70,7 +72,7 @@ function requireTreeKill() {
       //     break;
       default:
         buildProcessTree(pid, tree, pidsToProcess, function(parentPid) {
-          return spawn2("ps", ["-o", "pid", "--no-headers", "--ppid", parentPid]);
+          return spawn("ps", ["-o", "pid", "--no-headers", "--ppid", parentPid]);
         }, function() {
           killAll(tree, signal, callback);
         });
@@ -165,7 +167,7 @@ class ExeManager {
     if (commandToRun.includes(" ")) {
       commandToRun = `"${commandToRun}"`;
     }
-    this.process = spawn(commandToRun, [], {
+    this.process = node_child_process.spawn(commandToRun, [], {
       env: process.env,
       shell: true,
       cwd: process.cwd()
@@ -233,8 +235,8 @@ Error: Could not start process. ${err.message}\r
    */
   clear() {
     if (this.isRunning && this.process?.stdin) {
-      const command = platform() === "win32" ? "cls" : "clear";
-      const lineEnding = platform() === "win32" ? "\r\n" : "\n";
+      const command = node_os.platform() === "win32" ? "cls" : "clear";
+      const lineEnding = node_os.platform() === "win32" ? "\r\n" : "\n";
       this.write(`${command}${lineEnding}`);
     }
   }
@@ -254,12 +256,12 @@ Error: Could not start process. ${err.message}\r
 let ptyManager = void 0;
 let targetID = void 0;
 function startExecute(appManager) {
-  ipcMain.on(customActionsChannels.startExe, (_, id, exePath) => {
+  electron.ipcMain.on(customActionsChannels.startExe, (_, id, exePath) => {
     targetID = id;
     ptyManager = new ExeManager(id, exePath, appManager);
   });
-  ipcMain.on(ptyChannels.process, (_, id, opt) => {
-    if (ptyManager && targetID && opt === "stop" && id === targetID) {
+  electron.ipcMain.on(ptyChannels.stopProcess, (_, id) => {
+    if (ptyManager && targetID && id === targetID) {
       ptyManager.stop();
       ptyManager = void 0;
       targetID = void 0;
@@ -269,14 +271,12 @@ function startExecute(appManager) {
 async function initialExtension(lynxApi, utils) {
   lynxApi.listenForChannels(() => {
     utils.getStorageManager().then((storageManager) => {
-      ipcMain.handle(customActionsChannels.getCards, () => getCards(storageManager));
-      ipcMain.on(customActionsChannels.setCards, (_, cards) => setCards(storageManager, cards));
+      electron.ipcMain.handle(customActionsChannels.getCards, () => getCards(storageManager));
+      electron.ipcMain.on(customActionsChannels.setCards, (_, cards) => setCards(storageManager, cards));
     });
     utils.getAppManager().then((appManager) => {
       startExecute(appManager);
     });
   });
 }
-export {
-  initialExtension
-};
+exports.initialExtension = initialExtension;
