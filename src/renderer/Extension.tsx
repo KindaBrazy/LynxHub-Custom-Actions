@@ -1,6 +1,6 @@
 import './index.css';
 
-import {ExtensionRendererApi} from '../../../src/cross/plugin/ExtensionTypes_Renderer_Api';
+import {type ExtensionRendererApi} from '../../../src/cross/plugin/ExtensionTypes_Renderer_Api';
 import {
   AllActions,
   AudioActions,

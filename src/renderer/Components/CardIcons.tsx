@@ -662,8 +662,6 @@ export const CardIcons = {
   wrench: Wrench_Icon,
 };
 
-export type CardIconId = keyof typeof CardIcons;
-
 export const CardIconsList = Object.keys(CardIcons);
 
 export function CardIconById(id: string | undefined): (props: SvgProps) => ReactElement {
