@@ -17,8 +17,6 @@ import {
   getContrastingTextColor,
   glowVariants,
   iconVariants,
-  particle1Variants,
-  particle2Variants,
 } from './ActiopnCard_Utils';
 
 type Props = {
@@ -122,7 +120,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
       onClick={onClick}
       initial="initial"
       whileHover="hover"
-      style={{width: '180px', height: '160px'}}
+      style={{width: '150px', height: '105px'}}
       className={`relative group cursor-pointer select-none ${className}`}>
       {/* Glow effect */}
       <motion.div
@@ -134,9 +132,9 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
       {/* Main card */}
       <motion.div
         className={
-          'relative bg-white dark:bg-gray-900 rounded-2xl p-4 border border-foreground-100 transition-colors' +
-          ' duration-300 hover:border-foreground-200 shadow-lg shadow-gray-100 dark:shadow-gray-900/50 w-full' +
-          ' h-full flex flex-col'
+          `relative bg-white dark:bg-gray-900 rounded-2xl ${description ? 'p-2' : 'p-5'} border` +
+          ' border-foreground-100 transition-colors duration-300 hover:border-foreground-200 shadow-lg' +
+          ' shadow-gray-100 dark:shadow-gray-900/50 w-full h-full flex flex-col'
         }
         variants={cardVariants}>
         {/* Animated background gradient */}
@@ -147,22 +145,10 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
         />
 
         {/* Icon container with floating animation */}
-        <div className="relative mb-3 flex justify-center">
-          <motion.div className="mt-1" variants={iconVariants}>
-            <Icon className="size-10" />
+        <div className="relative mb-1 flex justify-center">
+          <motion.div variants={iconVariants}>
+            <Icon className="size-9" />
           </motion.div>
-
-          {/* Floating particles effect */}
-          <motion.div
-            variants={particle1Variants}
-            style={{backgroundColor: accentColor}}
-            className="absolute -top-1 -right-1 w-2 h-2 rounded-full"
-          />
-          <motion.div
-            variants={particle2Variants}
-            style={{backgroundColor: accentColor}}
-            className="absolute -bottom-1 -left-1 w-1.5 h-1.5 rounded-full"
-          />
         </div>
 
         {/* Content */}
@@ -177,9 +163,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
           </motion.h3>
 
           {description && (
-            <p className="text-gray-600 dark:text-gray-300 text-xs mt-1.5 leading-relaxed line-clamp-2">
-              {description}
-            </p>
+            <p className="text-gray-600 dark:text-gray-300 text-xs leading-relaxed line-clamp-1">{description}</p>
           )}
         </div>
 
