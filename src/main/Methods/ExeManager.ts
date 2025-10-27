@@ -3,7 +3,6 @@ import fs from 'node:fs';
 import {platform} from 'node:os';
 import path from 'node:path';
 
-// Replaced 'node-pty' with Node's standard 'child_process' and kept 'tree-kill' for robust process termination.
 import treeKill from 'tree-kill';
 
 import {ptyChannels} from '../../../../src/cross/IpcChannelAndTypes';
@@ -43,7 +42,6 @@ export default class ExeManager {
     }
 
     // Spawn the process using Node's 'child_process' module.
-    // The `shell: true` option makes it behave more like a standard terminal.
     this.process = spawn(commandToRun, [], {
       env: process.env,
       shell: true,
@@ -125,8 +123,6 @@ export default class ExeManager {
       this.isRunning = false;
     }
   }
-
-  // The 'resize' method was PTY-specific and has been removed as it's not applicable to a standard child process.
 
   /**
    * Clears the terminal by sending the appropriate command ('cls' or 'clear') to the process's input.

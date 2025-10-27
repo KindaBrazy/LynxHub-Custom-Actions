@@ -12,7 +12,7 @@ export function useIpc(): typeof RendererIpc {
   const ipc = useMemo(() => extReIpc, []);
 
   if (!ipc) {
-    throw new Error('IPC has not been initialized. Ensure setIpc() is called in the extension entry point.');
+    throw new Error('IPC has not been initialized. Please restart the app.');
   }
 
   return ipc;
