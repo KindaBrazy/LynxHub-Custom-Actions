@@ -1,11 +1,15 @@
 @layer theme, base, antd, components, utilities;
 
 @import 'tailwindcss';
+@plugin '../../../src/renderer/HeroUiConfig.ts';
 
 @source '../renderer/**/*.{js,ts,jsx,tsx}';
-
 /* TODO: remove these on version 3.4.0 release */
 @source '../../../src/renderer/src/App/Components/Reusable/SpotlightCard.tsx';
 @source '../../../src/renderer/src/App/Components/Reusable/ToolsCard.tsx';
 
 @custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-LynxOrange: #ff5f00;
+}
