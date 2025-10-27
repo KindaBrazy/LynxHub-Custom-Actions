@@ -12,12 +12,11 @@ import {
 import {CustomHook} from './Components/CustomHooks';
 import ModalManager from './Components/Modal/ModalManager';
 import ToolsPage from './Components/ToolsPage';
+import {setIpc} from './ObjectsHolder';
 import reducer from './reducer';
 
-export let extRendererIpc;
-
 export function InitialExtensions(lynxAPI: ExtensionRendererApi, _extensionId: string) {
-  extRendererIpc = lynxAPI.rendererIpc;
+  setIpc(lynxAPI.rendererIpc);
 
   lynxAPI.addReducer([{name: 'customActions', reducer}]);
 

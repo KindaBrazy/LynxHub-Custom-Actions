@@ -5,7 +5,7 @@ import {useDispatch} from 'react-redux';
 
 import {Add_Icon, Terminal_Icon} from '../../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {CustomExecuteActions} from '../../../../cross/CrossTypes';
-import {extRendererIpc} from '../../../Extension';
+import {useIpc} from '../../../ObjectsHolder';
 import {reducerActions, useCustomActionsState} from '../../../reducer';
 import {
   BookmarkOpenDuo_Icon,
@@ -23,6 +23,8 @@ export function ExecuteActions() {
   const dispatch = useDispatch();
   const [commandInput, setCommandInput] = useState<string>('');
   const editingCard = useCustomActionsState('editingCard');
+
+  const ipc = useIpc();
 
   const [addingFile, setAddingFile] = useState<boolean>(false);
   const [addingFolder, setAddingFolder] = useState<boolean>(false);
@@ -56,7 +58,7 @@ export function ExecuteActions() {
 
   const handleAddFile = () => {
     setAddingFile(true);
-    extRendererIpc.file.openDlg({properties: ['openFile']}).then(action => {
+    ipc.file.openDlg({properties: ['openFile']}).then(action => {
       if (action) dispatch(reducerActions.addAction({action, type: 'open'}));
       setAddingFile(false);
     });
@@ -64,7 +66,7 @@ export function ExecuteActions() {
 
   const handleAddFolder = () => {
     setAddingFolder(true);
-    extRendererIpc.file.openDlg({properties: ['openDirectory']}).then(action => {
+    ipc.file.openDlg({properties: ['openDirectory']}).then(action => {
       if (action) dispatch(reducerActions.addAction({action, type: 'open'}));
       setAddingFolder(false);
     });

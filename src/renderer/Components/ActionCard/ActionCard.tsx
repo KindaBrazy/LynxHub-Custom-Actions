@@ -8,7 +8,7 @@ import {useTabsState} from '../../../../../src/renderer/src/App/Redux/Reducer/Ta
 import {SvgProps} from '../../../../../src/renderer/src/assets/icons/SvgIconsContainer';
 import {CustomCard} from '../../../cross/CrossTypes';
 import {customActionsChannels} from '../../../cross/CrossUtils';
-import {extRendererIpc} from '../../Extension';
+import {useIpc} from '../../ObjectsHolder';
 import {ArrowLine_Icon} from '../SvgIcons';
 import {
   arrowVariants,
@@ -34,6 +34,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   const activeTab = useTabsState('activeTab');
   const darkMode = useAppState('darkMode');
 
+  const ipc = useIpc();
   const {title, description, accentColor, actions, cardType, urlConfig, iconColor} = useMemo(
     () => ({...card, iconColor: getContrastingTextColor(card.accentColor)}),
     [card],
@@ -41,7 +42,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
 
   const onClick = () => {
     const opens = actions.filter(action => action.type === 'open');
-    opens.forEach(open => extRendererIpc.file.openPath(open.action));
+    opens.forEach(open => ipc.file.openPath(open.action));
 
     const manageUrls = (onDone?: () => void) => {
       if (urlConfig.customUrl) {
@@ -61,11 +62,11 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
     const runCustomCommands = (ptyId: string) => {
       actions.forEach(action => {
         if (action.type === 'command') {
-          extRendererIpc.pty.write(ptyId, `${action.action}${LINE_ENDING}`);
+          ipc.pty.write(ptyId, `${action.action}${LINE_ENDING}`);
         } else if (action.type === 'script') {
           const command =
             window.osPlatform === 'win32' ? `& "${action.action}"${LINE_ENDING}` : `"${action.action}"${LINE_ENDING}`;
-          extRendererIpc.pty.write(ptyId, command);
+          ipc.pty.write(ptyId, command);
         } else {
           return;
         }
