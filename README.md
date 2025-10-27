@@ -28,7 +28,7 @@ websites, and streamline your entire workflow with a single click.
     - Execute shell scripts (`.bat`, `.sh`, `.ps1`) and custom commands.
     - Open any file or folder on your system.
     - Launch a browser view to a specific URL, either immediately or after a configurable timeout.
-- 🗂️ **Smart Categorization**: Organize your cards into categories like Pinned, Recently Used, or context-specific
+- 🗂️ **Smart Categorization**: Add your cards into LynxHub categories like Pinned, Recently Used, or context-specific
   pages (Image, Text, Audio).
 - 🪄 **Intuitive UI**: A seamless and animated management modal for creating, editing, and deleting your custom cards.
 
