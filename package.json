@@ -1,5 +1,11 @@
 {
   "name": "custom_actions",
-  "version": "0.2.0",
+  "version": "0.2.1",
+  "author": {
+    "name": "KindaBrazy",
+    "url": "https://github.com/KindaBrazy"
+  },
+  "homepage": "https://github.com/KindaBrazy/LynxHub-Custom-Actions",
+  "repository": "https://github.com/KindaBrazy/LynxHub-Custom-Actions",
   "type": "module"
 }
