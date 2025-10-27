@@ -1,39 +1,44 @@
 <div align="center">
-  <img src="resources/icon.png" alt="LynxHub Custom Actions Icon" width="128"/>
+  <img src="https://raw.githubusercontent.com/KindaBrazy/LynxHub-Custom-Actions/refs/heads/metadata/icon.png" alt="LynxHub Custom Actions Icon" width="128"/>
 
-# LynxHub Custom Actions
+# [LynxHub](https://github.com/KindaBrazy/LynxHub) Custom Actions
 
 ![Screenshot of Custom Actions](resources/screenshot.png)
 
-Create, customize, and manage custom cards with powerful actions inside LynxHub. This extension enhances your workflow by allowing you to build personalized shortcuts for your most common tasks.
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE.md)
+[![Project Status](https://img.shields.io/badge/status-active-brightgreen.svg)](https://github.com/KindaBrazy/LynxHub-Custom-Actions)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6.svg?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-61DAFB.svg?style=flat&logo=react&logoColor=black)](https://reactjs.org/)
+
+A powerful extension for the [LynxHub](https://github.com/KindaBrazy/LynxHub) application that allows you to create,
+manage, and execute custom action cards. Build your own command center to automate scripts, launch applications, open
+websites, and streamline your entire workflow with a single click.
 
 </div>
 
-## Features
+## ✨ Key Features
 
-- **Create Custom Action Cards**: Design unique cards with custom icons and accent colors to fit your style.
-- **Multiple Card Types**: Configure cards to:
-    - Run executables (`.exe`, `.bat`, etc.).
-    - Open a browser with a specific URL.
-    - Execute commands in a terminal.
-    - Combine terminal and browser actions.
-- **Chain Multiple Actions**: Combine a series of actions in a single card, such as running a script, opening a file, and then launching an application.
-- **Easy Organization**: Organize and categorize your cards for quick access across different sections of LynxHub like Pinned, Recently Used, and generation-specific pages (Image, Text, Audio).
-
-## Customization
-
-- **Personalize Card Appearance**: Choose from a wide variety of icons and a full-spectrum color picker to make each card your own.
-- **URL Configuration**: Define custom URLs to open automatically with options for immediate or delayed launch.
-- **Action Management**: Reorder and manage the execution sequence of your actions with an intuitive drag-and-drop interface.
-- **Flexible Categorization**: Assign cards to multiple categories to fit your workflow perfectly.
+- 🎨 **Visually Rich Cards**: Design beautiful cards with custom titles, descriptions, icons, and accent colors.
+- 🚀 **Powerful Card Types**: Choose from four distinct card types to match your needs: `Executable`, `Terminal`,
+  `Browser`, or a hybrid `Terminal & Browser`.
+- 🔗 **Chainable Actions**: Execute multiple actions in sequence—run a script, open a project folder, and launch a local
+  server, all with a single click.
+- ⚙️ **Advanced Configuration**:
+    - Run any executable file.
+    - Execute shell scripts (`.bat`, `.sh`, `.ps1`) and custom commands.
+    - Open any file or folder on your system.
+    - Launch a browser view to a specific URL, either immediately or after a configurable timeout.
+- 🗂️ **Smart Categorization**: Organize your cards into categories like Pinned, Recently Used, or context-specific
+  pages (Image, Text, Audio).
+- 🪄 **Intuitive UI**: A seamless and animated management modal for creating, editing, and deleting your custom cards.
 
 ## Installation
 
 1. **[Install LynxHub](https://github.com/KindaBrazy/LynxHub):** Ensure that you have LynxHub installed on your system.
-2. **Install Extension:** Install the Custom Actions Extension from the LynxHub extension page.
+2. **Install Extension:** Install the Custom Actions Extension from the LynxHub plugins page.
 
 ___
 
 ## 📄 License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the MIT License. See the [LICENSE.md](LICENSE.md) file for details.
