@@ -1,8 +1,8 @@
 import {ipcMain} from 'electron';
 
 import {
-  ExtensionMainApi,
-  MainExtensionUtils,
+  type ExtensionMainApi,
+  type MainExtensionUtils,
 } from '../../../src/main/Managements/Plugin/Extensions/ExtensionTypes_Main';
 import {CustomCard} from '../cross/CrossTypes';
 import {customActionsChannels} from '../cross/CrossUtils';
