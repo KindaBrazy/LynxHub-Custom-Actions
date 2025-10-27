@@ -2,22 +2,51 @@
   "$schema": "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Statics/refs/heads/schema/plugins/versioning.schema.json",
   "versions": [
     {
+      "version": "0.2.2",
+      "commit": "21bfb11",
+      "engines": {
+        "extensionApi": "^1.0.0"
+      },
+      "stage": "early_access",
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
       "version": "0.2.0",
       "commit": "9e12fda",
       "engines": {
         "extensionApi": "^1.0.0"
       },
       "stage": "early_access",
-      "platforms": ["win32"]
+      "platforms": [
+        "win32"
+      ]
     }
   ],
   "changes": [
+    {
+      "version": "0.2.2",
+      "date": "2025-10-27",
+      "items": [
+        {
+          "📌 Minor Changes": [
+            "Updated the size of action cards and removed the particle effect.",
+            "Updated the Tools page card design to match the new V3.3.0 style.",
+            "Switched to using image URLs instead of bundled icons.",
+            "Reduced the plugin bundle size."
+          ]
+        }
+      ]
+    },
     {
       "version": "0.2.0",
       "date": "2025-10-24",
       "items": [
         {
-          "⚡ Improvements": ["Support LynxHub Version 3.3.0"]
+          "⚡ Improvements": [
+            "Support LynxHub Version 3.3.0"
+          ]
         }
       ]
     }
