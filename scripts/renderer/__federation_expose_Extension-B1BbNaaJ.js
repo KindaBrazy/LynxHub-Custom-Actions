@@ -3747,32 +3747,32 @@ const {addToast,Button: Button$6} = await importShared('@heroui/react');
 
 const {isEmpty,isNil} = await importShared('lodash');
 
-const {Fragment: Fragment$1,useCallback: useCallback$1,useEffect: useEffect$2,useMemo: useMemo$8,useState: useState$4} = await importShared('react');
+const {Fragment: Fragment$1,useCallback: useCallback$1,useEffect: useEffect$2,useMemo: useMemo$9,useState: useState$4} = await importShared('react');
 
 const {useDispatch: useDispatch$e} = await importShared('react-redux');
 function useInstalledCard(cardId) {
   const installedCards = useCardsState("installedCards");
-  return useMemo$8(() => installedCards.find((card) => card.id === cardId), [installedCards, cardId]);
+  return useMemo$9(() => installedCards.find((card) => card.id === cardId), [installedCards, cardId]);
 }
 function useUpdatingCard(cardId) {
   const updatingCards = useCardsState("updatingCards");
-  return useMemo$8(() => updatingCards.some((card) => card.id === cardId), [updatingCards, cardId]);
+  return useMemo$9(() => updatingCards.some((card) => card.id === cardId), [updatingCards, cardId]);
 }
 function useUpdateAvailable(cardId) {
   const updateAvailable = useCardsState("updateAvailable");
-  return useMemo$8(() => updateAvailable.includes(cardId), [updateAvailable, cardId]);
+  return useMemo$9(() => updateAvailable.includes(cardId), [updateAvailable, cardId]);
 }
 function useIsAutoUpdateCard(cardId) {
   const autoUpdate = useCardsState("autoUpdate");
-  return useMemo$8(() => autoUpdate.includes(cardId), [autoUpdate, cardId]);
+  return useMemo$9(() => autoUpdate.includes(cardId), [autoUpdate, cardId]);
 }
 function useIsAutoUpdateExtensions(cardId) {
   const autoUpdate = useCardsState("autoUpdateExtensions");
-  return useMemo$8(() => autoUpdate.includes(cardId), [autoUpdate, cardId]);
+  return useMemo$9(() => autoUpdate.includes(cardId), [autoUpdate, cardId]);
 }
 function useIsPinnedCard(cardId) {
   const pinnedCards = useCardsState("pinnedCards");
-  return useMemo$8(() => pinnedCards.includes(cardId), [pinnedCards, cardId]);
+  return useMemo$9(() => pinnedCards.includes(cardId), [pinnedCards, cardId]);
 }
 function topToast(options) {
   const { title, color = "success", timeout = 2e3, promise, placement } = options;
@@ -6786,6 +6786,18 @@ const customActionsChannels = {
   startExe: "customActions_startExe"
 };
 
+const {useMemo: useMemo$8} = await importShared('react');
+
+let extReIpc = void 0;
+const setIpc = (ipc) => extReIpc = ipc;
+function useIpc() {
+  const ipc = useMemo$8(() => extReIpc, []);
+  if (!ipc) {
+    throw new Error("IPC has not been initialized. Please restart the app.");
+  }
+  return ipc;
+}
+
 function FileCodeDuo_Icon(props) {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, height: "1rem", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -6995,45 +7007,6 @@ const iconVariants = {
   initial: { scale: 1, rotate: 0 },
   hover: { scale: 1.2, rotate: -2, transition: { duration: 0.5, ease: "easeOut" } }
 };
-const particle1Variants = {
-  initial: { opacity: 0, x: 0, y: 0 },
-  hover: {
-    opacity: 0.6,
-    x: 3,
-    y: -3,
-    transition: { duration: 0.7, ease: "easeOut" }
-  }
-};
-const particle2Variants = {
-  initial: { opacity: 0, x: 0, y: 0 },
-  hover: {
-    opacity: 0.4,
-    // Keyframes define a looping path. The first value is the target for the initial move,
-    // and the start/end values are the same for a seamless loop.
-    x: [-4, -5, -3.5, -4],
-    y: [4, 5.5, 3, 4],
-    transition: {
-      // Opacity animates once on hover and then stays.
-      opacity: { duration: 0.5, delay: 0.1, ease: "easeOut" },
-      // X and Y axes loop infinitely with different durations, creating a natural,
-      // de-synchronized floating effect.
-      x: {
-        duration: 3,
-        repeat: Infinity,
-        repeatType: "loop",
-        ease: "easeInOut",
-        delay: 0.1
-      },
-      y: {
-        duration: 2.4,
-        repeat: Infinity,
-        repeatType: "loop",
-        ease: "easeInOut",
-        delay: 0.1
-      }
-    }
-  }
-};
 const arrowVariants = {
   initial: { opacity: 0.6, x: 0 },
   hover: { opacity: 1, x: 3, transition: { duration: 0.3, ease: "easeOut" } }
@@ -7047,13 +7020,14 @@ function ActionCard({ icon: Icon, card, className = "" }) {
   const dispatch = useDispatch$d();
   const activeTab = useTabsState("activeTab");
   const darkMode = useAppState("darkMode");
+  const ipc = useIpc();
   const { title, description, accentColor, actions, cardType, urlConfig, iconColor } = useMemo$7(
     () => ({ ...card, iconColor: getContrastingTextColor(card.accentColor) }),
     [card]
   );
   const onClick = () => {
     const opens = actions.filter((action) => action.type === "open");
-    opens.forEach((open) => extRendererIpc.file.openPath(open.action));
+    opens.forEach((open) => ipc.file.openPath(open.action));
     const manageUrls = (onDone) => {
       if (urlConfig.customUrl) {
         const openUrl = () => {
@@ -7070,10 +7044,10 @@ function ActionCard({ icon: Icon, card, className = "" }) {
     const runCustomCommands = (ptyId) => {
       actions.forEach((action) => {
         if (action.type === "command") {
-          extRendererIpc.pty.write(ptyId, `${action.action}${LINE_ENDING}`);
+          ipc.pty.write(ptyId, `${action.action}${LINE_ENDING}`);
         } else if (action.type === "script") {
           const command = window.osPlatform === "win32" ? `& "${action.action}"${LINE_ENDING}` : `"${action.action}"${LINE_ENDING}`;
-          extRendererIpc.pty.write(ptyId, command);
+          ipc.pty.write(ptyId, command);
         } else {
           return;
         }
@@ -7124,7 +7098,7 @@ function ActionCard({ icon: Icon, card, className = "" }) {
       onClick,
       initial: "initial",
       whileHover: "hover",
-      style: { width: "180px", height: "160px" },
+      style: { width: "150px", height: "105px" },
       className: `relative group cursor-pointer select-none ${className}`,
       children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -7138,7 +7112,7 @@ function ActionCard({ icon: Icon, card, className = "" }) {
         /* @__PURE__ */ jsxRuntimeExports.jsxs(
           motion.div,
           {
-            className: "relative bg-white dark:bg-gray-900 rounded-2xl p-4 border border-foreground-100 transition-colors duration-300 hover:border-foreground-200 shadow-lg shadow-gray-100 dark:shadow-gray-900/50 w-full h-full flex flex-col",
+            className: `relative bg-white dark:bg-gray-900 rounded-2xl ${description ? "p-2" : "p-5"} border border-foreground-100 transition-colors duration-300 hover:border-foreground-200 shadow-lg shadow-gray-100 dark:shadow-gray-900/50 w-full h-full flex flex-col`,
             variants: cardVariants,
             children: [
               /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -7149,25 +7123,7 @@ function ActionCard({ icon: Icon, card, className = "" }) {
                   style: { backgroundColor: accentColor + "0D" }
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mb-3 flex justify-center", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(motion.div, { className: "mt-1", variants: iconVariants, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "size-10" }) }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  motion.div,
-                  {
-                    variants: particle1Variants,
-                    style: { backgroundColor: accentColor },
-                    className: "absolute -top-1 -right-1 w-2 h-2 rounded-full"
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  motion.div,
-                  {
-                    variants: particle2Variants,
-                    style: { backgroundColor: accentColor },
-                    className: "absolute -bottom-1 -left-1 w-1.5 h-1.5 rounded-full"
-                  }
-                )
-              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "relative mb-1 flex justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(motion.div, { variants: iconVariants, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Icon, { className: "size-9" }) }) }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `relative flex-1 text-center ${!description ? "flex flex-col justify-center" : ""}`, children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx(
                   motion.h3,
@@ -7180,7 +7136,7 @@ function ActionCard({ icon: Icon, card, className = "" }) {
                     children: title
                   }
                 ),
-                description && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-600 dark:text-gray-300 text-xs mt-1.5 leading-relaxed line-clamp-2", children: description })
+                description && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-600 dark:text-gray-300 text-xs leading-relaxed line-clamp-1", children: description })
               ] }),
               /* @__PURE__ */ jsxRuntimeExports.jsx(motion.div, { variants: arrowVariants, className: "absolute bottom-3 right-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                 "div",
@@ -8370,10 +8326,11 @@ const {useState: useState$3} = await importShared('react');
 const {useDispatch: useDispatch$8} = await importShared('react-redux');
 function AddExe() {
   const dispatch = useDispatch$8();
+  const ipc = useIpc();
   const [isLoading, setIsLoading] = useState$3(false);
   const handleAdd = () => {
     setIsLoading(true);
-    extRendererIpc.file.openDlg({ properties: ["openFile"] }).then((action) => {
+    ipc.file.openDlg({ properties: ["openFile"] }).then((action) => {
       if (action) dispatch(reducerActions.addAction({ action, type: "exe" }));
       setIsLoading(false);
     });
@@ -8388,10 +8345,11 @@ const {useState: useState$2} = await importShared('react');
 const {useDispatch: useDispatch$7} = await importShared('react-redux');
 function AddScript() {
   const dispatch = useDispatch$7();
+  const ipc = useIpc();
   const [isLoading, setIsLoading] = useState$2(false);
   const handleAdd = () => {
     setIsLoading(true);
-    extRendererIpc.file.openDlg({ properties: ["openFile"] }).then((action) => {
+    ipc.file.openDlg({ properties: ["openFile"] }).then((action) => {
       if (action) dispatch(reducerActions.addAction({ action, type: "script" }));
       setIsLoading(false);
     });
@@ -8407,6 +8365,7 @@ function ExecuteActions() {
   const dispatch = useDispatch$6();
   const [commandInput, setCommandInput] = useState$1("");
   const editingCard = useCustomActionsState("editingCard");
+  const ipc = useIpc();
   const [addingFile, setAddingFile] = useState$1(false);
   const [addingFolder, setAddingFolder] = useState$1(false);
   const actions = useMemo$3(() => editingCard?.actions || [], [editingCard]);
@@ -8434,14 +8393,14 @@ function ExecuteActions() {
   };
   const handleAddFile = () => {
     setAddingFile(true);
-    extRendererIpc.file.openDlg({ properties: ["openFile"] }).then((action) => {
+    ipc.file.openDlg({ properties: ["openFile"] }).then((action) => {
       if (action) dispatch(reducerActions.addAction({ action, type: "open" }));
       setAddingFile(false);
     });
   };
   const handleAddFolder = () => {
     setAddingFolder(true);
-    extRendererIpc.file.openDlg({ properties: ["openDirectory"] }).then((action) => {
+    ipc.file.openDlg({ properties: ["openDirectory"] }).then((action) => {
       if (action) dispatch(reducerActions.addAction({ action, type: "open" }));
       setAddingFolder(false);
     });
@@ -8831,8 +8790,6 @@ function ModalManager() {
   )) });
 }
 
-const icon = ""+new URL('icon-BGymGH3H.png', import.meta.url).href+"";
-
 const {useRef,useState} = await importShared('react');
 
 function SpotlightCard({ children, className = "", spotlightColor = "rgba(255, 255, 255, 0.25)" }) {
@@ -8886,25 +8843,14 @@ function SpotlightCard({ children, className = "", spotlightColor = "rgba(255, 2
   );
 }
 
-const {Card,Image,Tooltip} = await importShared('@heroui/react');
-
-const {useCallback} = await importShared('react');
-
-const {useDispatch} = await importShared('react-redux');
-const title = "Custom Actions";
-const description = "Create, customize and manage custom cards with custom scripts, actions.";
-function ToolsPage() {
+const {Card,User} = await importShared('@heroui/react');
+function ToolsCard({ title, description, icon, onPress, footer }) {
   const isDarkMode = useAppState("darkMode");
-  const activeTab = useTabsState("activeTab");
-  const dispatch = useDispatch();
-  const openModal = useCallback(() => {
-    dispatch(reducerActions.openModal({ tabID: activeTab }));
-  }, [activeTab]);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
     Card,
     {
-      className: "size-[270px] relative group transform border border-foreground/5 transition-all duration-500 hover:-translate-y-[2px] shadow-small hover:shadow-medium bg-white dark:bg-stone-900 pt-3 pb-2 rounded-3xl hover:border-foreground/15",
-      onPress: openModal,
+      className: `w-[300px] ${footer ? "h-[210px]" : "h-[180px]"} relative group transform border border-foreground/5 transition-all duration-500 hover:-translate-y-[2px] shadow-small hover:shadow-medium bg-white dark:bg-stone-900 pt-3 pb-2 rounded-3xl hover:border-foreground/15`,
+      onPress,
       isPressable: true,
       children: [
         /* @__PURE__ */ jsxRuntimeExports.jsxs(SpotlightCard, { className: "size-full", spotlightColor: isDarkMode ? "#353535" : "#dadada", children: [
@@ -8914,12 +8860,17 @@ function ToolsPage() {
               className: "absolute top-0 left-1/2 transform -translate-x-1/2 h-[1px] bg-linear-to-r from-transparent via-LynxOrange to-transparent rounded-t-full opacity-0 group-hover:opacity-100 transition-all duration-700 w-0 group-hover:w-[90%]"
             }
           ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative h-full flex flex-col justify-between p-6", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Image, { src: icon, radius: "none", className: "size-[5.3rem]" }) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center space-y-5", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-2xl font-bold tracking-tight text-center", children: title }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Tooltip, { delay: 700, content: description, className: "max-w-[350px]", showArrow: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground/70 text-sm leading-relaxed line-clamp-2", children: description }) })
-            ] })
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `relative h-full flex flex-col ${footer ? "gap-y-5" : "gap-y-7"} px-5 pt-4`, children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              User,
+              {
+                name: title,
+                className: "scale-120 ml-4 font-semibold",
+                avatarProps: { src: icon, className: "!bg-transparent", radius: "none", showFallback: true, name: title }
+              }
+            ) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-foreground-500 text-sm line-clamp-3 text-start", children: description }),
+            footer
           ] })
         ] }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -8930,12 +8881,26 @@ function ToolsPage() {
         )
       ]
     }
-  ) });
+  );
 }
 
-let extRendererIpc;
+const {useCallback} = await importShared('react');
+
+const {useDispatch} = await importShared('react-redux');
+const title = "Custom Actions";
+const description = "Create, customize and manage custom cards with custom scripts, actions.";
+const icon = "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Custom-Actions/refs/heads/metadata/icon.png";
+function ToolsPage() {
+  const activeTab = useTabsState("activeTab");
+  const dispatch = useDispatch();
+  const openModal = useCallback(() => {
+    dispatch(reducerActions.openModal({ tabID: activeTab }));
+  }, [activeTab]);
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(ToolsCard, { icon, title, onPress: openModal, description });
+}
+
 function InitialExtensions(lynxAPI, _extensionId) {
-  extRendererIpc = lynxAPI.rendererIpc;
+  setIpc(lynxAPI.rendererIpc);
   lynxAPI.addReducer([{ name: "customActions", reducer }]);
   lynxAPI.customizePages.tools.addComponent(ToolsPage);
   lynxAPI.customizePages.home.add.pinCategory(PinnedActions);
@@ -8948,4 +8913,4 @@ function InitialExtensions(lynxAPI, _extensionId) {
   lynxAPI.addModal(ModalManager);
 }
 
-export { InitialExtensions, extRendererIpc };
+export { InitialExtensions };

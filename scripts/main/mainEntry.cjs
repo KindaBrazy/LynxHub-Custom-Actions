@@ -229,7 +229,6 @@ Error: Could not start process. ${err.message}\r
       this.isRunning = false;
     }
   }
-  // The 'resize' method was PTY-specific and has been removed as it's not applicable to a standard child process.
   /**
    * Clears the terminal by sending the appropriate command ('cls' or 'clear') to the process's input.
    */
