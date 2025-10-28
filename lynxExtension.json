@@ -11,6 +11,7 @@
   "tag": "tools",
   "platforms": ["win32"],
   "engines": {"extensionApi": "^1.0.0"},
+  "avatarUrl": "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Custom-Actions/refs/heads/metadata/icon.png",
   "changeLog": [
     {
       "title": "Version 0.1.0 - Initial Release",
@@ -52,5 +53,4 @@
       ]
     }
   ],
-  "avatarUrl": "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Custom-Actions/refs/heads/source/src/renderer/icon.png"
 }
