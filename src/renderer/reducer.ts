@@ -65,6 +65,7 @@ const customActionsSlice = createSlice({
       state.customCards = state.customCards.filter(item => item.id !== state.editingCard?.id);
       state.editingCard = undefined;
       state.view = 'list';
+      state.saveCards = true;
     },
     saveCard: state => {
       const targetCard = state.editingCard!;
