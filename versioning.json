@@ -2,6 +2,17 @@
   "$schema": "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Statics/refs/heads/schema/plugins/versioning.schema.json",
   "versions": [
     {
+      "version": "0.2.3",
+      "commit": "a7ab42e",
+      "engines": {
+        "extensionApi": "^1.0.0"
+      },
+      "stage": "early_access",
+      "platforms": [
+        "win32"
+      ]
+    },
+    {
       "version": "0.2.2",
       "commit": "21bfb11",
       "engines": {
@@ -25,6 +36,17 @@
     }
   ],
   "changes": [
+    {
+      "version": "0.2.3",
+      "date": "2025-10-29",
+      "items": [
+        {
+          "🐛 Bug Fixes": [
+            "Fixed action card deletion, restored after the app restarts."
+          ]
+        }
+      ]
+    },
     {
       "version": "0.2.2",
       "date": "2025-10-27",
