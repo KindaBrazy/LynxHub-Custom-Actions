@@ -27,6 +27,8 @@ type Props = {
 };
 
 const LINE_ENDING = window.osPlatform === 'win32' ? '\r' : '\n';
+const IS_MACOS = window.osPlatform === 'darwin';
+const IS_WINDOWS = window.osPlatform === 'win32';
 
 export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   const dispatch = useDispatch();
@@ -64,8 +66,24 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
         if (action.type === 'command') {
           ipc.pty.write(ptyId, `${action.action}${LINE_ENDING}`);
         } else if (action.type === 'script') {
-          const command =
-            window.osPlatform === 'win32' ? `& "${action.action}"${LINE_ENDING}` : `"${action.action}"${LINE_ENDING}`;
+          let command: string;
+          if (IS_WINDOWS) {
+            // Windows: PowerShell call operator
+            command = `& "${action.action}"${LINE_ENDING}`;
+          } else if (IS_MACOS) {
+            // macOS: Handle .app bundles, .command, and .sh files
+            const scriptPath = action.action;
+            if (scriptPath.endsWith('.app')) {
+              command = `open "${scriptPath}"${LINE_ENDING}`;
+            } else if (scriptPath.endsWith('.command')) {
+              command = `chmod +x "${scriptPath}" && "${scriptPath}"${LINE_ENDING}`;
+            } else {
+              command = `chmod +x "${scriptPath}" && "${scriptPath}"${LINE_ENDING}`;
+            }
+          } else {
+            // Linux: Make executable and run
+            command = `chmod +x "${action.action}" && "${action.action}"${LINE_ENDING}`;
+          }
           ipc.pty.write(ptyId, command);
         } else {
           return;

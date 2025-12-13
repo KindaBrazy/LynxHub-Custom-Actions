@@ -36,15 +36,26 @@ export default class ExeManager {
       return;
     }
 
-    let commandToRun = validatedExe;
-    if (commandToRun.includes(' ')) {
-      commandToRun = `"${commandToRun}"`;
+    const currentPlatform = platform();
+    let commandToRun: string;
+    let spawnArgs: string[] = [];
+
+    if (currentPlatform === 'darwin' && validatedExe.endsWith('.app')) {
+      // macOS: Use 'open' command for .app bundles
+      commandToRun = 'open';
+      spawnArgs = ['-W', validatedExe]; // -W waits for the app to close
+    } else {
+      // Windows, Linux, or non-.app files on macOS
+      commandToRun = validatedExe;
+      if (commandToRun.includes(' ')) {
+        commandToRun = `"${commandToRun}"`;
+      }
     }
 
     // Spawn the process using Node's 'child_process' module.
-    this.process = spawn(commandToRun, [], {
+    this.process = spawn(commandToRun, spawnArgs, {
       env: process.env,
-      shell: true,
+      shell: spawnArgs.length === 0, // Only use shell when not using 'open' command
       cwd: process.cwd(),
     });
 
