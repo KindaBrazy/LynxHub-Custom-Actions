@@ -13,6 +13,7 @@ import {
   FileCodeDuo_Icon,
   FolderDuo_Icon,
   Grip_Icon,
+  PenDuo_Icon,
   PlayDuo_Icon,
   TrashDuo_Icon,
 } from '../../SvgIcons';
@@ -28,6 +29,8 @@ export function ExecuteActions() {
 
   const [addingFile, setAddingFile] = useState<boolean>(false);
   const [addingFolder, setAddingFolder] = useState<boolean>(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editingValue, setEditingValue] = useState<string>('');
 
   const actions = useMemo(() => editingCard?.actions || [], [editingCard]);
   const cardType = useMemo(() => editingCard?.cardType || [], [editingCard]);
@@ -47,6 +50,34 @@ export function ExecuteActions() {
 
   const handleRemoveCommand = (indexToRemove: number) => {
     dispatch(reducerActions.removeAction(indexToRemove));
+  };
+
+  const handleStartEdit = (index: number, currentValue: string) => {
+    setEditingIndex(index);
+    setEditingValue(currentValue);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingIndex !== null && editingValue.trim()) {
+      dispatch(reducerActions.updateAction({index: editingIndex, newAction: editingValue.trim()}));
+    }
+    setEditingIndex(null);
+    setEditingValue('');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditingValue('');
+  };
+
+  const handleEditKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleCancelEdit();
+    }
   };
 
   const onReorder = (items: string[]) => {
@@ -98,13 +129,30 @@ export function ExecuteActions() {
           </>
         );
       case 'command':
-        return (
+        return editingIndex === index ? (
+          <>
+            <span>{index + 1}.</span>
+            <CodeDuo_Icon className="shrink-0" />
+            <Input
+              size="sm"
+              autoFocus
+              value={editingValue}
+              onValueChange={setEditingValue}
+              onKeyDown={handleEditKeyDown}
+              onBlur={handleSaveEdit}
+              classNames={{inputWrapper: 'h-7'}}
+            />
+          </>
+        ) : (
           <>
             <span>{index + 1}.</span>
             <CodeDuo_Icon className="shrink-0" />
             <Code radius="sm" className="w-full truncate">
               {item.action}
             </Code>
+            <Button size="sm" variant="light" onPress={() => handleStartEdit(index, item.action)} isIconOnly>
+              <PenDuo_Icon className="size-4" />
+            </Button>
             <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
               <TrashDuo_Icon className="size-4" />
             </Button>
