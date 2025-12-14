@@ -10,7 +10,7 @@ import {CustomCard} from '../../../cross/CrossTypes';
 import {customActionsChannels} from '../../../cross/CrossUtils';
 import {useIpc} from '../../ObjectsHolder';
 import {reducerActions} from '../../reducer';
-import {backgroundVariants, cardVariants, glowVariants, iconVariants} from './ActiopnCard_Utils';
+import {backgroundVariants, cardVariants, glowVariants, iconVariants} from './ActionCard_Utils';
 
 type Props = {
   icon: (props: SvgProps) => ReactElement;
