@@ -54,30 +54,57 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
       }
     };
 
+    const getScriptCommand = (scriptPath: string): string => {
+      const ext = scriptPath.substring(scriptPath.lastIndexOf('.')).toLowerCase();
+
+      if (IS_WINDOWS) {
+        // Windows: Use appropriate interpreter based on extension
+        switch (ext) {
+          case '.py':
+            return `python "${scriptPath}"${LINE_ENDING}`;
+          case '.js':
+            return `node "${scriptPath}"${LINE_ENDING}`;
+          default:
+            return `& "${scriptPath}"${LINE_ENDING}`;
+        }
+      } else if (IS_MACOS) {
+        // macOS: Handle .app bundles and scripts
+        if (scriptPath.endsWith('.app')) {
+          return `open -W "${scriptPath}"${LINE_ENDING}`;
+        } else if (ext === '.command') {
+          return `chmod +x "${scriptPath}" && open "${scriptPath}"${LINE_ENDING}`;
+        } else if (ext === '.py') {
+          return `python3 "${scriptPath}"${LINE_ENDING}`;
+        } else if (ext === '.js') {
+          return `node "${scriptPath}"${LINE_ENDING}`;
+        } else {
+          // For .sh and other scripts, use bash as fallback interpreter
+          return `chmod +x "${scriptPath}" && bash "${scriptPath}"${LINE_ENDING}`;
+        }
+      } else {
+        // Linux: Detect interpreter based on extension or use bash as fallback
+        switch (ext) {
+          case '.py':
+            return `python3 "${scriptPath}"${LINE_ENDING}`;
+          case '.js':
+            return `node "${scriptPath}"${LINE_ENDING}`;
+          case '.rb':
+            return `ruby "${scriptPath}"${LINE_ENDING}`;
+          case '.pl':
+            return `perl "${scriptPath}"${LINE_ENDING}`;
+          default:
+            // Use bash as fallback for .sh and unknown scripts
+            return `chmod +x "${scriptPath}" && bash "${scriptPath}"${LINE_ENDING}`;
+        }
+      }
+    };
+
     const runCustomCommands = (ptyId: string) => {
       actions.forEach(action => {
         if (action.type === 'command') {
           ipc.pty.write(ptyId, `${action.action}${LINE_ENDING}`);
         } else if (action.type === 'script') {
-          let command: string;
-          if (IS_WINDOWS) {
-            // Windows: PowerShell call operator
-            command = `& "${action.action}"${LINE_ENDING}`;
-          } else if (IS_MACOS) {
-            // macOS: Handle .app bundles, .command, and .sh files
-            const scriptPath = action.action;
-            if (scriptPath.endsWith('.app')) {
-              command = `open "${scriptPath}"${LINE_ENDING}`;
-            } else if (scriptPath.endsWith('.command')) {
-              command = `chmod +x "${scriptPath}" && "${scriptPath}"${LINE_ENDING}`;
-            } else {
-              command = `chmod +x "${scriptPath}" && "${scriptPath}"${LINE_ENDING}`;
-            }
-          } else {
-            // Linux: Make executable and run
-            command = `chmod +x "${action.action}" && "${action.action}"${LINE_ENDING}`;
-          }
-          ipc.pty.write(ptyId, command);
+          ipc.pty.write(ptyId, getScriptCommand(action.action));
         }
       });
     };
