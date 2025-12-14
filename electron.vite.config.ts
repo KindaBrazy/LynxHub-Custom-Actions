@@ -1,16 +1,14 @@
 import federation from '@originjs/vite-plugin-federation';
 import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react-swc';
-import {defineConfig, externalizeDepsPlugin} from 'electron-vite';
+import react from '@vitejs/plugin-react';
+import {defineConfig} from 'electron-vite';
 import {resolve} from 'path';
-
-// import packageJson from './package.json';
 
 export default defineConfig({
   main: {
     root: resolve('extension/src/main'),
-    plugins: [externalizeDepsPlugin({exclude: ['tree-kill']})],
     build: {
+      externalizeDeps: {exclude: ['tree-kill']},
       outDir: resolve('extension_out/main'),
       rollupOptions: {
         input: resolve('extension/src/main/lynxExtension.ts'),
@@ -43,7 +41,6 @@ export default defineConfig({
       outDir: resolve('extension_out/renderer'),
       rollupOptions: {
         input: resolve('extension/src/renderer/index.html'),
-        // external: Object.keys(packageJson.devDependencies),
         treeshake: {moduleSideEffects: false},
       },
       assetsDir: '',
