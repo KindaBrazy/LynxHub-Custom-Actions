@@ -16,7 +16,14 @@ export function AddScript() {
   const handleAdd = () => {
     setIsLoading(true);
     ipc.file.openDlg({properties: ['openFile']}).then(action => {
-      if (action) dispatch(reducerActions.addAction({action, type: 'script'}));
+      if (action) {
+        const lastSeparator = Math.max(action.lastIndexOf('/'), action.lastIndexOf('\\'));
+        if (lastSeparator > 0) {
+          const directory = action.substring(0, lastSeparator);
+          dispatch(reducerActions.addAction({action: `cd "${directory}"`, type: 'command'}));
+        }
+        dispatch(reducerActions.addAction({action, type: 'script'}));
+      }
       setIsLoading(false);
     });
   };
