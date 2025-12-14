@@ -2,6 +2,19 @@
   "$schema": "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Statics/refs/heads/schema/plugins/versioning.schema.json",
   "versions": [
     {
+      "version": "0.3.0",
+      "commit": "5f0ba6b",
+      "engines": {
+        "extensionApi": "^1.0.0"
+      },
+      "stage": "early_access",
+      "platforms": [
+        "win32",
+        "linux",
+        "darwin"
+      ]
+    },
+    {
       "version": "0.2.3",
       "commit": "a7ab42e",
       "engines": {
@@ -36,6 +49,34 @@
     }
   ],
   "changes": [
+    {
+      "version": "0.3.0",
+      "date": "2025-12-14",
+      "items": [
+        {
+          "✨ New": [
+            "Added macOS support.",
+            "Added Linux support.",
+            "Added URL detection by scanning terminal output for specific lines.",
+            "Added ability to edit existing commands in the actions list.",
+            "Added 'CD to Folder' action for quick directory navigation."
+          ]
+        },
+        {
+          "⚡ Improvements": [
+            "Improved overall styling and layout.",
+            "Auto-extract directory path when adding scripts.",
+            "Improved script execution with proper interpreter detection for various file types (.py, .sh, .js, etc.)."
+          ]
+        },
+        {
+          "🐛 Bug Fixes": [
+            "Fixed command list getting corrupted after adding long commands.",
+            "Fixed issue where only one executable could run at a time."
+          ]
+        }
+      ]
+    },
     {
       "version": "0.2.3",
       "date": "2025-10-29",
