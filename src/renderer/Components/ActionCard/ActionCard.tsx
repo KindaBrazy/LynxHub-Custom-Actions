@@ -1,5 +1,5 @@
 import {motion} from 'framer-motion';
-import {ReactElement, useMemo} from 'react';
+import {ReactElement} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {useAppState} from '../../../../../src/renderer/src/App/Redux/Reducer/AppReducer';
@@ -30,7 +30,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   const darkMode = useAppState('darkMode');
 
   const ipc = useIpc();
-  const {title, description, accentColor, actions, cardType, urlConfig} = useMemo(() => card, [card]);
+  const {title, description, accentColor, actions, cardType, urlConfig} = card;
 
   const onClick = () => {
     const opens = actions.filter(action => action.type === 'open');
