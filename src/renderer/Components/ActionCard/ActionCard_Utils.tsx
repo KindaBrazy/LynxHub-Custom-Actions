@@ -30,13 +30,3 @@ export const iconVariants: Variants = {
   initial: {scale: 1, rotate: 0},
   hover: {scale: 1.2, rotate: -2, transition: {duration: 0.5, ease: 'easeOut'}},
 };
-
-export const particle1Variants: Variants = {
-  initial: {opacity: 0, x: 0, y: 0},
-  hover: {
-    opacity: 0.6,
-    x: 3,
-    y: -3,
-    transition: {duration: 0.7, ease: 'easeOut'},
-  },
-};
