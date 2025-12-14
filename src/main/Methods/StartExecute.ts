@@ -5,20 +5,24 @@ import ElectronAppManager from '../../../../src/main/Managements/ElectronAppMana
 import {customActionsChannels} from '../../cross/CrossUtils';
 import ExeManager from './ExeManager';
 
-let ptyManager: ExeManager | undefined = undefined;
-let targetID: string | undefined = undefined;
+const processMap = new Map<string, ExeManager>();
 
 export default function startExecute(appManager: ElectronAppManager) {
   ipcMain.on(customActionsChannels.startExe, (_, id: string, exePath: string) => {
-    targetID = id;
-    ptyManager = new ExeManager(id, exePath, appManager);
+    // Stop existing process with same ID if any
+    if (processMap.has(id)) {
+      processMap.get(id)?.stop();
+      processMap.delete(id);
+    }
+    const manager = new ExeManager(id, exePath, appManager);
+    processMap.set(id, manager);
   });
 
   ipcMain.on(ptyChannels.stopProcess, (_, id: string) => {
-    if (ptyManager && targetID && id === targetID) {
-      ptyManager.stop();
-      ptyManager = undefined;
-      targetID = undefined;
+    const manager = processMap.get(id);
+    if (manager) {
+      manager.stop();
+      processMap.delete(id);
     }
   });
 }
