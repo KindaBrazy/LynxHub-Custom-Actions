@@ -10,15 +10,7 @@ import {CustomCard} from '../../../cross/CrossTypes';
 import {customActionsChannels} from '../../../cross/CrossUtils';
 import {useIpc} from '../../ObjectsHolder';
 import {reducerActions} from '../../reducer';
-import {ArrowLine_Icon} from '../SvgIcons';
-import {
-  arrowVariants,
-  backgroundVariants,
-  cardVariants,
-  getContrastingTextColor,
-  glowVariants,
-  iconVariants,
-} from './ActiopnCard_Utils';
+import {backgroundVariants, cardVariants, glowVariants, iconVariants} from './ActiopnCard_Utils';
 
 type Props = {
   icon: (props: SvgProps) => ReactElement;
@@ -38,10 +30,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   const darkMode = useAppState('darkMode');
 
   const ipc = useIpc();
-  const {title, description, accentColor, actions, cardType, urlConfig, iconColor} = useMemo(
-    () => ({...card, iconColor: getContrastingTextColor(card.accentColor)}),
-    [card],
-  );
+  const {title, description, accentColor, actions, cardType, urlConfig} = useMemo(() => card, [card]);
 
   const onClick = () => {
     const opens = actions.filter(action => action.type === 'open');
@@ -184,15 +173,6 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
             <p className="text-gray-600 dark:text-gray-300 text-xs leading-relaxed line-clamp-1">{description}</p>
           )}
         </div>
-
-        {/* Animated arrow */}
-        <motion.div variants={arrowVariants} className="absolute bottom-3 right-3">
-          <div
-            style={{backgroundColor: accentColor}}
-            className="size-6 rounded-full flex items-center justify-center shadow-sm">
-            <ArrowLine_Icon style={{color: iconColor}} />
-          </div>
-        </motion.div>
 
         {/* Ripple effect on tap */}
         <motion.div
