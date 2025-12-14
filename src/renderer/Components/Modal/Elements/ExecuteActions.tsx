@@ -29,6 +29,7 @@ export function ExecuteActions() {
 
   const [addingFile, setAddingFile] = useState<boolean>(false);
   const [addingFolder, setAddingFolder] = useState<boolean>(false);
+  const [addingCdFolder, setAddingCdFolder] = useState<boolean>(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editingValue, setEditingValue] = useState<string>('');
 
@@ -100,6 +101,14 @@ export function ExecuteActions() {
     ipc.file.openDlg({properties: ['openDirectory']}).then(action => {
       if (action) dispatch(reducerActions.addAction({action, type: 'open'}));
       setAddingFolder(false);
+    });
+  };
+
+  const handleAddCdFolder = () => {
+    setAddingCdFolder(true);
+    ipc.file.openDlg({properties: ['openDirectory']}).then(action => {
+      if (action) dispatch(reducerActions.addAction({action: `cd "${action}"`, type: 'command'}));
+      setAddingCdFolder(false);
     });
   };
 
@@ -176,6 +185,14 @@ export function ExecuteActions() {
           <Button isLoading={addingFolder} onPress={handleAddFolder} startContent={!addingFolder && <FolderDuo_Icon />}>
             Add Folder
           </Button>
+          {(cardType === 'terminal_browser' || cardType === 'terminal') && (
+            <Button
+              isLoading={addingCdFolder}
+              onPress={handleAddCdFolder}
+              startContent={!addingCdFolder && <FolderDuo_Icon />}>
+              CD Folder
+            </Button>
+          )}
         </ButtonGroup>
       </div>
       <div>
