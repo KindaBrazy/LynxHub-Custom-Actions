@@ -3649,7 +3649,91 @@ function isVariantNode(props) {
     return Boolean(isControllingVariants(props) || props.variants);
 }
 
-const scaleCorrectors = {};
+function pixelsToPercent(pixels, axis) {
+    if (axis.max === axis.min)
+        return 0;
+    return (pixels / (axis.max - axis.min)) * 100;
+}
+/**
+ * We always correct borderRadius as a percentage rather than pixels to reduce paints.
+ * For example, if you are projecting a box that is 100px wide with a 10px borderRadius
+ * into a box that is 200px wide with a 20px borderRadius, that is actually a 10%
+ * borderRadius in both states. If we animate between the two in pixels that will trigger
+ * a paint each time. If we animate between the two in percentage we'll avoid a paint.
+ */
+const correctBorderRadius = {
+    correct: (latest, node) => {
+        if (!node.target)
+            return latest;
+        /**
+         * If latest is a string, if it's a percentage we can return immediately as it's
+         * going to be stretched appropriately. Otherwise, if it's a pixel, convert it to a number.
+         */
+        if (typeof latest === "string") {
+            if (px.test(latest)) {
+                latest = parseFloat(latest);
+            }
+            else {
+                return latest;
+            }
+        }
+        /**
+         * If latest is a number, it's a pixel value. We use the current viewportBox to calculate that
+         * pixel value as a percentage of each axis
+         */
+        const x = pixelsToPercent(latest, node.target.x);
+        const y = pixelsToPercent(latest, node.target.y);
+        return `${x}% ${y}%`;
+    },
+};
+
+const correctBoxShadow = {
+    correct: (latest, { treeScale, projectionDelta }) => {
+        const original = latest;
+        const shadow = complex.parse(latest);
+        // TODO: Doesn't support multiple shadows
+        if (shadow.length > 5)
+            return original;
+        const template = complex.createTransformer(latest);
+        const offset = typeof shadow[0] !== "number" ? 1 : 0;
+        // Calculate the overall context scale
+        const xScale = projectionDelta.x.scale * treeScale.x;
+        const yScale = projectionDelta.y.scale * treeScale.y;
+        shadow[0 + offset] /= xScale;
+        shadow[1 + offset] /= yScale;
+        /**
+         * Ideally we'd correct x and y scales individually, but because blur and
+         * spread apply to both we have to take a scale average and apply that instead.
+         * We could potentially improve the outcome of this by incorporating the ratio between
+         * the two scales.
+         */
+        const averageScale = mixNumber$1(xScale, yScale, 0.5);
+        // Blur
+        if (typeof shadow[2 + offset] === "number")
+            shadow[2 + offset] /= averageScale;
+        // Spread
+        if (typeof shadow[3 + offset] === "number")
+            shadow[3 + offset] /= averageScale;
+        return template(shadow);
+    },
+};
+
+const scaleCorrectors = {
+    borderRadius: {
+        ...correctBorderRadius,
+        applyTo: [
+            "borderTopLeftRadius",
+            "borderTopRightRadius",
+            "borderBottomLeftRadius",
+            "borderBottomRightRadius",
+        ],
+    },
+    borderTopLeftRadius: correctBorderRadius,
+    borderTopRightRadius: correctBorderRadius,
+    borderBottomLeftRadius: correctBorderRadius,
+    borderBottomRightRadius: correctBorderRadius,
+    boxShadow: correctBoxShadow,
+};
 function addScaleCorrector(correctors) {
     for (const key in correctors) {
         scaleCorrectors[key] = correctors[key];

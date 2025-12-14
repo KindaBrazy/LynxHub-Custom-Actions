@@ -163,13 +163,22 @@ class ExeManager {
       this.isRunning = false;
       return;
     }
-    let commandToRun = validatedExe;
-    if (commandToRun.includes(" ")) {
-      commandToRun = `"${commandToRun}"`;
+    const currentPlatform = node_os.platform();
+    let commandToRun;
+    let spawnArgs = [];
+    if (currentPlatform === "darwin" && validatedExe.endsWith(".app")) {
+      commandToRun = "open";
+      spawnArgs = ["-W", validatedExe];
+    } else {
+      commandToRun = validatedExe;
+      if (commandToRun.includes(" ")) {
+        commandToRun = `"${commandToRun}"`;
+      }
     }
-    this.process = node_child_process.spawn(commandToRun, [], {
+    this.process = node_child_process.spawn(commandToRun, spawnArgs, {
       env: process.env,
-      shell: true,
+      shell: spawnArgs.length === 0,
+      // Only use shell when not using 'open' command
       cwd: process.cwd()
     });
     this.isRunning = true;
@@ -252,18 +261,21 @@ Error: Could not start process. ${err.message}\r
     }
   }
 }
-let ptyManager = void 0;
-let targetID = void 0;
+const processMap = /* @__PURE__ */ new Map();
 function startExecute(appManager) {
   electron.ipcMain.on(customActionsChannels.startExe, (_, id, exePath) => {
-    targetID = id;
-    ptyManager = new ExeManager(id, exePath, appManager);
+    if (processMap.has(id)) {
+      processMap.get(id)?.stop();
+      processMap.delete(id);
+    }
+    const manager = new ExeManager(id, exePath, appManager);
+    processMap.set(id, manager);
   });
   electron.ipcMain.on(ptyChannels.stopProcess, (_, id) => {
-    if (ptyManager && targetID && id === targetID) {
-      ptyManager.stop();
-      ptyManager = void 0;
-      targetID = void 0;
+    const manager = processMap.get(id);
+    if (manager) {
+      manager.stop();
+      processMap.delete(id);
     }
   });
 }

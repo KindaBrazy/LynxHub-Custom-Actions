@@ -1,5 +1,5 @@
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
-import { ab as isBrowser, h as isHTMLElement, f as frame, bZ as featureDefinitions, b_ as isControllingVariants, b$ as isVariantLabel, x as isMotionValue, c0 as isForcedMotionValue, c1 as buildHTMLStyles, c2 as buildSVGAttrs, c3 as isSVGTag, c4 as isSVGComponent, c5 as isVariantNode, c6 as isAnimationControls, c7 as resolveVariantFromProps, c8 as scrapeMotionValuesFromProps, c9 as scrapeMotionValuesFromProps$1, ae as optimizedAppearDataAttribute } from './gestures-WYWBo3Uv.js';
+import { ab as isBrowser, h as isHTMLElement, f as frame, bZ as featureDefinitions, b_ as isControllingVariants, b$ as isVariantLabel, x as isMotionValue, c0 as isForcedMotionValue, c1 as buildHTMLStyles, c2 as buildSVGAttrs, c3 as isSVGTag, c4 as isSVGComponent, c5 as isVariantNode, c6 as isAnimationControls, c7 as resolveVariantFromProps, c8 as scrapeMotionValuesFromProps, c9 as scrapeMotionValuesFromProps$1, ae as optimizedAppearDataAttribute } from './gestures-BBGq__hy.js';
 
 var jsxRuntime = {exports: {}};
 

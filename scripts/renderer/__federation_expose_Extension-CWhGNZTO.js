@@ -1,7 +1,7 @@
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
-import { j as jsxRuntimeExports, A as AnimatePresence, L as LayoutGroup } from './create-proxy-BAEgznKV.js';
+import { j as jsxRuntimeExports, A as AnimatePresence, L as LayoutGroup } from './create-proxy-lkpfAnnn.js';
 import { c as commonjsGlobal, g as getDefaultExportFromCjs } from './_commonjsHelpers-BFTU3MAI.js';
-import { m as motion, R as ReorderGroup, a as ReorderItem } from './Item-BZ7AGVf_.js';
+import { m as motion, R as ReorderGroup, a as ReorderItem } from './Item-CXottyGG.js';
 
 function isPlainObject$2(obj) {
   if (typeof obj !== "object" || obj === null)
@@ -24,31 +24,44 @@ function die(error, ...args) {
     `[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`
   );
 }
-var getPrototypeOf = Object.getPrototypeOf;
-function isDraft(value) {
-  return !!value && !!value[DRAFT_STATE];
-}
+var O$2 = Object;
+var getPrototypeOf = O$2.getPrototypeOf;
+var CONSTRUCTOR = "constructor";
+var PROTOTYPE = "prototype";
+var CONFIGURABLE = "configurable";
+var ENUMERABLE = "enumerable";
+var WRITABLE = "writable";
+var VALUE = "value";
+var isDraft = (value) => !!value && !!value[DRAFT_STATE];
 function isDraftable(value) {
   if (!value)
     return false;
-  return isPlainObject$1(value) || Array.isArray(value) || !!value[DRAFTABLE] || !!value.constructor?.[DRAFTABLE] || isMap(value) || isSet(value);
+  return isPlainObject$1(value) || isArray$1(value) || !!value[DRAFTABLE] || !!value[CONSTRUCTOR]?.[DRAFTABLE] || isMap(value) || isSet(value);
 }
-var objectCtorString = Object.prototype.constructor.toString();
+var objectCtorString = O$2[PROTOTYPE][CONSTRUCTOR].toString();
+var cachedCtorStrings = /* @__PURE__ */ new WeakMap();
 function isPlainObject$1(value) {
-  if (!value || typeof value !== "object")
+  if (!value || !isObjectish(value))
     return false;
   const proto = getPrototypeOf(value);
-  if (proto === null) {
+  if (proto === null || proto === O$2[PROTOTYPE])
     return true;
-  }
-  const Ctor = Object.hasOwnProperty.call(proto, "constructor") && proto.constructor;
+  const Ctor = O$2.hasOwnProperty.call(proto, CONSTRUCTOR) && proto[CONSTRUCTOR];
   if (Ctor === Object)
     return true;
-  return typeof Ctor == "function" && Function.toString.call(Ctor) === objectCtorString;
+  if (!isFunction$1(Ctor))
+    return false;
+  let ctorString = cachedCtorStrings.get(Ctor);
+  if (ctorString === void 0) {
+    ctorString = Function.toString.call(Ctor);
+    cachedCtorStrings.set(Ctor, ctorString);
+  }
+  return ctorString === objectCtorString;
 }
-function each$1(obj, iter) {
+function each$1(obj, iter, strict = true) {
   if (getArchtype(obj) === 0) {
-    Reflect.ownKeys(obj).forEach((key) => {
+    const keys = strict ? Reflect.ownKeys(obj) : O$2.keys(obj);
+    keys.forEach((key) => {
       iter(key, obj[key], obj);
     });
   } else {
@@ -57,20 +70,21 @@ function each$1(obj, iter) {
 }
 function getArchtype(thing) {
   const state = thing[DRAFT_STATE];
-  return state ? state.type_ : Array.isArray(thing) ? 1 : isMap(thing) ? 2 : isSet(thing) ? 3 : 0;
+  return state ? state.type_ : isArray$1(thing) ? 1 : isMap(thing) ? 2 : isSet(thing) ? 3 : 0;
 }
-function has(thing, prop) {
-  return getArchtype(thing) === 2 ? thing.has(prop) : Object.prototype.hasOwnProperty.call(thing, prop);
-}
-function set(thing, propOrOldValue, value) {
-  const t = getArchtype(thing);
-  if (t === 2)
+var has = (thing, prop, type = getArchtype(thing)) => type === 2 ? thing.has(prop) : O$2[PROTOTYPE].hasOwnProperty.call(thing, prop);
+var get = (thing, prop, type = getArchtype(thing)) => (
+  // @ts-ignore
+  type === 2 ? thing.get(prop) : thing[prop]
+);
+var set = (thing, propOrOldValue, value, type = getArchtype(thing)) => {
+  if (type === 2)
     thing.set(propOrOldValue, value);
-  else if (t === 3) {
+  else if (type === 3) {
     thing.add(value);
   } else
     thing[propOrOldValue] = value;
-}
+};
 function is$1(x, y) {
   if (x === y) {
     return x !== 0 || 1 / x === 1 / y;
@@ -78,15 +92,14 @@ function is$1(x, y) {
     return x !== x && y !== y;
   }
 }
-function isMap(target) {
-  return target instanceof Map;
-}
-function isSet(target) {
-  return target instanceof Set;
-}
-function latest(state) {
-  return state.copy_ || state.base_;
-}
+var isArray$1 = Array.isArray;
+var isMap = (target) => target instanceof Map;
+var isSet = (target) => target instanceof Set;
+var isObjectish = (target) => typeof target === "object";
+var isFunction$1 = (target) => typeof target === "function";
+var isBoolean$2 = (target) => typeof target === "boolean";
+var latest = (state) => state.copy_ || state.base_;
+var getFinalValue = (state) => state.modified_ ? state.copy_ : state.base_;
 function shallowCopy(base, strict) {
   if (isMap(base)) {
     return new Map(base);
@@ -94,61 +107,74 @@ function shallowCopy(base, strict) {
   if (isSet(base)) {
     return new Set(base);
   }
-  if (Array.isArray(base))
-    return Array.prototype.slice.call(base);
+  if (isArray$1(base))
+    return Array[PROTOTYPE].slice.call(base);
   const isPlain = isPlainObject$1(base);
   if (strict === true || strict === "class_only" && !isPlain) {
-    const descriptors = Object.getOwnPropertyDescriptors(base);
+    const descriptors = O$2.getOwnPropertyDescriptors(base);
     delete descriptors[DRAFT_STATE];
     let keys = Reflect.ownKeys(descriptors);
     for (let i = 0; i < keys.length; i++) {
       const key = keys[i];
       const desc = descriptors[key];
-      if (desc.writable === false) {
-        desc.writable = true;
-        desc.configurable = true;
+      if (desc[WRITABLE] === false) {
+        desc[WRITABLE] = true;
+        desc[CONFIGURABLE] = true;
       }
       if (desc.get || desc.set)
         descriptors[key] = {
-          configurable: true,
-          writable: true,
+          [CONFIGURABLE]: true,
+          [WRITABLE]: true,
           // could live with !!desc.set as well here...
-          enumerable: desc.enumerable,
-          value: base[key]
+          [ENUMERABLE]: desc[ENUMERABLE],
+          [VALUE]: base[key]
         };
     }
-    return Object.create(getPrototypeOf(base), descriptors);
+    return O$2.create(getPrototypeOf(base), descriptors);
   } else {
     const proto = getPrototypeOf(base);
     if (proto !== null && isPlain) {
       return { ...base };
     }
-    const obj = Object.create(proto);
-    return Object.assign(obj, base);
+    const obj = O$2.create(proto);
+    return O$2.assign(obj, base);
   }
 }
 function freeze(obj, deep = false) {
   if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj))
     return obj;
   if (getArchtype(obj) > 1) {
-    Object.defineProperties(obj, {
-      set: { value: dontMutateFrozenCollections },
-      add: { value: dontMutateFrozenCollections },
-      clear: { value: dontMutateFrozenCollections },
-      delete: { value: dontMutateFrozenCollections }
+    O$2.defineProperties(obj, {
+      set: dontMutateMethodOverride,
+      add: dontMutateMethodOverride,
+      clear: dontMutateMethodOverride,
+      delete: dontMutateMethodOverride
     });
   }
-  Object.freeze(obj);
+  O$2.freeze(obj);
   if (deep)
-    Object.values(obj).forEach((value) => freeze(value, true));
+    each$1(
+      obj,
+      (_key, value) => {
+        freeze(value, true);
+      },
+      false
+    );
   return obj;
 }
 function dontMutateFrozenCollections() {
   die(2);
 }
+var dontMutateMethodOverride = {
+  [VALUE]: dontMutateFrozenCollections
+};
 function isFrozen(obj) {
-  return Object.isFrozen(obj);
+  if (obj === null || !isObjectish(obj))
+    return true;
+  return O$2.isFrozen(obj);
 }
+var PluginMapSet = "MapSet";
+var PluginPatches = "Patches";
 var plugins = {};
 function getPlugin(pluginKey) {
   const plugin = plugins[pluginKey];
@@ -157,24 +183,24 @@ function getPlugin(pluginKey) {
   }
   return plugin;
 }
+var isPluginLoaded = (pluginKey) => !!plugins[pluginKey];
 var currentScope;
-function getCurrentScope() {
-  return currentScope;
-}
-function createScope(parent_, immer_) {
-  return {
-    drafts_: [],
-    parent_,
-    immer_,
-    // Whenever the modified draft contains a draft from another scope, we
-    // need to prevent auto-freezing so the unowned draft can be finalized.
-    canAutoFreeze_: true,
-    unfinalizedDrafts_: 0
-  };
-}
+var getCurrentScope = () => currentScope;
+var createScope = (parent_, immer_) => ({
+  drafts_: [],
+  parent_,
+  immer_,
+  // Whenever the modified draft contains a draft from another scope, we
+  // need to prevent auto-freezing so the unowned draft can be finalized.
+  canAutoFreeze_: true,
+  unfinalizedDrafts_: 0,
+  handledSet_: /* @__PURE__ */ new Set(),
+  processedForPatches_: /* @__PURE__ */ new Set(),
+  mapSetPlugin_: isPluginLoaded(PluginMapSet) ? getPlugin(PluginMapSet) : void 0
+});
 function usePatchesInScope(scope, patchListener) {
   if (patchListener) {
-    getPlugin("Patches");
+    scope.patchPlugin_ = getPlugin(PluginPatches);
     scope.patches_ = [];
     scope.inversePatches_ = [];
     scope.patchListener_ = patchListener;
@@ -190,9 +216,7 @@ function leaveScope(scope) {
     currentScope = scope.parent_;
   }
 }
-function enterScope(immer2) {
-  return currentScope = createScope(currentScope, immer2);
-}
+var enterScope = (immer2) => currentScope = createScope(currentScope, immer2);
 function revokeDraft(draft) {
   const state = draft[DRAFT_STATE];
   if (state.type_ === 0 || state.type_ === 1)
@@ -211,101 +235,164 @@ function processResult(result, scope) {
     }
     if (isDraftable(result)) {
       result = finalize(scope, result);
-      if (!scope.parent_)
-        maybeFreeze(scope, result);
     }
-    if (scope.patches_) {
-      getPlugin("Patches").generateReplacementPatches_(
+    const { patchPlugin_ } = scope;
+    if (patchPlugin_) {
+      patchPlugin_.generateReplacementPatches_(
         baseDraft[DRAFT_STATE].base_,
         result,
-        scope.patches_,
-        scope.inversePatches_
+        scope
       );
     }
   } else {
-    result = finalize(scope, baseDraft, []);
+    result = finalize(scope, baseDraft);
   }
+  maybeFreeze(scope, result, true);
   revokeScope(scope);
   if (scope.patches_) {
     scope.patchListener_(scope.patches_, scope.inversePatches_);
   }
   return result !== NOTHING ? result : void 0;
 }
-function finalize(rootScope, value, path) {
+function finalize(rootScope, value) {
   if (isFrozen(value))
     return value;
   const state = value[DRAFT_STATE];
   if (!state) {
-    each$1(
-      value,
-      (key, childValue) => finalizeProperty(rootScope, state, value, key, childValue, path)
-    );
+    const finalValue = handleValue(value, rootScope.handledSet_, rootScope);
+    return finalValue;
+  }
+  if (!isSameScope(state, rootScope)) {
     return value;
   }
-  if (state.scope_ !== rootScope)
-    return value;
   if (!state.modified_) {
-    maybeFreeze(rootScope, state.base_, true);
     return state.base_;
   }
   if (!state.finalized_) {
-    state.finalized_ = true;
-    state.scope_.unfinalizedDrafts_--;
-    const result = state.copy_;
-    let resultEach = result;
-    let isSet2 = false;
-    if (state.type_ === 3) {
-      resultEach = new Set(result);
-      result.clear();
-      isSet2 = true;
+    const { callbacks_ } = state;
+    if (callbacks_) {
+      while (callbacks_.length > 0) {
+        const callback = callbacks_.pop();
+        callback(rootScope);
+      }
     }
-    each$1(
-      resultEach,
-      (key, childValue) => finalizeProperty(rootScope, state, result, key, childValue, path, isSet2)
-    );
-    maybeFreeze(rootScope, result, false);
-    if (path && rootScope.patches_) {
-      getPlugin("Patches").generatePatches_(
-        state,
-        path,
-        rootScope.patches_,
-        rootScope.inversePatches_
-      );
-    }
+    generatePatchesAndFinalize(state, rootScope);
   }
   return state.copy_;
-}
-function finalizeProperty(rootScope, parentState, targetObject, prop, childValue, rootPath, targetIsSet) {
-  if (isDraft(childValue)) {
-    const path = rootPath && parentState && parentState.type_ !== 3 && // Set objects are atomic since they have no keys.
-    !has(parentState.assigned_, prop) ? rootPath.concat(prop) : void 0;
-    const res = finalize(rootScope, childValue, path);
-    set(targetObject, prop, res);
-    if (isDraft(res)) {
-      rootScope.canAutoFreeze_ = false;
-    } else
-      return;
-  } else if (targetIsSet) {
-    targetObject.add(childValue);
-  }
-  if (isDraftable(childValue) && !isFrozen(childValue)) {
-    if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) {
-      return;
-    }
-    finalize(rootScope, childValue);
-    if ((!parentState || !parentState.scope_.parent_) && typeof prop !== "symbol" && (isMap(targetObject) ? targetObject.has(prop) : Object.prototype.propertyIsEnumerable.call(targetObject, prop)))
-      maybeFreeze(rootScope, childValue);
-  }
 }
 function maybeFreeze(scope, value, deep = false) {
   if (!scope.parent_ && scope.immer_.autoFreeze_ && scope.canAutoFreeze_) {
     freeze(value, deep);
   }
 }
+function markStateFinalized(state) {
+  state.finalized_ = true;
+  state.scope_.unfinalizedDrafts_--;
+}
+var isSameScope = (state, rootScope) => state.scope_ === rootScope;
+var EMPTY_LOCATIONS_RESULT = [];
+function updateDraftInParent(parent, draftValue, finalizedValue, originalKey) {
+  const parentCopy = latest(parent);
+  const parentType = parent.type_;
+  if (originalKey !== void 0) {
+    const currentValue = get(parentCopy, originalKey, parentType);
+    if (currentValue === draftValue) {
+      set(parentCopy, originalKey, finalizedValue, parentType);
+      return;
+    }
+  }
+  if (!parent.draftLocations_) {
+    const draftLocations = parent.draftLocations_ = /* @__PURE__ */ new Map();
+    each$1(parentCopy, (key, value) => {
+      if (isDraft(value)) {
+        const keys = draftLocations.get(value) || [];
+        keys.push(key);
+        draftLocations.set(value, keys);
+      }
+    });
+  }
+  const locations = parent.draftLocations_.get(draftValue) ?? EMPTY_LOCATIONS_RESULT;
+  for (const location of locations) {
+    set(parentCopy, location, finalizedValue, parentType);
+  }
+}
+function registerChildFinalizationCallback(parent, child, key) {
+  parent.callbacks_.push(function childCleanup(rootScope) {
+    const state = child;
+    if (!state || !isSameScope(state, rootScope)) {
+      return;
+    }
+    rootScope.mapSetPlugin_?.fixSetContents(state);
+    const finalizedValue = getFinalValue(state);
+    updateDraftInParent(parent, state.draft_ ?? state, finalizedValue, key);
+    generatePatchesAndFinalize(state, rootScope);
+  });
+}
+function generatePatchesAndFinalize(state, rootScope) {
+  const shouldFinalize = state.modified_ && !state.finalized_ && (state.type_ === 3 || (state.assigned_?.size ?? 0) > 0);
+  if (shouldFinalize) {
+    const { patchPlugin_ } = rootScope;
+    if (patchPlugin_) {
+      const basePath = patchPlugin_.getPath(state);
+      if (basePath) {
+        patchPlugin_.generatePatches_(state, basePath, rootScope);
+      }
+    }
+    markStateFinalized(state);
+  }
+}
+function handleCrossReference(target, key, value) {
+  const { scope_ } = target;
+  if (isDraft(value)) {
+    const state = value[DRAFT_STATE];
+    if (isSameScope(state, scope_)) {
+      state.callbacks_.push(function crossReferenceCleanup() {
+        prepareCopy(target);
+        const finalizedValue = getFinalValue(state);
+        updateDraftInParent(target, value, finalizedValue, key);
+      });
+    }
+  } else if (isDraftable(value)) {
+    target.callbacks_.push(function nestedDraftCleanup() {
+      const targetCopy = latest(target);
+      if (get(targetCopy, key, target.type_) === value) {
+        if (scope_.drafts_.length > 1 && (target.assigned_.get(key) ?? false) === true && target.copy_) {
+          handleValue(
+            get(target.copy_, key, target.type_),
+            scope_.handledSet_,
+            scope_
+          );
+        }
+      }
+    });
+  }
+}
+function handleValue(target, handledSet, rootScope) {
+  if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) {
+    return target;
+  }
+  if (isDraft(target) || handledSet.has(target) || !isDraftable(target) || isFrozen(target)) {
+    return target;
+  }
+  handledSet.add(target);
+  each$1(target, (key, value) => {
+    if (isDraft(value)) {
+      const state = value[DRAFT_STATE];
+      if (isSameScope(state, rootScope)) {
+        const updatedValue = getFinalValue(state);
+        set(target, key, updatedValue, target.type_);
+        markStateFinalized(state);
+      }
+    } else if (isDraftable(value)) {
+      handleValue(value, handledSet, rootScope);
+    }
+  });
+  return target;
+}
 function createProxyProxy(base, parent) {
-  const isArray = Array.isArray(base);
+  const baseIsArray = isArray$1(base);
   const state = {
-    type_: isArray ? 1 : 0,
+    type_: baseIsArray ? 1 : 0,
     // Track which produce call this is associated with.
     scope_: parent ? parent.scope_ : getCurrentScope(),
     // True for both shallow and deep changes.
@@ -313,7 +400,8 @@ function createProxyProxy(base, parent) {
     // Used during finalization.
     finalized_: false,
     // Track which properties have been assigned (true) or deleted (false).
-    assigned_: {},
+    // actually instantiated in `prepareCopy()`
+    assigned_: void 0,
     // The parent draft state.
     parent_: parent,
     // The base state.
@@ -325,25 +413,27 @@ function createProxyProxy(base, parent) {
     copy_: null,
     // Called by the `produce` function.
     revoke_: null,
-    isManual_: false
+    isManual_: false,
+    // `callbacks` actually gets assigned in `createProxy`
+    callbacks_: void 0
   };
   let target = state;
   let traps = objectTraps;
-  if (isArray) {
+  if (baseIsArray) {
     target = [state];
     traps = arrayTraps;
   }
   const { revoke, proxy } = Proxy.revocable(target, traps);
   state.draft_ = proxy;
   state.revoke_ = revoke;
-  return proxy;
+  return [proxy, state];
 }
 var objectTraps = {
   get(state, prop) {
     if (prop === DRAFT_STATE)
       return state;
     const source = latest(state);
-    if (!has(source, prop)) {
+    if (!has(source, prop, state.type_)) {
       return readPropFromProto(state, source, prop);
     }
     const value = source[prop];
@@ -352,7 +442,9 @@ var objectTraps = {
     }
     if (value === peek(state.base_, prop)) {
       prepareCopy(state);
-      return state.copy_[prop] = createProxy(value, state);
+      const childKey = state.type_ === 1 ? +prop : prop;
+      const childDraft = createProxy(state.scope_, value, state, childKey);
+      return state.copy_[childKey] = childDraft;
     }
     return value;
   },
@@ -373,10 +465,10 @@ var objectTraps = {
       const currentState = current2?.[DRAFT_STATE];
       if (currentState && currentState.base_ === value) {
         state.copy_[prop] = value;
-        state.assigned_[prop] = false;
+        state.assigned_.set(prop, false);
         return true;
       }
-      if (is$1(value, current2) && (value !== void 0 || has(state.base_, prop)))
+      if (is$1(value, current2) && (value !== void 0 || has(state.base_, prop, state.type_)))
         return true;
       prepareCopy(state);
       markChanged(state);
@@ -386,16 +478,17 @@ var objectTraps = {
     Number.isNaN(value) && Number.isNaN(state.copy_[prop]))
       return true;
     state.copy_[prop] = value;
-    state.assigned_[prop] = true;
+    state.assigned_.set(prop, true);
+    handleCrossReference(state, prop, value);
     return true;
   },
   deleteProperty(state, prop) {
+    prepareCopy(state);
     if (peek(state.base_, prop) !== void 0 || prop in state.base_) {
-      state.assigned_[prop] = false;
-      prepareCopy(state);
+      state.assigned_.set(prop, false);
       markChanged(state);
     } else {
-      delete state.assigned_[prop];
+      state.assigned_.delete(prop);
     }
     if (state.copy_) {
       delete state.copy_[prop];
@@ -410,10 +503,10 @@ var objectTraps = {
     if (!desc)
       return desc;
     return {
-      writable: true,
-      configurable: state.type_ !== 1 || prop !== "length",
-      enumerable: desc.enumerable,
-      value: owner[prop]
+      [WRITABLE]: true,
+      [CONFIGURABLE]: state.type_ !== 1 || prop !== "length",
+      [ENUMERABLE]: desc[ENUMERABLE],
+      [VALUE]: owner[prop]
     };
   },
   defineProperty() {
@@ -429,8 +522,9 @@ var objectTraps = {
 var arrayTraps = {};
 each$1(objectTraps, (key, fn) => {
   arrayTraps[key] = function() {
-    arguments[0] = arguments[0][0];
-    return fn.apply(this, arguments);
+    const args = arguments;
+    args[0] = args[0][0];
+    return fn.apply(this, args);
   };
 });
 arrayTraps.deleteProperty = function(state, prop) {
@@ -446,7 +540,7 @@ function peek(draft, prop) {
 }
 function readPropFromProto(state, source, prop) {
   const desc = getDescriptorFromProto(source, prop);
-  return desc ? `value` in desc ? desc.value : (
+  return desc ? VALUE in desc ? desc[VALUE] : (
     // This is a very special case, if the prop is a getter defined by the
     // prototype, we should invoke it with the draft as context!
     desc.get?.call(state.draft_)
@@ -474,6 +568,7 @@ function markChanged(state) {
 }
 function prepareCopy(state) {
   if (!state.copy_) {
+    state.assigned_ = /* @__PURE__ */ new Map();
     state.copy_ = shallowCopy(
       state.base_,
       state.scope_.immer_.useStrictShallowCopy_
@@ -484,8 +579,9 @@ var Immer2 = class {
   constructor(config) {
     this.autoFreeze_ = true;
     this.useStrictShallowCopy_ = false;
+    this.useStrictIteration_ = false;
     this.produce = (base, recipe, patchListener) => {
-      if (typeof base === "function" && typeof recipe !== "function") {
+      if (isFunction$1(base) && !isFunction$1(recipe)) {
         const defaultBase = recipe;
         recipe = base;
         const self = this;
@@ -493,14 +589,14 @@ var Immer2 = class {
           return self.produce(base2, (draft) => recipe.call(this, draft, ...args));
         };
       }
-      if (typeof recipe !== "function")
+      if (!isFunction$1(recipe))
         die(6);
-      if (patchListener !== void 0 && typeof patchListener !== "function")
+      if (patchListener !== void 0 && !isFunction$1(patchListener))
         die(7);
       let result;
       if (isDraftable(base)) {
         const scope = enterScope(this);
-        const proxy = createProxy(base, void 0);
+        const proxy = createProxy(scope, base, void 0);
         let hasError = true;
         try {
           result = recipe(proxy);
@@ -513,7 +609,7 @@ var Immer2 = class {
         }
         usePatchesInScope(scope, patchListener);
         return processResult(result, scope);
-      } else if (!base || typeof base !== "object") {
+      } else if (!base || !isObjectish(base)) {
         result = recipe(base);
         if (result === void 0)
           result = base;
@@ -524,7 +620,10 @@ var Immer2 = class {
         if (patchListener) {
           const p = [];
           const ip = [];
-          getPlugin("Patches").generateReplacementPatches_(base, result, p, ip);
+          getPlugin(PluginPatches).generateReplacementPatches_(base, result, {
+            patches_: p,
+            inversePatches_: ip
+          });
           patchListener(p, ip);
         }
         return result;
@@ -532,7 +631,7 @@ var Immer2 = class {
         die(1, base);
     };
     this.produceWithPatches = (base, recipe) => {
-      if (typeof base === "function") {
+      if (isFunction$1(base)) {
         return (state, ...args) => this.produceWithPatches(state, (draft) => base(draft, ...args));
       }
       let patches, inversePatches;
@@ -542,10 +641,12 @@ var Immer2 = class {
       });
       return [result, patches, inversePatches];
     };
-    if (typeof config?.autoFreeze === "boolean")
+    if (isBoolean$2(config?.autoFreeze))
       this.setAutoFreeze(config.autoFreeze);
-    if (typeof config?.useStrictShallowCopy === "boolean")
+    if (isBoolean$2(config?.useStrictShallowCopy))
       this.setUseStrictShallowCopy(config.useStrictShallowCopy);
+    if (isBoolean$2(config?.useStrictIteration))
+      this.setUseStrictIteration(config.useStrictIteration);
   }
   createDraft(base) {
     if (!isDraftable(base))
@@ -553,7 +654,7 @@ var Immer2 = class {
     if (isDraft(base))
       base = current(base);
     const scope = enterScope(this);
-    const proxy = createProxy(base, void 0);
+    const proxy = createProxy(scope, base, void 0);
     proxy[DRAFT_STATE].isManual_ = true;
     leaveScope(scope);
     return proxy;
@@ -582,6 +683,18 @@ var Immer2 = class {
   setUseStrictShallowCopy(value) {
     this.useStrictShallowCopy_ = value;
   }
+  /**
+   * Pass false to use faster iteration that skips non-enumerable properties
+   * but still handles symbols for compatibility.
+   *
+   * By default, strict iteration is enabled (includes all own properties).
+   */
+  setUseStrictIteration(value) {
+    this.useStrictIteration_ = value;
+  }
+  shouldUseStrictIteration() {
+    return this.useStrictIteration_;
+  }
   applyPatches(base, patches) {
     let i;
     for (i = patches.length - 1; i >= 0; i--) {
@@ -594,7 +707,7 @@ var Immer2 = class {
     if (i > -1) {
       patches = patches.slice(i + 1);
     }
-    const applyPatchesImpl = getPlugin("Patches").applyPatches_;
+    const applyPatchesImpl = getPlugin(PluginPatches).applyPatches_;
     if (isDraft(base)) {
       return applyPatchesImpl(base, patches);
     }
@@ -604,10 +717,23 @@ var Immer2 = class {
     );
   }
 };
-function createProxy(value, parent) {
-  const draft = isMap(value) ? getPlugin("MapSet").proxyMap_(value, parent) : isSet(value) ? getPlugin("MapSet").proxySet_(value, parent) : createProxyProxy(value, parent);
-  const scope = parent ? parent.scope_ : getCurrentScope();
+function createProxy(rootScope, value, parent, key) {
+  const [draft, state] = isMap(value) ? getPlugin(PluginMapSet).proxyMap_(value, parent) : isSet(value) ? getPlugin(PluginMapSet).proxySet_(value, parent) : createProxyProxy(value, parent);
+  const scope = parent?.scope_ ?? getCurrentScope();
   scope.drafts_.push(draft);
+  state.callbacks_ = parent?.callbacks_ ?? [];
+  state.key_ = key;
+  if (parent && key !== void 0) {
+    registerChildFinalizationCallback(parent, state, key);
+  } else {
+    state.callbacks_.push(function rootDraftCleanup(rootScope2) {
+      rootScope2.mapSetPlugin_?.fixSetContents(state);
+      const { patchPlugin_ } = rootScope2;
+      if (state.modified_ && patchPlugin_) {
+        patchPlugin_.generatePatches_(state, [], rootScope2);
+      }
+    });
+  }
   return draft;
 }
 function current(value) {
@@ -620,17 +746,23 @@ function currentImpl(value) {
     return value;
   const state = value[DRAFT_STATE];
   let copy;
+  let strict = true;
   if (state) {
     if (!state.modified_)
       return state.base_;
     state.finalized_ = true;
     copy = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
+    strict = state.scope_.immer_.shouldUseStrictIteration();
   } else {
     copy = shallowCopy(value, true);
   }
-  each$1(copy, (key, childValue) => {
-    set(copy, key, currentImpl(childValue));
-  });
+  each$1(
+    copy,
+    (key, childValue) => {
+      set(copy, key, currentImpl(childValue));
+    },
+    strict
+  );
   if (state) {
     state.finalized_ = false;
   }
@@ -1102,7 +1234,8 @@ const initialState$3 = {
   customCards: [],
   view: "list",
   editingCard: void 0,
-  saveCards: false
+  saveCards: false,
+  urlCatchingSession: void 0
 };
 const customActionsSlice = createSlice({
   initialState: initialState$3,
@@ -1128,7 +1261,7 @@ const customActionsSlice = createSlice({
         title: "",
         accentColor: "#AA00FF",
         cardType: "terminal_browser",
-        urlConfig: { openImmediately: true, timeout: 5 },
+        urlConfig: { type: "nothing", openImmediately: true, timeout: 5 },
         categories: { pinned: true },
         actions: []
       };
@@ -1184,6 +1317,9 @@ const customActionsSlice = createSlice({
     setEditingCard: (state, action) => {
       state.editingCard = action.payload;
     },
+    setUrlConfigType: (state, action) => {
+      if (state.editingCard) state.editingCard.urlConfig.type = action.payload;
+    },
     setCustomUrl: (state, action) => {
       if (state.editingCard) state.editingCard.urlConfig.customUrl = action.payload;
     },
@@ -1192,6 +1328,9 @@ const customActionsSlice = createSlice({
     },
     setTimeoutValue: (state, action) => {
       if (state.editingCard) state.editingCard.urlConfig.timeout = action.payload;
+    },
+    setFindLine: (state, action) => {
+      if (state.editingCard) state.editingCard.urlConfig.findLine = action.payload;
     },
     setCategories: (state, action) => {
       if (state.editingCard) state.editingCard.categories[action.payload.id] = action.payload.value;
@@ -1207,8 +1346,29 @@ const customActionsSlice = createSlice({
     addAction: (state, action) => {
       if (state.editingCard) state.editingCard.actions = [...state.editingCard.actions, action.payload];
     },
+    updateAction: (state, action) => {
+      if (state.editingCard && state.editingCard.actions[action.payload.index]) {
+        state.editingCard.actions[action.payload.index].action = action.payload.newAction;
+      }
+    },
     clearSaveCards: (state) => {
       state.saveCards = false;
+    },
+    startUrlCatching: (state, action) => {
+      state.urlCatchingSession = {
+        ptyId: action.payload.ptyId,
+        tabId: action.payload.tabId,
+        findLine: action.payload.findLine,
+        urlFound: false
+      };
+    },
+    stopUrlCatching: (state) => {
+      state.urlCatchingSession = void 0;
+    },
+    setUrlFound: (state) => {
+      if (state.urlCatchingSession) {
+        state.urlCatchingSession.urlFound = true;
+      }
     }
   }
 });
@@ -1475,8 +1635,14 @@ const browserDownloadChannels = {
   pause: "browserDL:pause",
   resume: "browserDL:resume",
   clear: "browserDL:clear",
+  clearAll: "browserDL:clear-all",
   openDownloadsMenu: "browserDL:open-downloads-menu",
   openItem: "browserDL:open-item",
+  setDownloadLocation: "browserDL:set-download-location",
+  getDownloadLocation: "browserDL:get-download-location",
+  openLocationDialog: "browserDL:open-location-dialog",
+  setDownloadBehavior: "browserDL:set-download-behavior",
+  getDownloadBehavior: "browserDL:get-download-behavior",
   mainDownloadCount: "browserDL:main-download-count"
 };
 const customNotifChannels = {
@@ -1501,6 +1667,7 @@ const fileChannels = {
   getAppDirectories: "app:getAppDirectories",
   dialog: "app:openDialog",
   openPath: "app:openPath",
+  saveToFile: "app:saveToFile",
   removeDir: "app:removeDir",
   trashDir: "app:trashDir",
   listDir: "app:listDir",
@@ -1642,6 +1809,7 @@ const contextMenuChannels = {
   onTerminateTab: "context:on-terminate-tab",
   onCloseApp: "context:on-close-app",
   onZoom: "context:zoom-page",
+  onVolume: "context:volume-control",
   relaunchAI: "context:relaunch-ai",
   onRelaunchAI: "context:on-relaunch-ai",
   stopAI: "context:stop-ai",
@@ -1675,6 +1843,7 @@ const browserChannels = {
   setVisible: "browser:set-visible",
   openFindInPage: "browser:openFindInPage",
   openZoom: "browser:openZoom",
+  openVolume: "browser:openVolume",
   findInPage: "browser:findInPage",
   stopFindInPage: "browser:stopFindInPage",
   setZoomFactor: "browser:setZoomFactor",
@@ -1720,6 +1889,19 @@ const patreonChannels = {
   logout: "patreon:logout",
   updateChannel: "patreon:updateChannel",
   onReleaseChannel: "patreon:onReleaseChannel"
+};
+const volumeChannels = {
+  // Renderer -> Main
+  setVolume: "volume:set",
+  setMuted: "volume:setMuted",
+  getState: "volume:getState",
+  // Context menu -> Main -> Main renderer (for Redux sync)
+  updateTabVolume: "volume:updateTabVolume",
+  updateTabMuted: "volume:updateTabMuted",
+  onTabVolumeUpdate: "volume:onTabVolumeUpdate",
+  onTabMutedUpdate: "volume:onTabMutedUpdate",
+  // Main -> Renderer
+  onAudioStateChange: "volume:onAudioStateChange"
 };
 
 function mitt(n){return {all:n=n||new Map,on:function(t,e){var i=n.get(t);i?i.push(e):n.set(t,[e]);},off:function(t,e){var i=n.get(t);i&&(e?i.splice(i.indexOf(e)>>>0,1):n.set(t,[]));},emit:function(t,e){var i=n.get(t);i&&i.slice().map(function(n){n(e);}),(i=n.get("*"))&&i.slice().map(function(n){n(t,e);});}}}
@@ -1841,36 +2023,46 @@ const ipc = window.electron.ipcRenderer;
 const rendererIpc = {
   /** Managing app window states */
   win: {
+    // Changes window state (maximize, minimize, close, fullscreen, restart)
     changeWinState: (state) => {
       extensionRendererApi.events_ipc.emit("win_change_state", { state });
       ipc.send(winChannels.changeState, state);
     },
+    // Listens for window state change events
     onChangeState: (result) => ipc.on(winChannels.onChangeState, result),
+    // Sets app theme (light, dark, or system)
     setDarkMode: (darkMode) => {
       extensionRendererApi.events_ipc.emit("win_set_dark_mode", { darkMode });
       ipc.send(winChannels.setDarkMode, darkMode);
     },
+    // Gets system dark mode preference (light/dark)
     getSystemDarkMode: () => {
       extensionRendererApi.events_ipc.emit("win_get_system_dark_mode", {});
       return ipc.invoke(winChannels.getSystemDarkMode);
     },
+    // Listens for dark mode change events
     onDarkMode: (result) => ipc.on(winChannels.onDarkMode, result),
+    // Sets taskbar visibility status (taskbar, tray, taskbar-tray, tray-minimized)
     setTaskBarStatus: (status) => {
       extensionRendererApi.events_ipc.emit("win_set_taskbar_status", { status });
       ipc.send(winChannels.setTaskBarStatus, status);
     },
+    // Sets Discord Rich Presence configuration
     setDiscordRP: (discordRp) => {
       extensionRendererApi.events_ipc.emit("win_set_discord_rp", { discordRp });
       ipc.send(winChannels.setDiscordRP, discordRp);
     },
+    // Updates Discord RP status when AI is running
     setDiscordRpAiRunning: (status) => {
       extensionRendererApi.events_ipc.emit("win_set_discord_rp_ai_running", { status });
       ipc.send(winChannels.setDiscordRpAiRunning, status);
     },
+    // Gets system information (OS platform and build number)
     getSystemInfo: () => {
       extensionRendererApi.events_ipc.emit("win_get_system_info", {});
       return ipc.invoke(winChannels.getSystemInfo);
     },
+    // Opens URL in default system browser
     openUrlDefaultBrowser: (url) => {
       extensionRendererApi.events_ipc.emit("win_open_url_default_browser", { url });
       ipc.send(winChannels.openUrlDefaultBrowser, url);
@@ -1878,46 +2070,59 @@ const rendererIpc = {
   },
   /** Managing files and directories */
   file: {
+    // Opens file/folder selection dialog
     openDlg: (option) => {
       extensionRendererApi.events_ipc.emit("file_open_dialog", { option });
       return ipc.invoke(fileChannels.dialog, option);
     },
+    // Opens directory in system file manager
     openPath: (dir) => {
       extensionRendererApi.events_ipc.emit("file_open_path", { dir });
       ipc.send(fileChannels.openPath, dir);
     },
+    // Shows save dialog and saves content to file
+    saveToFile: (content) => ipc.invoke(fileChannels.saveToFile, content),
+    // Gets app directory path by folder name (cards, extensions, etc.)
     getAppDirectories: (name) => {
       extensionRendererApi.events_ipc.emit("file_get_app_directories", { name });
       return ipc.invoke(fileChannels.getAppDirectories, name);
     },
+    // Permanently removes directory and all contents
     removeDir: (dir) => {
       extensionRendererApi.events_ipc.emit("file_remove_dir", { dir });
       return ipc.invoke(fileChannels.removeDir, dir);
     },
+    // Moves directory to system trash
     trashDir: (dir) => {
       extensionRendererApi.events_ipc.emit("file_trash_dir", { dir });
       return ipc.invoke(fileChannels.trashDir, dir);
     },
+    // Lists directory contents with relative path support
     listDir: (dirPath, relatives) => {
       extensionRendererApi.events_ipc.emit("file_list_dir", { dirPath, relatives });
       return ipc.invoke(fileChannels.listDir, dirPath, relatives);
     },
+    // Checks if specified files exist in directory
     checkFilesExist: (dir, fileNames) => {
       extensionRendererApi.events_ipc.emit("file_check_files_exist", { dir, fileNames });
       return ipc.invoke(fileChannels.checkFilesExist, dir, fileNames);
     },
+    // Calculates total size of folder and all contents
     calcFolderSize: (dir) => {
       extensionRendererApi.events_ipc.emit("file_calc_folder_size", { dir });
       return ipc.invoke(fileChannels.calcFolderSize, dir);
     },
+    // Converts absolute path to relative path
     getRelativePath: (basePath, targetPath) => {
       extensionRendererApi.events_ipc.emit("file_get_relative_path", { basePath, targetPath });
       return ipc.invoke(fileChannels.getRelativePath, basePath, targetPath);
     },
+    // Converts relative path to absolute path
     getAbsolutePath: (basePath, targetPath) => {
       extensionRendererApi.events_ipc.emit("file_get_absolute_path", { basePath, targetPath });
       return ipc.invoke(fileChannels.getAbsolutePath, basePath, targetPath);
     },
+    // Checks if directory is empty
     isEmptyDir: (dir) => {
       extensionRendererApi.events_ipc.emit("file_is_empty_dir", { dir });
       return ipc.invoke(fileChannels.isEmptyDir, dir);
@@ -1925,33 +2130,43 @@ const rendererIpc = {
   },
   /** Git operations */
   git: {
+    // Performs shallow clone of Git repository (non-blocking)
     cloneShallow: (options) => ipc.send(gitChannels.shallowClone, options),
+    // Performs shallow clone and returns promise
     cloneShallowPromise: (options) => ipc.invoke(gitChannels.shallowClonePromise, options),
+    // Gets repository information (branch, remote, etc.)
     getRepoInfo: (dir) => {
       extensionRendererApi.events_ipc.emit("git_get_repo_info", { dir });
       return ipc.invoke(gitChannels.getRepoInfo, dir);
     },
+    // Changes Git branch
     changeBranch: (dir, branchName) => {
       extensionRendererApi.events_ipc.emit("git_change_branch", { dir, branchName });
       return ipc.invoke(gitChannels.changeBranch, dir, branchName);
     },
+    // Converts shallow clone to full clone
     unShallow: (dir) => {
       extensionRendererApi.events_ipc.emit("git_unshallow", { dir });
       return ipc.invoke(gitChannels.unShallow, dir);
     },
+    // Performs hard reset to HEAD
     resetHard: (dir) => {
       extensionRendererApi.events_ipc.emit("git_reset_hard", { dir });
       return ipc.invoke(gitChannels.resetHard, dir);
     },
+    // Validates if directory is a valid Git repository matching the URL
     validateGitDir: (dir, url) => {
       extensionRendererApi.events_ipc.emit("git_validate_git_dir", { dir, url });
       return ipc.invoke(gitChannels.validateGitDir, dir, url);
     },
+    // Listens for Git operation progress updates
     onProgress: (callback) => ipc.on(gitChannels.onProgress, callback),
+    // Pulls latest changes from remote repository
     pull: (repoDir, id) => {
       extensionRendererApi.events_ipc.emit("git_pull", { repoDir, id });
       ipc.send(gitChannels.pull, repoDir, id);
     },
+    // Drops Git stash entries
     stashDrop: (dir) => {
       extensionRendererApi.events_ipc.emit("git_stash_drop", { dir });
       return ipc.invoke(gitChannels.stashDrop, dir);
@@ -1959,209 +2174,277 @@ const rendererIpc = {
   },
   /** Managing app modules */
   module: {
+    // Checks if card has available updates
     cardUpdateAvailable: (card, updateType) => {
       extensionRendererApi.events_ipc.emit("module_card_update_available", { card, updateType });
       return ipc.invoke(modulesChannels.cardUpdateAvailable, card, updateType);
     },
+    // Uninstalls card by ID
     uninstallCardByID: (id) => {
       extensionRendererApi.events_ipc.emit("module_uninstall_card_by_id", { id });
       return ipc.invoke(modulesChannels.uninstallCardByID, id);
     },
+    // Checks for updates on multiple cards at intervals
     checkCardsUpdateInterval: (updateType) => {
       extensionRendererApi.events_ipc.emit("module_check_cards_update_interval", { updateType });
       ipc.send(modulesChannels.checkCardsUpdateInterval, updateType);
     },
+    // Listens for card update availability events
     onCardsUpdateAvailable: (result) => ipc.on(modulesChannels.onCardsUpdateAvailable, result)
   },
   moduleApi: {
+    // Gets folder creation date
     getFolderCreationTime: (dir) => {
       extensionRendererApi.events_ipc.emit("module_api_get_folder_creation_time", { dir });
       return ipc.invoke(moduleApiChannels.getFolderCreationTime, dir);
     },
+    // Gets last Git pull date for repository
     getLastPulledDate: (dir) => {
       extensionRendererApi.events_ipc.emit("module_api_get_last_pulled_date", { dir });
       return ipc.invoke(moduleApiChannels.getLastPulledDate, dir);
     },
+    // Gets current Git release tag
     getCurrentReleaseTag: (dir) => {
       extensionRendererApi.events_ipc.emit("module_api_get_current_release_tag", { dir });
       return ipc.invoke(moduleApiChannels.getCurrentReleaseTag, dir);
     }
   },
   plugins: {
+    // Gets list of available plugins for subscription stage
     getList: (stage) => ipc.invoke(pluginChannels.getList, stage),
+    // Gets plugin server addresses
     getAddresses: () => ipc.invoke(pluginChannels.getAddresses),
+    // Gets list of installed plugins
     getInstalledList: () => ipc.invoke(pluginChannels.getInstalledList),
+    // Gets list of unloaded plugins
     getUnloadedList: () => ipc.invoke(pluginChannels.getUnloadedList),
+    // Installs plugin from URL
     install: (url, commitHash) => ipc.invoke(pluginChannels.install, url, commitHash),
+    // Uninstalls plugin by ID
     uninstall: (id) => ipc.invoke(pluginChannels.uninstall, id),
+    // Syncs plugin to specific commit
     sync: (id, commit) => ipc.invoke(pluginChannels.sync, id, commit),
+    // Updates sync list entry for plugin
     updateSyncList: (id, commit) => ipc.invoke(pluginChannels.updateSyncList, id, commit),
+    // Syncs multiple plugins to their commits
     syncAll: (items) => ipc.invoke(pluginChannels.syncAll, items),
+    // Checks for available sync updates based on subscription stage
     checkForSync: (stage) => ipc.invoke(pluginChannels.checkForSync, stage),
+    // Listens for plugin sync availability events
     onSyncAvailable: (result) => ipc.on(pluginChannels.onSyncAvailable, result)
   },
   /** Utilities methods for working with app storage data */
   storageUtils: {
+    // Adds installed card to storage
     addInstalledCard: (cardData) => {
       extensionRendererApi.events_ipc.emit("storage_utils_add_installed_card", { cardData });
       ipc.send(storageUtilsChannels.addInstalledCard, cardData);
     },
+    // Removes installed card from storage
     removeInstalledCard: (cardId) => {
       extensionRendererApi.events_ipc.emit("storage_utils_remove_installed_card", { cardId });
       ipc.send(storageUtilsChannels.removeInstalledCard, cardId);
     },
+    // Listens for installed cards change events
     onInstalledCards: (result) => ipc.on(storageUtilsChannels.onInstalledCards, result),
+    // Adds card to auto-update list
     addAutoUpdateCard: (cardId) => {
       extensionRendererApi.events_ipc.emit("storage_utils_add_auto_update_card", { cardId });
       ipc.send(storageUtilsChannels.addAutoUpdateCard, cardId);
     },
+    // Removes card from auto-update list
     removeAutoUpdateCard: (cardId) => {
       extensionRendererApi.events_ipc.emit("storage_utils_remove_auto_update_card", { cardId });
       ipc.send(storageUtilsChannels.removeAutoUpdateCard, cardId);
     },
+    // Listens for auto-update cards change events
     onAutoUpdateCards: (result) => ipc.on(storageUtilsChannels.onAutoUpdateCards, result),
+    // Adds card extensions to auto-update list
     addAutoUpdateExtensions: (cardId) => {
       extensionRendererApi.events_ipc.emit("storage_utils_add_auto_update_extensions", { cardId });
       ipc.send(storageUtilsChannels.addAutoUpdateExtensions, cardId);
     },
+    // Removes card extensions from auto-update list
     removeAutoUpdateExtensions: (cardId) => {
       extensionRendererApi.events_ipc.emit("storage_utils_remove_auto_update_extensions", { cardId });
       ipc.send(storageUtilsChannels.removeAutoUpdateExtensions, cardId);
     },
+    // Listens for auto-update extensions change events
     onAutoUpdateExtensions: (result) => ipc.on(storageUtilsChannels.onAutoUpdateExtensions, result),
+    // Manages pinned cards (add, remove, get)
     pinnedCards: (opt, id, pinnedCards) => {
       extensionRendererApi.events_ipc.emit("storage_utils_pinned_cards", { opt, id, pinnedCards });
       return ipc.invoke(storageUtilsChannels.pinnedCards, opt, id, pinnedCards);
     },
+    // Listens for pinned cards change events
     onPinnedCardsChange: (result) => ipc.on(storageUtilsChannels.onPinnedCardsChange, result),
+    // Manages pre-commands for cards (commands run before card starts)
     preCommands: (opt, data) => {
       extensionRendererApi.events_ipc.emit("storage_utils_pre_commands", { opt, data });
       return ipc.invoke(storageUtilsChannels.preCommands, opt, data);
     },
+    // Listens for pre-commands change events
     onPreCommands: (result) => ipc.on(storageUtilsChannels.onPreCommands, result),
+    // Manages custom run commands for cards
     customRun: (opt, data) => {
       extensionRendererApi.events_ipc.emit("storage_utils_custom_run", { opt, data });
       return ipc.invoke(storageUtilsChannels.customRun, opt, data);
     },
+    // Listens for custom run commands change events
     onCustomRun: (result) => ipc.on(storageUtilsChannels.onCustomRun, result),
+    // Updates custom run behavior settings
     updateCustomRunBehavior: (data) => ipc.send(storageUtilsChannels.customRunBehavior, data),
+    // Manages pre-open items (files/folders opened before card starts)
     preOpen: (opt, open) => {
       extensionRendererApi.events_ipc.emit("storage_utils_pre_open", { opt, open });
       return ipc.invoke(storageUtilsChannels.preOpen, opt, open);
     },
+    // Gets card arguments by card ID
     getCardArguments: (cardId) => {
       extensionRendererApi.events_ipc.emit("storage_utils_get_card_arguments", { cardId });
       return ipc.invoke(storageUtilsChannels.getCardArguments, cardId);
     },
+    // Sets card arguments by card ID
     setCardArguments: (cardId, args) => {
       extensionRendererApi.events_ipc.emit("storage_utils_set_card_arguments", { cardId, args });
       return ipc.invoke(storageUtilsChannels.setCardArguments, cardId, args);
     },
+    // Manages recently used cards (add, remove, get)
     recentlyUsedCards: (opt, id) => {
       extensionRendererApi.events_ipc.emit("storage_utils_recently_used_cards", { opt, id });
       return ipc.invoke(storageUtilsChannels.recentlyUsedCards, opt, id);
     },
+    // Listens for recently used cards change events
     onRecentlyUsedCardsChange: (result) => ipc.on(storageUtilsChannels.onRecentlyUsedCardsChange, result),
+    // Manages home category organization
     homeCategory: (opt, data) => {
       extensionRendererApi.events_ipc.emit("storage_utils_home_category", { opt, data });
       return ipc.invoke(storageUtilsChannels.homeCategory, opt, data);
     },
+    // Listens for home category change events
     onHomeCategory: (result) => ipc.on(storageUtilsChannels.onHomeCategory, result),
+    // Sets app to start with system startup
     setSystemStartup: (startup) => {
       extensionRendererApi.events_ipc.emit("storage_utils_set_system_startup", { startup });
       ipc.send(storageUtilsChannels.setSystemStartup, startup);
     },
+    // Updates zoom factor for cards
     updateZoomFactor: (zoomFactor) => {
       extensionRendererApi.events_ipc.emit("storage_utils_update_zoom_factor", { zoomFactor });
       ipc.send(storageUtilsChannels.updateZoomFactor, zoomFactor);
     },
+    // Adds URL to browser recent list
     addBrowserRecent: (recentEntry) => {
       extensionRendererApi.events_ipc.emit("storage_utils_add_browser_recent", { recentEntry });
       ipc.send(storageUtilsChannels.addBrowserRecent, recentEntry);
     },
+    // Adds URL to browser favorites
     addBrowserFavorite: (favoriteEntry) => {
       extensionRendererApi.events_ipc.emit("storage_utils_add_browser_favorite", { favoriteEntry });
       ipc.send(storageUtilsChannels.addBrowserFavorite, favoriteEntry);
     },
+    // Adds URL to browser history
     addBrowserHistory: (historyEntry) => {
       extensionRendererApi.events_ipc.emit("storage_utils_add_browser_history", { historyEntry });
       ipc.send(storageUtilsChannels.addBrowserHistory, historyEntry);
     },
+    // Adds favicon for browser recent URL
     addBrowserRecentFavIcon: (url, favIcon) => {
       extensionRendererApi.events_ipc.emit("storage_utils_add_browser_recent_favicon", { url, favIcon });
       ipc.send(storageUtilsChannels.addBrowserRecentFavIcon, url, favIcon);
     },
+    // Removes URL from browser recent list
     removeBrowserRecent: (url) => {
       extensionRendererApi.events_ipc.emit("storage_utils_remove_browser_recent", { url });
       ipc.send(storageUtilsChannels.removeBrowserRecent, url);
     },
+    // Removes URL from browser favorites
     removeBrowserFavorite: (url) => {
       extensionRendererApi.events_ipc.emit("storage_utils_remove_browser_favorite", { url });
       ipc.send(storageUtilsChannels.removeBrowserFavorite, url);
     },
+    // Removes URL from browser history
     removeBrowserHistory: (url) => {
       extensionRendererApi.events_ipc.emit("storage_utils_remove_browser_history", { url });
       ipc.send(storageUtilsChannels.removeBrowserHistory, url);
     },
+    // Sets confirmation dialog visibility (close, terminate AI, close tab)
     setShowConfirm: (type, enable) => {
       extensionRendererApi.events_ipc.emit("storage_utils_set_show_confirm", { type, enable });
       ipc.send(storageUtilsChannels.setShowConfirm, type, enable);
     },
+    // Listens for confirmation dialog setting changes
     onConfirmChange: (result) => ipc.on(storageUtilsChannels.onConfirmChange, result),
+    // Marks notification as read
     addReadNotif: (id) => {
       extensionRendererApi.events_ipc.emit("storage_utils_add_read_notif", { id });
       ipc.send(storageUtilsChannels.addReadNotif, id);
     },
+    // Sets terminal pre-commands for card
     setCardTerminalPreCommands: (id, commands) => {
       extensionRendererApi.events_ipc.emit("storage_utils_setCardTerminalPreCommands", { id, commands });
       ipc.send(storageUtilsChannels.setCardTerminalPreCommands, id, commands);
     },
+    // Unassigns card and optionally clears its configurations
     unassignCard: (id, clearConfigs) => {
       extensionRendererApi.events_ipc.emit("storage_utils_unassignCard", { id, clearConfigs });
       return ipc.invoke(storageUtilsChannels.unassignCard, id, clearConfigs);
     },
+    // Gets browser history data securely
     getBrowserHistoryData: () => ipc.invoke(storageUtilsChannels.getBrowserHistoryData)
   },
   /** Utilities methods */
   utils: {
+    // Updates all extensions in directory sequentially
     updateAllExtensions: (data) => {
       extensionRendererApi.events_ipc.emit("utils_update_all_extensions", { data });
       ipc.send(utilsChannels.updateAllExtensions, data);
     },
+    // Listens for extension update progress
     onUpdateAllExtensions: (result) => ipc.on(utilsChannels.onUpdateAllExtensions, result),
+    // Gets detailed information about extensions in directory
     getExtensionsDetails: (dir) => {
       extensionRendererApi.events_ipc.emit("utils_get_extensions_details", { dir });
       return ipc.invoke(utilsChannels.extensionsDetails, dir);
     },
+    // Gets update status for all extensions in directory
     getExtensionsUpdateStatus: (dir) => {
       extensionRendererApi.events_ipc.emit("utils_get_extensions_update_status", { dir });
       return ipc.invoke(utilsChannels.updateStatus, dir);
     },
+    // Enables or disables extension by renaming folder (add/remove . prefix)
     disableExtension: (disable, dir) => {
       extensionRendererApi.events_ipc.emit("utils_disable_extension", { disable, dir });
       return ipc.invoke(utilsChannels.disableExtension, disable, dir);
     },
+    // Cancels loading extension data operation
     cancelExtensionsData: () => {
       extensionRendererApi.events_ipc.emit("utils_cancel_extensions_data", {});
       ipc.send(utilsChannels.cancelExtensionsData);
     },
+    // Downloads file from URL with progress tracking
     downloadFile: (url) => {
       extensionRendererApi.events_ipc.emit("utils_download_file", { url });
       ipc.send(utilsChannels.downloadFile, url);
     },
+    // Cancels ongoing file download
     cancelDownload: () => {
       extensionRendererApi.events_ipc.emit("utils_cancel_download", {});
       ipc.send(utilsChannels.cancelDownload);
     },
+    // Listens for file download progress updates
     onDownloadFile: (result) => ipc.on(utilsChannels.onDownloadFile, result),
+    // Decompresses archive file (zip, tar, etc.)
     decompressFile: (filePath) => {
       extensionRendererApi.events_ipc.emit("utils_decompress_file", { filePath });
       return ipc.invoke(utilsChannels.decompressFile, filePath);
     },
+    // Validates if URL returns valid HTTP response
     isResponseValid: (url) => {
       extensionRendererApi.events_ipc.emit("utils_is_response_valid", { url });
       return ipc.invoke(utilsChannels.isResponseValid, url);
     },
+    // Fetches image from URL and converts to data URL (base64)
     getImageAsDataURL: (url) => {
       extensionRendererApi.events_ipc.emit("utils_get_image_as_data_url", { url });
       return ipc.invoke(utilsChannels.getImageAsDataURL, url);
@@ -2169,54 +2452,70 @@ const rendererIpc = {
   },
   /** Managing and using node_pty(Pseudo Terminal ) */
   pty: {
+    // Starts PTY process for card with pre-commands and run commands
     process: (id, cardId) => {
       extensionRendererApi.events_ipc.emit("terminal_process", { id, cardId });
       ipc.send(ptyChannels.process, id, cardId);
     },
+    // Starts custom PTY process with specific file to execute
     customProcess: (id, dir, file) => {
       extensionRendererApi.events_ipc.emit("terminal_process_custom", { id, dir, file });
       ipc.send(ptyChannels.customProcess, id, dir, file);
     },
+    // Starts empty PTY process (no commands executed)
     emptyProcess: (id, dir) => {
       extensionRendererApi.events_ipc.emit("terminal_process_empty", { id, dir });
       ipc.send(ptyChannels.emptyProcess, id, dir);
     },
+    // Executes custom commands in PTY
     customCommands: (id, commands, dir) => {
       extensionRendererApi.events_ipc.emit("terminal_process_custom_command", { id, commands, dir });
       ipc.send(ptyChannels.customCommands, id, commands, dir);
     },
+    // Stops PTY process by ID
     stop: (id) => {
       extensionRendererApi.events_ipc.emit("terminal_process_stop", { id });
       ipc.send(ptyChannels.stopProcess, id);
     },
+    // Writes data to PTY input
     write: (id, data) => {
       extensionRendererApi.events_ipc.emit("terminal_write", { id, data });
       ipc.send(ptyChannels.write, id, data);
     },
+    // Clears PTY terminal screen
     clear: (id) => {
       extensionRendererApi.events_ipc.emit("terminal_clear", { id });
       ipc.send(ptyChannels.clear, id);
     },
+    // Resizes PTY terminal dimensions
     resize: (id, cols, rows) => {
       extensionRendererApi.events_ipc.emit("terminal_resize", { id, cols, rows });
       ipc.send(ptyChannels.resize, id, cols, rows);
     },
+    // Listens for PTY output data
     onData: (result) => ipc.on(ptyChannels.onData, result),
+    // Listens for PTY title changes
     onTitle: (result) => ipc.on(ptyChannels.onTitle, result),
+    // Listens for PTY process exit
     onExit: (result) => ipc.on(ptyChannels.onExit, result)
   },
   /** Managing app automatic updates */
   appUpdate: {
+    // Listens for app update error events
     statusError: (result) => ipc.on(appUpdateChannels.statusError, result),
+    // Listens for app update status events
     status: (result) => ipc.on(appUpdateChannels.status, result),
+    // Downloads app update
     download: () => {
       extensionRendererApi.events_ipc.emit("app_update_download", {});
       ipc.send(appUpdateChannels.download);
     },
+    // Cancels app update download
     cancel: () => {
       extensionRendererApi.events_ipc.emit("app_update_cancel", {});
       ipc.send(appUpdateChannels.cancel);
     },
+    // Installs downloaded app update
     install: () => {
       extensionRendererApi.events_ipc.emit("app_update_install", {});
       ipc.send(appUpdateChannels.install);
@@ -2224,14 +2523,17 @@ const rendererIpc = {
   },
   /** Managing app data directories */
   appData: {
+    // Gets current app data directory path
     getCurrentPath: () => {
       extensionRendererApi.events_ipc.emit("app_data_get_current_path", {});
       return ipc.invoke(appDataChannels.getCurrentPath);
     },
+    // Opens dialog to select new app data folder
     selectAnother: () => {
       extensionRendererApi.events_ipc.emit("app_data_select_another", {});
       return ipc.invoke(appDataChannels.selectAnother);
     },
+    // Checks if directory is valid app data directory
     isAppDir: (dir) => {
       extensionRendererApi.events_ipc.emit("app_data_is_app_dir", { dir });
       return ipc.invoke(appDataChannels.isAppDir, dir);
@@ -2239,273 +2541,457 @@ const rendererIpc = {
   },
   /** Managing app storage data */
   storage: {
+    // Gets custom storage data by key
     getCustom: (key) => {
       extensionRendererApi.events_ipc.emit("storage_get_custom", { key });
       return ipc.invoke(storageChannels.getCustom, key);
     },
+    // Sets custom storage data by key
     setCustom: (key, data) => {
       extensionRendererApi.events_ipc.emit("storage_set_custom", { key, data });
       ipc.send(storageChannels.setCustom, key, data);
     },
+    // Gets typed storage data by key
     get: (key) => {
       extensionRendererApi.events_ipc.emit("storage_get", { key });
       return ipc.invoke(storageChannels.get, key);
     },
+    // Gets all storage data
     getAll: () => {
       extensionRendererApi.events_ipc.emit("storage_get_all", {});
       return ipc.invoke(storageChannels.getAll);
     },
+    // Updates storage data partially
     update: (key, updateData) => {
       extensionRendererApi.events_ipc.emit("storage_update", { key, updateData });
       return ipc.invoke(storageChannels.update, key, updateData);
     },
+    // Clears all storage data
     clear: () => {
       extensionRendererApi.events_ipc.emit("storage_clear", {});
       return ipc.invoke(storageChannels.clear);
     }
   },
   appWindow: {
+    // Listens for hotkey change events
     onHotkeysChange: (result) => ipc.on(appWindowChannels.hotkeysChange, result),
+    // Listens for toast notification events
     onShowToast: (result) => ipc.on(appWindowChannels.showToast, result)
   },
   contextMenu: {
+    // Resizes context menu window
     resizeWindow: (data) => {
       extensionRendererApi.events_ipc.emit("context_menu_resize_window", { data });
       ipc.send(contextMenuChannels.resizeWindow, data);
     },
+    // Shows context menu window
     showWindow: () => {
       extensionRendererApi.events_ipc.emit("context_menu_show_window", {});
       ipc.send(contextMenuChannels.showWindow);
     },
+    // Hides context menu window
     hideWindow: () => {
       extensionRendererApi.events_ipc.emit("context_menu_hide_window", {});
       ipc.send(contextMenuChannels.hideWindow);
     },
+    // Listens for context menu view initialization events
     onInitView: (result) => ipc.on(contextMenuChannels.onInitView, result),
+    // Opens terminate AI dialog
     openTerminateAI: (id) => {
       extensionRendererApi.events_ipc.emit("context_menu_open_terminate_ai", { id });
       ipc.send(contextMenuChannels.openTerminateAI, id);
     },
+    // Opens terminate tab dialog
     openTerminateTab: (id, customPosition) => {
       extensionRendererApi.events_ipc.emit("context_menu_open_terminate_tab", { id, customPosition });
       ipc.send(contextMenuChannels.openTerminateTab, id, customPosition);
     },
+    // Opens close app dialog
     openCloseApp: () => {
       extensionRendererApi.events_ipc.emit("context_menu_open_close_app", {});
       ipc.send(contextMenuChannels.openCloseApp);
     },
+    // Listens for find in page events
     onFind: (result) => ipc.on(contextMenuChannels.onFind, result),
+    // Listens for terminate AI events
     onTerminateAI: (result) => ipc.on(contextMenuChannels.onTerminateAI, result),
+    // Listens for terminate tab events
     onTerminateTab: (result) => ipc.on(contextMenuChannels.onTerminateTab, result),
+    // Listens for close app events
     onCloseApp: (result) => ipc.on(contextMenuChannels.onCloseApp, result),
+    // Listens for zoom events
     onZoom: (result) => ipc.on(contextMenuChannels.onZoom, result),
+    // Listens for volume control events
+    onVolume: (result) => ipc.on(contextMenuChannels.onVolume, result),
+    // Relaunches AI process
     relaunchAI: (id) => {
       extensionRendererApi.events_ipc.emit("context_menu_relaunch_ai", { id });
       ipc.send(contextMenuChannels.relaunchAI, id);
     },
+    // Listens for AI relaunch events
     onRelaunchAI: (result) => ipc.on(contextMenuChannels.onRelaunchAI, result),
+    // Stops AI process
     stopAI: (id) => {
       extensionRendererApi.events_ipc.emit("context_menu_stop_ai", { id });
       ipc.send(contextMenuChannels.stopAI, id);
     },
+    // Listens for AI stop events
     onStopAI: (result) => ipc.on(contextMenuChannels.onStopAI, result),
+    // Removes browser tab
     removeTab: (tabID) => {
       extensionRendererApi.events_ipc.emit("context_menu_remove_tab", { tabID });
       ipc.send(contextMenuChannels.removeTab, tabID);
     },
+    // Listens for tab removal events
     onRemoveTab: (result) => ipc.on(contextMenuChannels.onRemoveTab, result)
   },
   tab: {
+    // Listens for new tab events
     onNewTab: (result) => ipc.on(tabsChannels.onNewTab, result)
   },
   contextItems: {
+    // Copies selected text in browser
     copy: (id) => {
       extensionRendererApi.events_ipc.emit("context_items_copy", { id });
       ipc.send(contextMenuChannels.copy, id);
     },
+    // Pastes clipboard content in browser
     paste: (id) => {
       extensionRendererApi.events_ipc.emit("context_items_paste", { id });
       ipc.send(contextMenuChannels.paste, id);
     },
+    // Replaces misspelled word in browser
     replaceMisspelling: (id, text) => {
       extensionRendererApi.events_ipc.emit("context_items_replace_misspelling", { id, text });
       ipc.send(contextMenuChannels.replaceMisspelling, id, text);
     },
+    // Selects all text in browser
     selectAll: (id) => {
       extensionRendererApi.events_ipc.emit("context_items_select_all", { id });
       ipc.send(contextMenuChannels.selectAll, id);
     },
+    // Undoes last action in browser
     undo: (id) => {
       extensionRendererApi.events_ipc.emit("context_items_undo", { id });
       ipc.send(contextMenuChannels.undo, id);
     },
+    // Redoes last undone action in browser
     redo: (id) => {
       extensionRendererApi.events_ipc.emit("context_items_redo", { id });
       ipc.send(contextMenuChannels.redo, id);
     },
+    // Opens new tab with URL
     newTab: (url) => {
       extensionRendererApi.events_ipc.emit("context_items_new_tab", { url });
       ipc.send(contextMenuChannels.newTab, url);
     },
+    // Opens URL in default system browser
     openExternal: (url) => {
       extensionRendererApi.events_ipc.emit("context_items_open_external", { url });
       ipc.send(contextMenuChannels.openExternal, url);
     },
+    // Downloads image from URL
     downloadImage: (id, url) => {
       extensionRendererApi.events_ipc.emit("context_items_download_image", { id, url });
       ipc.send(contextMenuChannels.downloadImage, id, url);
     },
+    // Navigates browser (back, forward, or refresh)
     navigate: (id, action) => {
       extensionRendererApi.events_ipc.emit("context_items_navigate", { id, action });
       ipc.send(contextMenuChannels.navigate, id, action);
     }
   },
   browser: {
+    // Creates new browser webview instance
     createBrowser: (id) => {
       extensionRendererApi.events_ipc.emit("browser_create", { id });
       ipc.send(browserChannels.createBrowser, id);
     },
+    // Removes browser webview instance
     removeBrowser: (id) => {
       extensionRendererApi.events_ipc.emit("browser_remove", { id });
       ipc.send(browserChannels.removeBrowser, id);
     },
+    // Loads URL in browser webview
     loadURL: (id, url) => {
       extensionRendererApi.events_ipc.emit("browser_load_url", { id, url });
       ipc.send(browserChannels.loadURL, id, url);
     },
+    // Sets browser webview visibility
     setVisible: (id, visible) => {
       extensionRendererApi.events_ipc.emit("browser_set_visible", { id, visible });
       ipc.send(browserChannels.setVisible, id, visible);
     },
+    // Opens find in page dialog
     openFindInPage: (id, customPosition) => {
       extensionRendererApi.events_ipc.emit("browser_open_find_in_page", { id, customPosition });
       ipc.send(browserChannels.openFindInPage, id, customPosition);
     },
+    // Opens zoom dialog
     openZoom: (id) => {
       extensionRendererApi.events_ipc.emit("browser_open_zoom", { id });
       ipc.send(browserChannels.openZoom, id);
     },
+    // Opens volume control dialog
+    openVolume: (data) => ipc.send(browserChannels.openVolume, data),
+    // Finds text in page
     findInPage: (id, value, options) => {
       extensionRendererApi.events_ipc.emit("browser_find_in_page", { id, value, options });
       ipc.send(browserChannels.findInPage, id, value, options);
     },
+    // Stops find in page operation
     stopFindInPage: (id, action) => {
       extensionRendererApi.events_ipc.emit("browser_stop_find_in_page", { id, action });
       ipc.send(browserChannels.stopFindInPage, id, action);
     },
+    // Focuses browser webview
     focusWebView: (id) => {
       extensionRendererApi.events_ipc.emit("browser_focus_web_view", { id });
       ipc.send(browserChannels.focusWebView, id);
     },
+    // Clears browser cache
     clearCache: () => {
       extensionRendererApi.events_ipc.emit("browser_clear_cache", {});
-      ipc.send(browserChannels.clearCache);
+      return ipc.invoke(browserChannels.clearCache);
     },
+    // Clears browser cookies
     clearCookies: () => {
       extensionRendererApi.events_ipc.emit("browser_clear_cookies", {});
-      ipc.send(browserChannels.clearCookies);
+      return ipc.invoke(browserChannels.clearCookies);
     },
+    // Sets zoom factor for browser webview
     setZoomFactor: (id, factor) => {
       extensionRendererApi.events_ipc.emit("browser_set_zoom_factor", { id, factor });
       ipc.send(browserChannels.setZoomFactor, id, factor);
     },
+    // Reloads current page
     reload: (id) => {
       extensionRendererApi.events_ipc.emit("browser_reload", { id });
       ipc.send(browserChannels.reload, id);
     },
+    // Navigates browser back
     goBack: (id) => {
       extensionRendererApi.events_ipc.emit("browser_go_back", { id });
       ipc.send(browserChannels.goBack, id);
     },
+    // Navigates browser forward
     goForward: (id) => {
       extensionRendererApi.events_ipc.emit("browser_go_forward", { id });
       ipc.send(browserChannels.goForward, id);
     },
+    // Listens for browser navigation availability (can go back/forward)
     onCanGo: (result) => ipc.on(browserChannels.onCanGo, result),
+    // Listens for browser loading state changes
     onIsLoading: (result) => ipc.on(browserChannels.isLoading, result),
+    // Listens for browser page title changes
     onTitleChange: (result) => ipc.on(browserChannels.onTitleChange, result),
+    // Listens for browser favicon changes
     onFavIconChange: (result) => ipc.on(browserChannels.onFavIconChange, result),
+    // Listens for browser URL changes
     onUrlChange: (result) => ipc.on(browserChannels.onUrlChange, result),
+    // Listens for browser DOM ready state
     onDomReady: (result) => ipc.on(browserChannels.onDomReady, result),
+    // Gets user agent string
     getUserAgent: (type) => {
       extensionRendererApi.events_ipc.emit("browser_get_user_agent", { type });
       return ipc.invoke(browserChannels.getUserAgent, type);
     },
+    // Updates user agent for all browsers
     updateUserAgent: () => {
       extensionRendererApi.events_ipc.emit("browser_update_user_agent", {});
       ipc.send(browserChannels.updateUserAgent);
     },
+    // Adds offset to browser webview position
     addOffset: (id, offset) => {
       extensionRendererApi.events_ipc.emit("browser_add_offset", { id, offset });
       ipc.send(browserChannels.addOffset, id, offset);
     },
+    // Clears browser history for selected URLs
     clearHistory: (selected) => ipc.send(browserChannels.clearHistory, selected),
+    // Listens for failed URL load events
     onFailedLoadUrl: (result) => ipc.on(browserChannels.onFailedLoadUrl, result),
+    // Listens for cleared failed URL events
     onClearFailed: (result) => ipc.on(browserChannels.onClearFailed, result)
   },
+  /** Managing browser volume and audio */
+  volume: {
+    // Sets volume level for browser webview (0-100)
+    setVolume: async (id, volume) => {
+      extensionRendererApi.events_ipc.emit("volume_set_volume", { id, volume });
+      try {
+        await Promise.race([
+          ipc.invoke(volumeChannels.setVolume, id, volume),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Volume set operation timed out")), 5e3))
+        ]);
+      } catch (error) {
+        console.error("Failed to set volume:", error);
+        throw error;
+      }
+    },
+    // Sets mute state for browser webview
+    setMuted: async (id, muted) => {
+      extensionRendererApi.events_ipc.emit("volume_set_muted", { id, muted });
+      try {
+        await Promise.race([
+          ipc.invoke(volumeChannels.setMuted, id, muted),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("Mute set operation timed out")), 5e3))
+        ]);
+      } catch (error) {
+        console.error("Failed to set mute state:", error);
+        throw error;
+      }
+    },
+    // Gets current audio state (playing, muted) for browser webview
+    getState: async (id) => {
+      extensionRendererApi.events_ipc.emit("volume_get_state", { id });
+      try {
+        return await Promise.race([
+          ipc.invoke(volumeChannels.getState, id),
+          new Promise(
+            (_, reject) => setTimeout(() => reject(new Error("Get audio state operation timed out")), 3e3)
+          )
+        ]);
+      } catch (error) {
+        console.error("Failed to get audio state:", error);
+        return null;
+      }
+    },
+    // Listens for audio state changes (media started/paused, mute state)
+    onAudioStateChange: (callback) => {
+      const handler = (_, id, state) => {
+        try {
+          callback(id, state);
+        } catch (error) {
+          console.error("Error in audio state change callback:", error);
+        }
+      };
+      return ipc.on(volumeChannels.onAudioStateChange, handler);
+    },
+    // Updates tab volume from context menu (sends to main window)
+    updateTabVolume: (tabId, volume) => {
+      ipc.send(volumeChannels.updateTabVolume, tabId, volume);
+    },
+    // Updates tab muted state from context menu (sends to main window)
+    updateTabMuted: (tabId, muted) => {
+      ipc.send(volumeChannels.updateTabMuted, tabId, muted);
+    },
+    // Listens for tab volume updates from context menu
+    onTabVolumeUpdate: (callback) => {
+      const handler = (_, tabId, volume) => callback(tabId, volume);
+      ipc.on(volumeChannels.onTabVolumeUpdate, handler);
+      return () => ipc.removeListener(volumeChannels.onTabVolumeUpdate, handler);
+    },
+    // Listens for tab muted updates from context menu
+    onTabMutedUpdate: (callback) => {
+      const handler = (_, tabId, muted) => callback(tabId, muted);
+      ipc.on(volumeChannels.onTabMutedUpdate, handler);
+      return () => ipc.removeListener(volumeChannels.onTabMutedUpdate, handler);
+    }
+  },
   statics: {
+    // Pulls latest static data from server
     pull: () => {
       extensionRendererApi.events_ipc.emit("statics_pull", {});
       return ipc.invoke(staticsChannels.pull);
     },
+    // Gets app release information
     getReleases: () => {
       extensionRendererApi.events_ipc.emit("statics_get_releases", {});
       return ipc.invoke(staticsChannels.getReleases);
     },
+    // Gets insider build information
     getInsider: () => {
       extensionRendererApi.events_ipc.emit("statics_get_insider", {});
       return ipc.invoke(staticsChannels.getInsider);
     },
+    // Gets notification data
     getNotification: () => {
       extensionRendererApi.events_ipc.emit("statics_get_notification", {});
       return ipc.invoke(staticsChannels.getNotification);
     },
+    // Gets available modules list
     getModules: () => {
       extensionRendererApi.events_ipc.emit("statics_get_modules", {});
       return ipc.invoke(staticsChannels.getModules);
     },
+    // Gets available extensions list
     getExtensions: () => {
       extensionRendererApi.events_ipc.emit("statics_get_extensions", {});
       return ipc.invoke(staticsChannels.getExtensions);
     },
+    // Gets early access extensions list
     getExtensionsEA: () => {
       extensionRendererApi.events_ipc.emit("statics_get_extensions_ea", {});
       return ipc.invoke(staticsChannels.getExtensionsEA);
     },
+    // Gets Patreon supporters list
     getPatrons: () => {
       extensionRendererApi.events_ipc.emit("statics_get_patrons", {});
       return ipc.invoke(staticsChannels.getPatrons);
     }
   },
   events: {
+    // Sends event for card pre-command uninstall
     card_PreCommandUninstall: (preCommands) => ipc.send(eventsChannels.card_PreCommandUninstall, preCommands)
   },
   downloadManager: {
+    // Listens for download count changes
     onDownloadCount: (result) => ipc.on(browserDownloadChannels.mainDownloadCount, result),
+    // Listens for download start events
     onDlStart: (result) => ipc.on(browserDownloadChannels.onDlStart, result),
+    // Listens for download progress events
     onProgress: (result) => ipc.on(browserDownloadChannels.onProgress, result),
+    // Listens for download completion events
     onDone: (result) => ipc.on(browserDownloadChannels.onDone, result),
+    // Opens downloads menu window
     openMenu: () => ipc.send(browserDownloadChannels.openDownloadsMenu),
+    // Opens downloaded item or its folder
     openItem: (name, action) => ipc.send(browserDownloadChannels.openItem, name, action),
+    // Cancels download
     cancel: (name) => ipc.send(browserDownloadChannels.cancel, name),
+    // Pauses download
     pause: (name) => ipc.send(browserDownloadChannels.pause, name),
+    // Resumes paused download
     resume: (name) => ipc.send(browserDownloadChannels.resume, name),
-    clear: (name) => ipc.send(browserDownloadChannels.clear, name)
+    // Clears completed download from list
+    clear: (name) => ipc.send(browserDownloadChannels.clear, name),
+    // Clears all downloads from list
+    clearAll: () => ipc.send(browserDownloadChannels.clearAll),
+    // Gets current download location
+    getDownloadLocation: () => ipc.invoke(browserDownloadChannels.getDownloadLocation),
+    // Sets download location
+    setDownloadLocation: (path) => ipc.invoke(browserDownloadChannels.setDownloadLocation, path),
+    // Opens location selection dialog
+    openLocationDialog: () => ipc.invoke(browserDownloadChannels.openLocationDialog),
+    // Gets download behavior setting
+    getDownloadBehavior: () => ipc.invoke(browserDownloadChannels.getDownloadBehavior),
+    // Sets download behavior
+    setDownloadBehavior: (behavior) => ipc.invoke(browserDownloadChannels.setDownloadBehavior, behavior)
   },
   customNotification: {
+    // Listens for custom notification open events
     onOpen: (result) => ipc.on(customNotifChannels.onOpen, result),
+    // Listens for custom notification close events
     onClose: (result) => ipc.on(customNotifChannels.onClose, result),
+    // Sends button press event for custom notification
     btnPress: (btnId, notifKey) => ipc.send(customNotifChannels.onBtnPress, btnId, notifKey)
   },
   init: {
+    // Checks if Git is installed and returns version
     checkGitInstalled: () => ipc.invoke(initChannels.checkGitInstalled),
+    // Checks if PowerShell 7 is installed and returns version
     checkPwsh7Installed: () => ipc.invoke(initChannels.checkPwsh7Installed)
   },
   patreon: {
+    // Gets Patreon user information
     getInfo: () => ipc.invoke(patreonChannels.getInfo),
+    // Logs in to Patreon
     login: () => ipc.invoke(patreonChannels.login),
+    // Logs out from Patreon
     logout: () => ipc.invoke(patreonChannels.logout),
+    // Updates Patreon subscription channel
     updateChannel: (channel) => ipc.send(patreonChannels.updateChannel, channel),
+    // Listens for Patreon release channel changes
     onReleaseChannel: (result) => ipc.on(patreonChannels.onReleaseChannel, result)
   }
 };
@@ -2754,11 +3240,11 @@ const cardsSlice = createSlice({
 const useCardsState = (name) => useSelector$1((state) => state.cards[name]);
 const cardsActions = cardsSlice.actions;
 
-const version = "3.3.0";
+const version = "3.4.0-insider-2";
 const author = {"name":"KindaBrazy","email":"kindofbrazy@gmail.com"};
 const repository = {"url":"https://github.com/KindaBrazy/LynxHub"};
 const license = "AGPL-3.0";
-const appDetails = {"title":"LynxHub","buildNumber":32,"detailedDescription":"Open-source, cross-platform terminal and browser, designed for managing AI. Highly modular and extensible, it's the all-in-one environment for AI power users."};
+const appDetails = {"title":"LynxHub","buildNumber":34,"detailedDescription":"Open-source, cross-platform terminal and browser, designed for managing AI. Highly modular and extensible, it's the all-in-one environment for AI power users."};
 const packageJson = {
   version,
   author,
@@ -2957,6 +3443,19 @@ function ExternalLink_Icon(props) {
       }
     )
   ] }) });
+}
+function FolderDuo_Icon$1(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "M22 14v-2.202c0-2.632 0-3.949-.77-4.804a3 3 0 0 0-.224-.225C20.151 6 18.834 6 16.202 6h-.374c-1.153 0-1.73 0-2.268-.153a4 4 0 0 1-.848-.352C12.224 5.224 11.816 4.815 11 4l-.55-.55c-.274-.274-.41-.41-.554-.53a4 4 0 0 0-2.18-.903C7.53 2 7.336 2 6.95 2c-.883 0-1.324 0-1.692.07A4 4 0 0 0 2.07 5.257C2 5.626 2 6.068 2 6.95V14c0 3.771 0 5.657 1.172 6.828S6.229 22 10 22h4c3.771 0 5.657 0 6.828-1.172S22 17.771 22 14"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { fill: "currentColor", d: "M12.25 10a.75.75 0 0 1 .75-.75h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75" })
+  ] });
 }
 function GitHub_Icon(props) {
   return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, height: "1em", viewBox: "0 0 16 16", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -3746,34 +4245,34 @@ function PlayDuo_Icon$1(props) {
 
 const {addToast,Button: Button$6} = await importShared('@heroui/react');
 
-const {isEmpty,isNil} = await importShared('lodash');
+const {isEmpty: isEmpty$1,isNil} = await importShared('lodash');
 
-const {Fragment: Fragment$1,useCallback: useCallback$1,useEffect: useEffect$2,useMemo: useMemo$9,useState: useState$4} = await importShared('react');
+const {Fragment: Fragment$1,useCallback: useCallback$1,useEffect: useEffect$2,useMemo: useMemo$8,useState: useState$4} = await importShared('react');
 
 const {useDispatch: useDispatch$e} = await importShared('react-redux');
 function useInstalledCard(cardId) {
   const installedCards = useCardsState("installedCards");
-  return useMemo$9(() => installedCards.find((card) => card.id === cardId), [installedCards, cardId]);
+  return useMemo$8(() => installedCards.find((card) => card.id === cardId), [installedCards, cardId]);
 }
 function useUpdatingCard(cardId) {
   const updatingCards = useCardsState("updatingCards");
-  return useMemo$9(() => updatingCards.some((card) => card.id === cardId), [updatingCards, cardId]);
+  return useMemo$8(() => updatingCards.some((card) => card.id === cardId), [updatingCards, cardId]);
 }
 function useUpdateAvailable(cardId) {
   const updateAvailable = useCardsState("updateAvailable");
-  return useMemo$9(() => updateAvailable.includes(cardId), [updateAvailable, cardId]);
+  return useMemo$8(() => updateAvailable.includes(cardId), [updateAvailable, cardId]);
 }
 function useIsAutoUpdateCard(cardId) {
   const autoUpdate = useCardsState("autoUpdate");
-  return useMemo$9(() => autoUpdate.includes(cardId), [autoUpdate, cardId]);
+  return useMemo$8(() => autoUpdate.includes(cardId), [autoUpdate, cardId]);
 }
 function useIsAutoUpdateExtensions(cardId) {
   const autoUpdate = useCardsState("autoUpdateExtensions");
-  return useMemo$9(() => autoUpdate.includes(cardId), [autoUpdate, cardId]);
+  return useMemo$8(() => autoUpdate.includes(cardId), [autoUpdate, cardId]);
 }
 function useIsPinnedCard(cardId) {
   const pinnedCards = useCardsState("pinnedCards");
-  return useMemo$9(() => pinnedCards.includes(cardId), [pinnedCards, cardId]);
+  return useMemo$8(() => pinnedCards.includes(cardId), [pinnedCards, cardId]);
 }
 function topToast(options) {
   const { title, color = "success", timeout = 2e3, promise, placement } = options;
@@ -3804,7 +4303,7 @@ const isLinuxPortable = window.isPortable === "linux";
 
 /*!
  * OverlayScrollbars
- * Version: 2.12.0
+ * Version: 2.13.0
  *
  * Copyright (c) Rene Haas | KingSora.
  * https://github.com/KingSora
@@ -4044,24 +4543,25 @@ const debounce = (t, n) => {
     const t = from(arguments);
     const n = getDebouncer(o);
     if (n) {
-      const o = getDebouncer(s);
-      const c = mergeParms(t);
-      const f = c || t;
-      const _ = u.bind(0, f);
+      const o = typeof e === "function" ? e() : e;
+      const c = getDebouncer(s);
+      const f = mergeParms(t);
+      const _ = f || t;
+      const d = u.bind(0, _);
       if (i) {
         i();
       }
-      if (e && !a) {
-        _();
+      if (o && !a) {
+        d();
         a = true;
         i = n((() => a = void 0));
       } else {
-        i = n(_);
-        if (o && !r) {
-          r = o(flush);
+        i = n(d);
+        if (c && !r) {
+          r = c(flush);
         }
       }
-      l = f;
+      l = _;
     } else {
       u(t);
     }
@@ -4306,7 +4806,7 @@ const getTrasformTranslateValue = (t, n) => `translate${isObject(t) ? `(${t.x},$
 
 const elementHasDimensions = t => !!(t.offsetWidth || t.offsetHeight || t.getClientRects().length);
 
-const T = {
+const I = {
   w: 0,
   h: 0
 };
@@ -4314,13 +4814,13 @@ const T = {
 const getElmWidthHeightProperty = (t, n) => n ? {
   w: n[`${t}Width`],
   h: n[`${t}Height`]
-} : T;
+} : I;
 
 const getWindowSize = t => getElmWidthHeightProperty("inner", t || n);
 
-const I = bind(getElmWidthHeightProperty, "offset");
+const A = bind(getElmWidthHeightProperty, "offset");
 
-const A = bind(getElmWidthHeightProperty, "client");
+const T = bind(getElmWidthHeightProperty, "client");
 
 const D = bind(getElmWidthHeightProperty, "scroll");
 
@@ -4355,9 +4855,9 @@ const removeEventListener = (t, n, o, s) => {
 
 const addEventListener = (t, n, o, s) => {
   var e;
-  const c = (e = s && s.T) != null ? e : true;
-  const r = s && s.I || false;
-  const i = s && s.A || false;
+  const c = (e = s && s.I) != null ? e : true;
+  const r = s && s.A || false;
+  const i = s && s.T || false;
   const l = {
     passive: c,
     capture: r
@@ -4455,7 +4955,8 @@ const getScrollCoordinatesPercent = ({D: t, M: n}, o) => {
 const focusElement = t => {
   if (t && t.focus) {
     t.focus({
-      preventScroll: true
+      preventScroll: true,
+      focusVisible: false
     });
   }
 };
@@ -4659,12 +5160,23 @@ const opsStringify = t => JSON.stringify(t, ((t, n) => {
 
 const getPropByPath = (t, n) => t ? `${n}`.split(".").reduce(((t, n) => t && hasOwnProperty(t, n) ? t[n] : void 0), t) : void 0;
 
-const Tt = {
+const It = [ 0, 33 ];
+
+const At = [ 33, 99 ];
+
+const Tt = [ 222, 666, true ];
+
+const Dt = {
   paddingAbsolute: false,
   showNativeOverlaidScrollbars: false,
   update: {
     elementEvents: [ [ "img", "load" ] ],
-    debounce: [ 0, 33 ],
+    debounce: {
+      mutation: It,
+      resize: null,
+      event: At,
+      env: Tt
+    },
     attributes: null,
     ignoreMutation: null
   },
@@ -4714,22 +5226,22 @@ const getOptionsDiff = (t, n) => {
 
 const createOptionCheck = (t, n, o) => s => [ getPropByPath(t, s), o || getPropByPath(n, s) !== void 0 ];
 
-let It;
+let Mt;
 
-const getNonce = () => It;
+const getNonce = () => Mt;
 
 const setNonce = t => {
-  It = t;
+  Mt = t;
 };
 
-let At;
+let kt;
 
 const createEnvironment = () => {
   const getNativeScrollbarSize = (t, n, o) => {
     appendChildren(document.body, t);
     appendChildren(document.body, t);
-    const s = A(t);
-    const e = I(t);
+    const s = T(t);
+    const e = A(t);
     const c = getFractionalSize(n);
     if (o) {
       removeElements(t);
@@ -4783,7 +5295,7 @@ const createEnvironment = () => {
       body: null
     }
   };
-  const g = assignDeep({}, Tt);
+  const g = assignDeep({}, Dt);
   const h = bind(assignDeep, {}, g);
   const b = bind(assignDeep, {}, v);
   const w = {
@@ -4811,7 +5323,7 @@ const createEnvironment = () => {
         t();
         addZoomListener(t);
       }), {
-        A: true
+        T: true
       });
     };
     addZoomListener((() => {
@@ -4824,10 +5336,10 @@ const createEnvironment = () => {
 };
 
 const getEnvironment = () => {
-  if (!At) {
-    At = createEnvironment();
+  if (!kt) {
+    kt = createEnvironment();
   }
-  return At;
+  return kt;
 };
 
 const createEventContentChange = (t, n, o) => {
@@ -4871,24 +5383,20 @@ const createEventContentChange = (t, n, o) => {
 const createDOMObserver = (t, n, o, s) => {
   let e = false;
   const {et: c, ct: r, rt: i, it: l, lt: a, ut: u} = s || {};
-  const _ = debounce((() => e && o(true)), {
-    p: 33,
-    v: 99
-  });
-  const [d, p] = createEventContentChange(t, _, i);
-  const v = c || [];
-  const g = r || [];
-  const h = concat(v, g);
+  const [_, d] = createEventContentChange(t, (() => e && o(true)), i);
+  const p = c || [];
+  const v = r || [];
+  const g = concat(p, v);
   const observerCallback = (e, c) => {
     if (!isEmptyArray(c)) {
       const r = a || noop;
       const i = u || noop;
       const f = [];
       const _ = [];
-      let d = false;
-      let v = false;
+      let p = false;
+      let g = false;
       each(c, (o => {
-        const {attributeName: e, target: c, type: a, oldValue: u, addedNodes: p, removedNodes: h} = o;
+        const {attributeName: e, target: c, type: a, oldValue: u, addedNodes: d, removedNodes: h} = o;
         const b = a === "attributes";
         const w = a === "childList";
         const y = t === c;
@@ -4896,33 +5404,33 @@ const createDOMObserver = (t, n, o, s) => {
         const m = S && getAttr(c, e || "");
         const O = isString(m) ? m : null;
         const C = S && u !== O;
-        const $ = inArray(g, e) && C;
+        const $ = inArray(v, e) && C;
         if (n && (w || !y)) {
           const n = b && C;
           const a = n && l && is(c, l);
           const _ = a ? !r(c, e, u, O) : !b || n;
-          const d = _ && !i(o, !!a, t, s);
-          each(p, (t => push(f, t)));
+          const p = _ && !i(o, !!a, t, s);
+          each(d, (t => push(f, t)));
           each(h, (t => push(f, t)));
-          v = v || d;
+          g = g || p;
         }
         if (!n && y && C && !r(c, e, u, O)) {
           push(_, e);
-          d = d || $;
+          p = p || $;
         }
       }));
-      p((t => deduplicateArray(f).reduce(((n, o) => {
+      d((t => deduplicateArray(f).reduce(((n, o) => {
         push(n, find(t, o));
         return is(o, t) ? push(n, o) : n;
       }), [])));
       if (n) {
-        if (!e && v) {
+        if (!e && g) {
           o(false);
         }
         return [ false ];
       }
-      if (!isEmptyArray(_) || d) {
-        const t = [ deduplicateArray(_), d ];
+      if (!isEmptyArray(_) || p) {
+        const t = [ deduplicateArray(_), p ];
         if (!e) {
           o.apply(0, t);
         }
@@ -4930,12 +5438,12 @@ const createDOMObserver = (t, n, o, s) => {
       }
     }
   };
-  const b = new f(bind(observerCallback, false));
+  const h = new f(bind(observerCallback, false));
   return [ () => {
-    b.observe(t, {
+    h.observe(t, {
       attributes: true,
       attributeOldValue: true,
-      attributeFilter: h,
+      attributeFilter: g,
       subtree: n,
       childList: n,
       characterData: n
@@ -4943,20 +5451,19 @@ const createDOMObserver = (t, n, o, s) => {
     e = true;
     return () => {
       if (e) {
-        d();
-        b.disconnect();
+        _();
+        h.disconnect();
         e = false;
       }
     };
   }, () => {
     if (e) {
-      _.O();
-      return observerCallback(true, b.takeRecords());
+      return observerCallback(true, h.takeRecords());
     }
   } ];
 };
 
-let Dt = null;
+let Rt = null;
 
 const createSizeObserver = (t, n, o) => {
   const {ft: s} = o || {};
@@ -4991,14 +5498,14 @@ const createSizeObserver = (t, n, o) => {
       }
     };
     if (d$1) {
-      if (!isBoolean(Dt)) {
+      if (!isBoolean(Rt)) {
         const n = new d$1(noop);
         n.observe(t, {
           get box() {
-            Dt = true;
+            Rt = true;
           }
         });
-        Dt = Dt || false;
+        Rt = Rt || false;
         n.disconnect();
       }
       const n = debounce(onSizeChangedCallbackProxy, {
@@ -5007,11 +5514,11 @@ const createSizeObserver = (t, n, o) => {
       });
       const resizeObserverCallback = t => n(t);
       const s = new d$1(resizeObserverCallback);
-      s.observe(Dt ? t : l);
+      s.observe(Rt ? t : l);
       push(o, [ () => {
         s.disconnect();
-      }, !Dt && appendChildren(t, i) ]);
-      if (Dt) {
+      }, !Rt && appendChildren(t, i) ]);
+      if (Rt) {
         const n = new d$1(resizeObserverCallback);
         n.observe(t, {
           box: "border-box"
@@ -5055,7 +5562,7 @@ const createTrinsicObserver = (t, n) => {
       }));
     } else {
       const onSizeChanged = () => {
-        const t = I(s);
+        const t = A(s);
         triggerOnTrinsicChangedCallback(t);
       };
       push(n, createSizeObserver(s, onSizeChanged)());
@@ -5072,38 +5579,77 @@ const createObserversSetup = (t, n, o, s) => {
   let i;
   let l;
   let a;
-  const u = `[${B}]`;
-  const f = `[${j}]`;
-  const _ = [ "id", "class", "style", "open", "wrap", "cols", "rows" ];
-  const {dt: p, vt: v, L: g, gt: h, ht: b, V: w, bt: y, wt: S, yt: m, St: O} = t;
+  let u;
+  let f;
+  const _ = `[${B}]`;
+  const p = `[${j}]`;
+  const v = [ "id", "class", "style", "open", "wrap", "cols", "rows" ];
+  const {dt: g, vt: h, L: b, gt: w, ht: y, V: S, bt: m, wt: O, yt: C, St: $} = t;
   const getDirectionIsRTL = t => getStyles(t, "direction") === "rtl";
-  const C = {
-    Ot: false,
-    B: getDirectionIsRTL(p)
+  const createDebouncedObservesUpdate = () => {
+    let t;
+    let n;
+    let o;
+    const e = debounce(s, {
+      p: () => t,
+      v: () => n,
+      S: () => o,
+      m(t, n) {
+        const [o] = t;
+        const [s] = n;
+        return [ concat(keys(o), keys(s)).reduce(((t, n) => {
+          t[n] = o[n] || s[n];
+          return t;
+        }), {}) ];
+      }
+    });
+    const fn = (s, c) => {
+      if (isArray(c)) {
+        const [s, e, r] = c;
+        t = s;
+        n = e;
+        o = r;
+      } else if (isNumber(c)) {
+        t = c;
+        n = false;
+        o = false;
+      } else {
+        t = false;
+        n = false;
+        o = false;
+      }
+      e(s);
+    };
+    fn.O = e.O;
+    return fn;
   };
-  const $ = getEnvironment();
-  const x = getStaticPluginModuleInstance(xt);
-  const [H] = createCache({
+  const x = {
+    Ot: false,
+    B: getDirectionIsRTL(g)
+  };
+  const H = getEnvironment();
+  const E = getStaticPluginModuleInstance(xt);
+  const [z] = createCache({
     i: equalWH,
     o: {
       w: 0,
       h: 0
     }
   }, (() => {
-    const s = x && x.R(t, n, C, $, o).Y;
-    const e = y && w;
-    const c = !e && hasAttrClass(v, B, N);
-    const r = !w && S(W);
-    const i = r && getElementScroll(h);
-    const l = i && O();
-    const a = m(J, c);
+    const s = E && E.R(t, n, x, H, o).Y;
+    const e = m && S;
+    const c = !e && hasAttrClass(h, B, N);
+    const r = !S && O(W);
+    const i = r && getElementScroll(w);
+    const l = i && $();
+    const a = C(J, c);
     const u = r && s && s();
-    const f = D(g);
-    const _ = getFractionalSize(g);
+    const f = D(b);
+    const _ = getFractionalSize(b);
     if (u) {
       u();
     }
-    scrollElementTo(h, i);
+    scrollElementTo(w, i);
     if (l) {
       l();
     }
@@ -5115,34 +5661,23 @@ const createObserversSetup = (t, n, o, s) => {
       h: f.h + _.h
     };
   }));
-  const E = debounce(s, {
-    p: () => e,
-    v: () => c,
-    m(t, n) {
-      const [o] = t;
-      const [s] = n;
-      return [ concat(keys(o), keys(s)).reduce(((t, n) => {
-        t[n] = o[n] || s[n];
-        return t;
-      }), {}) ];
-    }
-  });
+  const I = createDebouncedObservesUpdate();
   const setDirection = t => {
-    const n = getDirectionIsRTL(p);
+    const n = getDirectionIsRTL(g);
     assignDeep(t, {
-      Ct: a !== n
+      Ct: f !== n
     });
-    assignDeep(C, {
+    assignDeep(x, {
       B: n
     });
-    a = n;
+    f = n;
   };
   const onTrinsicChanged = (t, n) => {
     const [o, e] = t;
     const c = {
       $t: e
     };
-    assignDeep(C, {
+    assignDeep(x, {
       Ot: o
     });
     if (!n) {
@@ -5151,26 +5686,24 @@ const createObserversSetup = (t, n, o, s) => {
     return c;
   };
   const onSizeChanged = ({_t: t, ft: n}) => {
-    const o = t && !n;
-    const e = !o && $.U ? E : s;
-    const c = {
+    const o = n ? s : I;
+    const e = {
       _t: t || n,
       ft: n
     };
-    setDirection(c);
-    e(c);
+    setDirection(e);
+    o(e, c);
   };
   const onContentMutation = (t, n) => {
-    const [, o] = H();
-    const e = {
+    const [, o] = z();
+    const s = {
       xt: o
     };
-    setDirection(e);
-    const c = t ? s : E;
+    setDirection(s);
     if (o && !n) {
-      c(e);
+      I(s, t ? r : e);
     }
-    return e;
+    return s;
   };
   const onHostMutation = (t, n, o) => {
     const s = {
@@ -5178,55 +5711,44 @@ const createObserversSetup = (t, n, o, s) => {
     };
     setDirection(s);
     if (n && !o) {
-      E(s);
+      I(s, e);
     }
     return s;
   };
-  const [z, T] = b ? createTrinsicObserver(v, onTrinsicChanged) : [];
-  const I = !w && createSizeObserver(v, onSizeChanged, {
+  const [A, T] = y ? createTrinsicObserver(h, onTrinsicChanged) : [];
+  const M = !S && createSizeObserver(h, onSizeChanged, {
     ft: true
   });
-  const [A, M] = createDOMObserver(v, false, onHostMutation, {
-    ct: _,
-    et: _
+  const [k, R] = createDOMObserver(h, false, onHostMutation, {
+    ct: v,
+    et: v
   });
-  const k = w && d$1 && new d$1((t => {
+  const V = S && d$1 && new d$1((t => {
     const n = t[t.length - 1].contentRect;
     onSizeChanged({
       _t: true,
-      ft: domRectAppeared(n, l)
+      ft: domRectAppeared(n, u)
     });
-    l = n;
+    u = n;
   }));
-  const R = debounce((() => {
-    const [, t] = H();
-    s({
-      xt: t,
-      _t: y
-    });
-  }), {
-    p: 222,
-    S: true
-  });
   return [ () => {
-    if (k) {
-      k.observe(v);
+    if (V) {
+      V.observe(h);
     }
-    const t = I && I();
-    const n = z && z();
-    const o = A();
-    const s = $.G((t => {
-      if (t) {
-        E({
-          Et: t
-        });
-      } else {
-        R();
-      }
+    const t = M && M();
+    const n = A && A();
+    const o = k();
+    const s = H.G((t => {
+      const [, n] = z();
+      I({
+        Et: t,
+        xt: n,
+        _t: m
+      }, i);
     }));
     return () => {
-      if (k) {
-        k.disconnect();
+      if (V) {
+        V.disconnect();
       }
       if (t) {
         t();
@@ -5234,73 +5756,77 @@ const createObserversSetup = (t, n, o, s) => {
       if (n) {
         n();
       }
-      if (i) {
-        i();
+      if (a) {
+        a();
       }
       o();
       s();
     };
-  }, ({zt: t, Tt: n, It: o}) => {
+  }, ({zt: t, It: n, At: o}) => {
     const s = {};
-    const [l] = t("update.ignoreMutation");
-    const [a, d] = t("update.attributes");
-    const [p, v] = t("update.elementEvents");
-    const [h, y] = t("update.debounce");
-    const S = v || d;
-    const m = n || o;
-    const ignoreMutationFromOptions = t => isFunction(l) && l(t);
-    if (S) {
-      if (r) {
-        r();
+    const [u] = t("update.ignoreMutation");
+    const [f, d] = t("update.attributes");
+    const [g, h] = t("update.elementEvents");
+    const [w, m] = t("update.debounce");
+    const O = h || d;
+    const C = n || o;
+    const ignoreMutationFromOptions = t => isFunction(u) && u(t);
+    if (O) {
+      if (l) {
+        l();
       }
-      if (i) {
-        i();
+      if (a) {
+        a();
       }
-      const [t, n] = createDOMObserver(b || g, true, onContentMutation, {
-        et: concat(_, a || []),
-        rt: p,
-        it: u,
+      const [t, n] = createDOMObserver(y || b, true, onContentMutation, {
+        et: concat(v, f || []),
+        rt: g,
+        it: _,
         ut: (t, n) => {
           const {target: o, attributeName: s} = t;
-          const e = !n && s && !w ? liesBetween(o, u, f) : false;
+          const e = !n && s && !S ? liesBetween(o, _, p) : false;
           return e || !!closest(o, `.${at}`) || !!ignoreMutationFromOptions(t);
         }
       });
-      i = t();
-      r = n;
+      a = t();
+      l = n;
     }
-    if (y) {
-      E.O();
-      if (isArray(h)) {
-        const t = h[0];
-        const n = h[1];
-        e = isNumber(t) && t;
-        c = isNumber(n) && n;
-      } else if (isNumber(h)) {
-        e = h;
+    if (m) {
+      I.O();
+      if (isArray(w) || isNumber(w)) {
+        e = w;
         c = false;
+        r = At;
+        i = Tt;
+      } else if (isPlainObject(w)) {
+        e = w.mutation;
+        c = w.resize;
+        r = w.event;
+        i = w.env;
       } else {
         e = false;
         c = false;
+        r = false;
+        i = false;
       }
     }
-    if (m) {
-      const t = M();
+    if (C) {
+      const t = R();
       const n = T && T();
-      const o = r && r();
+      const o = l && l();
       if (t) {
-        assignDeep(s, onHostMutation(t[0], t[1], m));
+        assignDeep(s, onHostMutation(t[0], t[1], C));
       }
       if (n) {
-        assignDeep(s, onTrinsicChanged(n[0], m));
+        assignDeep(s, onTrinsicChanged(n[0], C));
       }
       if (o) {
-        assignDeep(s, onContentMutation(o[0], m));
+        assignDeep(s, onContentMutation(o[0], C));
       }
     }
     setDirection(s);
     return s;
-  }, C ];
+  }, x ];
 };
 
 const resolveInitialization = (t, n) => isFunction(n) ? n.apply(0, t) : n;
@@ -5335,7 +5861,7 @@ const createScrollbarsSetupElements = (t, n, o, s) => {
   const {K: i} = getEnvironment();
   const {scrollbars: l} = i();
   const {slot: a} = l;
-  const {dt: u, vt: f, L: _, At: d, gt: v, bt: g, V: h} = n;
+  const {dt: u, vt: f, L: _, Tt: d, gt: v, bt: g, V: h} = n;
   const {scrollbars: b} = d ? {} : t;
   const {slot: w} = b || {};
   const y = [];
@@ -5360,13 +5886,13 @@ const createScrollbarsSetupElements = (t, n, o, s) => {
         const {Dt: r} = o;
         const i = isDefaultDirectionScrollCoordinates(r)[t];
         const l = t === "x";
-        const a = [ getTrasformTranslateValue(0, l), getTrasformTranslateValue(`calc(100cq${l ? "w" : "h"} + -100%)`, l) ];
+        const a = [ getTrasformTranslateValue(0, l), getTrasformTranslateValue(`calc(-100% + 100cq${l ? "w" : "h"})`, l) ];
         const u = i ? a : a.reverse();
         if (s[0] === u[0] && s[1] === u[1]) {
           return cancelAnimation;
         }
-        cancelAnimation();
         s = u;
+        cancelAnimation();
         n = c.Mt.animate({
           clear: [ "left" ],
           transform: u
@@ -5537,7 +6063,7 @@ const createScrollbarsSetupEvents = (t, n, o, s) => (r, i, l) => {
     const u = l ? "x" : "y";
     const createRelativeHandleMove = (t, n) => s => {
       const {Rt: e} = o;
-      const c = I(h)[a] - I(b)[a];
+      const c = A(h)[a] - A(b)[a];
       const r = n * s / c;
       const i = r * e[u];
       scrollElementTo(d, {
@@ -5560,15 +6086,15 @@ const createScrollbarsSetupEvents = (t, n, o, s) => (r, i, l) => {
         const g = bind(getBoundingClientRect, b);
         const y = bind(getBoundingClientRect, h);
         const getHandleOffset = (t, n) => (t || g())[i] - (n || y())[i];
-        const O = e(getBoundingClientRect(d)[r]) / I(d)[a] || 1;
+        const O = e(getBoundingClientRect(d)[r]) / A(d)[a] || 1;
         const C = createRelativeHandleMove(getElementScroll(d)[u], 1 / O);
         const $ = o[s];
         const x = g();
         const H = y();
         const E = x[r];
         const z = getHandleOffset(x, H) + E / 2;
-        const T = $ - H[i];
-        const A = l ? 0 : T - z;
+        const I = $ - H[i];
+        const T = l ? 0 : I - z;
         const releasePointerCapture = t => {
           runEachAndClear(k);
           _.releasePointerCapture(t.pointerId);
@@ -5576,8 +6102,8 @@ const createScrollbarsSetupEvents = (t, n, o, s) => (r, i, l) => {
         const D = l || t;
         const M = v();
         const k = [ addEventListener(p, n, releasePointerCapture), addEventListener(p, "selectstart", (t => preventDefault(t)), {
-          T: false
-        }), addEventListener(h, n, releasePointerCapture), D && addEventListener(h, "pointermove", (t => C(A + (t[s] - $)))), D && (() => {
+          I: false
+        }), addEventListener(h, n, releasePointerCapture), D && addEventListener(h, "pointermove", (t => C(T + (t[s] - $)))), D && (() => {
           const t = getElementScroll(d);
           M();
           const n = getElementScroll(d);
@@ -5594,11 +6120,11 @@ const createScrollbarsSetupEvents = (t, n, o, s) => (r, i, l) => {
         }) ];
         _.setPointerCapture(o.pointerId);
         if (t) {
-          C(A);
+          C(T);
         } else if (!l) {
           const t = getStaticPluginModuleInstance(Et);
           if (t) {
-            const n = t(C, A, E, (t => {
+            const n = t(C, T, E, (t => {
               if (t) {
                 M();
               } else {
@@ -5638,27 +6164,27 @@ const createScrollbarsSetupEvents = (t, n, o, s) => (r, i, l) => {
     }));
     preventDefault(t);
   }), {
-    T: false,
-    I: true
+    I: false,
+    A: true
   }), addEventListener(g, "pointerdown", (() => {
     const t = addEventListener(p, "click", (t => {
       n();
       stopAndPrevent(t);
     }), {
+      T: true,
       A: true,
-      I: true,
-      T: false
+      I: false
     });
     const n = addEventListener(p, "pointerup pointercancel", (() => {
       n();
       setTimeout(t, 150);
     }), {
-      I: true,
-      T: true
+      A: true,
+      I: true
     });
   }), {
-    I: true,
-    T: true
+    A: true,
+    I: true
   }), createInteractiveScrollEvents(), y, m ]);
 };
 
@@ -5678,7 +6204,7 @@ const createScrollbarsSetup = (t, n, o, s, e, c) => {
   const [y, S] = selfClearTimeout((() => _));
   const [m, O] = createScrollbarsSetupElements(t, e, s, createScrollbarsSetupEvents(n, e, s, (t => isHoverablePointerType(t) && manageScrollbarsAutoHideInstantInteraction())));
   const {vt: C, Kt: $, bt: H} = e;
-  const {Ft: z, Pt: T, Nt: I, qt: A, Bt: D} = m;
+  const {Ft: z, Pt: I, Nt: A, qt: T, Bt: D} = m;
   const manageScrollbarsAutoHide = (t, n) => {
     S();
     if (t) {
@@ -5713,7 +6239,7 @@ const createScrollbarsSetup = (t, n, o, s, e, c) => {
     }
   };
   const M = [ S, h, w, v, () => f(), addEventListener(C, "pointerover", onHostMouseEnter, {
-    A: true
+    T: true
   }), addEventListener(C, "pointerenter", onHostMouseEnter), addEventListener(C, "pointerleave", (t => {
     if (isHoverablePointerType(t)) {
       r = false;
@@ -5727,14 +6253,14 @@ const createScrollbarsSetup = (t, n, o, s, e, c) => {
     }
   })), addEventListener($, "scroll", (t => {
     p((() => {
-      I();
+      A();
       manageScrollbarsAutoHideInstantInteraction();
     }));
     c(t);
     D();
   })) ];
   const k = getStaticPluginModuleInstance(xt);
-  return [ () => bind(runEachAndClear, push(M, O())), ({zt: t, It: n, Qt: e, Zt: c}) => {
+  return [ () => bind(runEachAndClear, push(M, O())), ({zt: t, At: n, Qt: e, Zt: c}) => {
     const {tn: r, nn: d, sn: p, en: v} = c || {};
     const {Ct: g, ft: h} = e || {};
     const {B: w} = o;
@@ -5768,7 +6294,7 @@ const createScrollbarsSetup = (t, n, o, s, e, c) => {
         f();
         b((() => {
           f = addEventListener($, "scroll", bind(manageAutoHideSuspension, true), {
-            A: true
+            T: true
           });
         }));
       } else {
@@ -5805,11 +6331,11 @@ const createScrollbarsSetup = (t, n, o, s, e, c) => {
       z(gt, !o);
     }
     if (Z) {
+      A();
       I();
-      T();
       D();
       if (v) {
-        A();
+        T();
       }
       z(bt, !O.x, true);
       z(bt, !O.y, false);
@@ -5838,7 +6364,7 @@ const createStructureSetupElements = t => {
   const C = bind(w, S, i);
   const $ = bind(y, S, l);
   const elementHasOverflow = t => {
-    const n = I(t);
+    const n = A(t);
     const o = D(t);
     const s = getStyles(t, m);
     const e = getStyles(t, O$1);
@@ -5848,20 +6374,20 @@ const createStructureSetupElements = t => {
   const H = x === v;
   const E = H && g;
   const z = !H && $(p);
-  const T = !H && x === z;
-  const A = E ? b : x;
-  const M = E ? A : v;
+  const I = !H && x === z;
+  const T = E ? b : x;
+  const M = E ? T : v;
   const k = !H && y(S, r, _);
-  const R = !T && z;
-  const V = [ R, A, k, M ].map((t => isHTMLElement(t) && !parent(t) && t));
+  const R = !I && z;
+  const V = [ R, T, k, M ].map((t => isHTMLElement(t) && !parent(t) && t));
   const elementIsGenerated = t => t && inArray(V, t);
-  const L = !elementIsGenerated(A) && elementHasOverflow(A) ? A : v;
-  const U = E ? b : A;
-  const N = E ? h : A;
+  const L = !elementIsGenerated(T) && elementHasOverflow(T) ? T : v;
+  const U = E ? b : T;
+  const N = E ? h : T;
   const X = {
     dt: v,
     vt: M,
-    L: A,
+    L: T,
     rn: k,
     ht: R,
     gt: U,
@@ -5869,11 +6395,11 @@ const createStructureSetupElements = t => {
     ln: g ? b : L,
     Gt: h,
     bt: g,
-    At: a,
+    Tt: a,
     V: H,
     an: getDocumentWindow,
-    wt: t => hasAttrClass(A, j, t),
-    yt: (t, n) => addRemoveAttrClass(A, j, t, n),
+    wt: t => hasAttrClass(T, j, t),
+    yt: (t, n) => addRemoveAttrClass(T, j, t, n),
     St: () => addRemoveAttrClass(U, j, G, true)
   };
   const {dt: Y, vt: W, rn: J, L: Q, ht: nt} = X;
@@ -5895,8 +6421,8 @@ const createStructureSetupElements = t => {
       removeElements(t);
     };
     const prepareWrapUnwrapFocus = t => addEventListener(t, "focusin focusout focus blur", stopAndPrevent, {
-      I: true,
-      T: false
+      A: true,
+      I: false
     });
     const o = "tabindex";
     const s = getAttr(Q, o);
@@ -5955,7 +6481,7 @@ const createStructureSetupElements = t => {
   return [ X, appendElements, ct ];
 };
 
-const createTrinsicUpdateSegment = ({ht: t}) => ({Qt: n, un: o, It: s}) => {
+const createTrinsicUpdateSegment = ({ht: t}) => ({Qt: n, un: o, At: s}) => {
   const {$t: e} = n || {};
   const {Ot: c} = o;
   const r = t && (e || s);
@@ -5971,7 +6497,7 @@ const createPaddingUpdateSegment = ({vt: t, rn: n, L: o, V: s}, e) => {
     i: equalTRBL,
     o: topRightBottomLeft()
   }, bind(topRightBottomLeft, t, "padding", ""));
-  return ({zt: t, Qt: i, un: l, It: a}) => {
+  return ({zt: t, Qt: i, un: l, At: a}) => {
     let [u, f] = r(a);
     const {U: _} = getEnvironment();
     const {_t: d, xt: p, Ct: m} = i || {};
@@ -6068,8 +6594,8 @@ const createOverflowUpdateSegment = (t, s) => {
         stopPropagation(t);
       }
     }), {
-      I: true,
-      A: true
+      A: true,
+      T: true
     });
     scrollElementTo(f, {
       x: 0,
@@ -6137,8 +6663,8 @@ const createOverflowUpdateSegment = (t, s) => {
   };
   const [m, O] = createCache(y, bind(getFractionalSize, i));
   const [C, $] = createCache(y, bind(D, i));
-  const [z, T] = createCache(y);
-  const [I] = createCache(S);
+  const [z, I] = createCache(y);
+  const [A] = createCache(S);
   const [M, k] = createCache(y);
   const [R] = createCache(S);
   const [V] = createCache({
@@ -6154,7 +6680,7 @@ const createOverflowUpdateSegment = (t, s) => {
     const o = n ? X : Y;
     return `${o}${capitalizeFirstLetter(t)}`;
   };
-  return ({zt: n, Qt: o, un: l, It: a}, {_n: u}) => {
+  return ({zt: n, Qt: o, un: l, At: a}, {_n: u}) => {
     const {_t: f, Ht: _, xt: b, Ct: w, ft: y, Et: S} = o || {};
     const x = P && P.R(t, s, l, e, n);
     const {X: H, Y: E, W: D} = x || {};
@@ -6165,7 +6691,7 @@ const createOverflowUpdateSegment = (t, s) => {
     const J = f || u || b || w || S || F;
     let G = O(a);
     let Q = $(a);
-    let tt = T(a);
+    let tt = I(a);
     let nt = k(a);
     if (F && v) {
       d(K, !q);
@@ -6177,7 +6703,7 @@ const createOverflowUpdateSegment = (t, s) => {
       const t = E && E();
       const [n] = G = m(a);
       const [o] = Q = C(a);
-      const s = A(i);
+      const s = T(i);
       const e = g && getWindowSize(p());
       const r = {
         w: h(o.w + n.w),
@@ -6197,7 +6723,7 @@ const createOverflowUpdateSegment = (t, s) => {
     const [et, ct] = tt;
     const [rt, it] = Q;
     const [lt, at] = G;
-    const [ut, ft] = I({
+    const [ut, ft] = A({
       x: et.w > 0,
       y: et.h > 0
     });
@@ -6314,20 +6840,20 @@ const createSetups = (t, n, o, s, e) => {
     if (o()) {
       return false;
     }
-    const {dn: r, It: i, Tt: a, pn: u} = t;
+    const {dn: r, At: i, It: a, pn: u} = t;
     const f = r || {};
     const _ = !!i || !c;
     const v = {
       zt: createOptionCheck(n, f, _),
       dn: f,
-      It: _
+      At: _
     };
     if (u) {
       g(v);
       return false;
     }
     const h = e || d(assignDeep({}, v, {
-      Tt: a
+      It: a
     }));
     const b = l(assignDeep({}, v, {
       un: p,
@@ -6366,17 +6892,17 @@ const createSetups = (t, n, o, s, e) => {
   }, f ];
 };
 
-const Mt = new WeakMap;
+const Vt = new WeakMap;
 
 const addInstance = (t, n) => {
-  Mt.set(t, n);
+  Vt.set(t, n);
 };
 
 const removeInstance = t => {
-  Mt.delete(t);
+  Vt.delete(t);
 };
 
-const getInstance = t => Mt.get(t);
+const getInstance = t => Vt.get(t);
 
 const OverlayScrollbars = (t, n, o) => {
   const {tt: s} = getEnvironment();
@@ -6399,7 +6925,7 @@ const OverlayScrollbars = (t, n, o) => {
       v(t, n);
       _(t, n);
     };
-    const [g, h, b, w, y] = createSetups(t, a, (() => r), (({dn: t, It: n}, {Qt: o, Zt: s}) => {
+    const [g, h, b, w, y] = createSetups(t, a, (() => r), (({dn: t, At: n}, {Qt: o, Zt: s}) => {
       const {_t: e, Ct: c, $t: r, xt: i, Ht: l, ft: a} = o;
       const {tn: u, nn: f, sn: _, en: d} = s;
       triggerEvent("updated", [ S, {
@@ -6503,8 +7029,8 @@ const OverlayScrollbars = (t, n, o) => {
         });
       },
       update: t => h({
-        It: t,
-        Tt: true
+        At: t,
+        It: true
       }),
       destroy: bind(destroy, false),
       plugin: t => l[keys(t)[0]]
@@ -6787,201 +7313,18 @@ const customActionsChannels = {
   startExe: "customActions_startExe"
 };
 
-const {useMemo: useMemo$8} = await importShared('react');
+const {useMemo: useMemo$7} = await importShared('react');
 
 let extReIpc = void 0;
 const setIpc = (ipc) => extReIpc = ipc;
 function useIpc() {
-  const ipc = useMemo$8(() => extReIpc, []);
+  const ipc = useMemo$7(() => extReIpc, []);
   if (!ipc) {
     throw new Error("IPC has not been initialized. Please restart the app.");
   }
   return ipc;
 }
 
-function FileCodeDuo_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, height: "1rem", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        opacity: "0.5",
-        fillRule: "evenodd",
-        clipRule: "evenodd",
-        fill: "currentColor",
-        d: "M10 22h4c3.771 0 5.657 0 6.828-1.172S22 17.771 22 14v-.437c0-.873 0-1.529-.043-2.063h-4.052c-1.097 0-2.067 0-2.848-.105c-.847-.114-1.694-.375-2.385-1.066c-.692-.692-.953-1.539-1.067-2.386c-.105-.781-.105-1.75-.105-2.848l.01-2.834q0-.124.02-.244C11.121 2 10.636 2 10.03 2C6.239 2 4.343 2 3.172 3.172C2 4.343 2 6.229 2 10v4c0 3.771 0 5.657 1.172 6.828S6.229 22 10 22"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        fill: "currentColor",
-        d: "M10.702 14.264a.75.75 0 1 0-1.404-.527l-1.5 4a.75.75 0 1 0 1.404.527zm-3.172.266a.75.75 0 1 0-1.06-1.06l-1 1a.75.75 0 0 0 0 1.06l1 1a.75.75 0 0 0 1.06-1.06L7.06 15zm4.5.94a.75.75 0 1 0-1.06 1.06l.47.47l-.47.47a.75.75 0 1 0 1.06 1.06l1-1a.75.75 0 0 0 0-1.06zm-.52-13.21l-.01 2.835c0 1.097 0 2.066.105 2.848c.114.847.375 1.694 1.067 2.385c.69.691 1.538.953 2.385 1.067c.781.105 1.751.105 2.848.105h4.052q.02.232.028.5H22c0-.268 0-.402-.01-.56a5.3 5.3 0 0 0-.958-2.641c-.094-.128-.158-.204-.285-.357C19.954 7.494 18.91 6.312 18 5.5c-.81-.724-1.921-1.515-2.89-2.161c-.832-.556-1.248-.834-1.819-1.04a6 6 0 0 0-.506-.154c-.384-.095-.758-.128-1.285-.14z"
-      }
-    )
-  ] });
-}
-function Grip_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 16 16", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "path",
-    {
-      fillRule: "evenodd",
-      clipRule: "evenodd",
-      fill: "currentColor",
-      d: "M7 3a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0M5.5 9.5a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3m5 0a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3m0-5a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3M7 13a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0m3.5 1.5a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3"
-    }
-  ) });
-}
-function TrashDuo_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        fill: "currentColor",
-        d: "M2.75 6.167c0-.46.345-.834.771-.834h2.665c.529-.015.996-.378 1.176-.916l.03-.095l.115-.372c.07-.228.131-.427.217-.605c.338-.702.964-1.189 1.687-1.314c.184-.031.377-.031.6-.031h3.478c.223 0 .417 0 .6.031c.723.125 1.35.612 1.687 1.314c.086.178.147.377.217.605l.115.372l.03.095c.18.538.74.902 1.27.916h2.57c.427 0 .772.373.772.834S20.405 7 19.979 7H3.52c-.426 0-.771-.373-.771-.833"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        opacity: 0.5,
-        fill: "currentColor",
-        d: "M11.607 22h.787c2.707 0 4.06 0 4.941-.863c.88-.864.97-2.28 1.15-5.111l.26-4.081c.098-1.537.147-2.305-.295-2.792s-1.187-.487-2.679-.487H8.23c-1.491 0-2.237 0-2.679.487s-.392 1.255-.295 2.792l.26 4.08c.18 2.833.27 4.248 1.15 5.112S8.9 22 11.607 22"
-      }
-    )
-  ] });
-}
-function PenDuo_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        opacity: 0.5,
-        fill: "currentColor",
-        d: "M20.849 8.713a3.932 3.932 0 0 0-5.562-5.561l-.887.887l.038.111a8.75 8.75 0 0 0 2.093 3.32a8.75 8.75 0 0 0 3.43 2.13z"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        fill: "currentColor",
-        d: "m14.439 4l-.039.038l.038.112a8.75 8.75 0 0 0 2.093 3.32a8.75 8.75 0 0 0 3.43 2.13l-8.56 8.56c-.578.577-.867.866-1.185 1.114a6.6 6.6 0 0 1-1.211.748c-.364.174-.751.303-1.526.561l-4.083 1.361a1.06 1.06 0 0 1-1.342-1.341l1.362-4.084c.258-.774.387-1.161.56-1.525q.309-.646.749-1.212c.248-.318.537-.606 1.114-1.183z"
-      }
-    )
-  ] });
-}
-function PlayDuo_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        fillRule: "evenodd",
-        clipRule: "evenodd",
-        fill: "currentColor",
-        d: "M23 12c0-1.035-.53-2.07-1.591-2.647L8.597 2.385C6.534 1.264 4 2.724 4 5.033V12z"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        opacity: 0.5,
-        fill: "currentColor",
-        d: "m8.597 21.615l12.812-6.968A2.99 2.99 0 0 0 23 12H4v6.967c0 2.31 2.534 3.769 4.597 2.648"
-      }
-    )
-  ] });
-}
-function FolderDuo_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        fillRule: "evenodd",
-        clipRule: "evenodd",
-        fill: "currentColor",
-        d: "M3.358 12.779c-.61.941-.358 2.25.145 4.868c.363 1.885.544 2.827 1.172 3.452q.246.244.544.429C5.982 22 6.995 22 9.022 22h6.956c2.027 0 3.04 0 3.803-.472q.298-.185.544-.429c.628-.625.81-1.567 1.172-3.452c.503-2.618.755-3.927.145-4.868a3 3 0 0 0-.57-.646c-.87-.735-2.279-.735-5.094-.735H9.022c-2.815 0-4.223 0-5.094.735a3 3 0 0 0-.57.646m6.337 4.402c0-.4.343-.723.765-.723h4.08c.422 0 .765.323.765.723s-.343.723-.765.723h-4.08c-.422 0-.765-.324-.765-.723"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        opacity: 0.5,
-        fill: "currentColor",
-        d: "M3.576 12.485q.16-.19.352-.352c.87-.735 2.279-.735 5.094-.735h6.956c2.815 0 4.223 0 5.094.735q.192.162.353.353v-2.73c0-.91 0-1.663-.086-2.264c-.09-.635-.286-1.197-.755-1.66a3 3 0 0 0-.242-.214c-.512-.408-1.125-.575-1.82-.652c-.669-.074-1.512-.074-2.545-.074h-.353c-.982 0-1.334-.006-1.653-.087a2.7 2.7 0 0 1-.536-.196c-.284-.14-.532-.351-1.227-.968l-.474-.42c-.2-.176-.335-.296-.48-.403a4.3 4.3 0 0 0-2.183-.803A8 8 0 0 0 8.414 2h-.117c-.64 0-1.063 0-1.43.061c-1.605.268-2.903 1.39-3.22 2.875c-.071.337-.071.724-.07 1.283z"
-      }
-    )
-  ] });
-}
-function CodeDuo_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        fill: "currentColor",
-        d: "M16.443 7.328a.75.75 0 0 1 1.059-.056l1.737 1.564c.737.663 1.347 1.212 1.767 1.71c.44.525.754 1.088.754 1.784c0 .695-.313 1.258-.754 1.782c-.42.499-1.03 1.049-1.767 1.711l-1.737 1.564a.75.75 0 1 1-1.004-1.115l1.697-1.527c.788-.709 1.319-1.19 1.663-1.598c.33-.393.402-.622.402-.817c0-.196-.072-.425-.402-.818c-.344-.409-.875-.889-1.663-1.598l-1.697-1.527a.75.75 0 0 1-.056-1.06m-8.94 1.06a.75.75 0 0 0-1.004-1.115L4.761 8.836c-.737.663-1.347 1.212-1.767 1.71c-.44.525-.754 1.088-.754 1.784c0 .695.313 1.258.754 1.782c.42.499 1.03 1.049 1.767 1.711l1.737 1.564a.75.75 0 1 0 1.004-1.115l-1.697-1.527c-.788-.709-1.319-1.19-1.663-1.598c-.33-.393-.402-.622-.402-.817c0-.196.072-.425.402-.818c.344-.409.875-.889 1.663-1.598z"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        opacity: 0.5,
-        fill: "currentColor",
-        d: "M14.182 4.276a.75.75 0 0 1 .53.918l-3.974 14.83a.75.75 0 1 1-1.449-.389l3.974-14.83a.75.75 0 0 1 .919-.53"
-      }
-    )
-  ] });
-}
-function BookmarkOpenDuo_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        opacity: 0.6,
-        fillRule: "evenodd",
-        clipRule: "evenodd",
-        fill: "currentColor",
-        d: "M3.464 20.536C4.93 22 7.286 22 12 22s7.071 0 8.535-1.465C22 19.072 22 16.714 22 12q.001-1.002-.004-1.867c-.002-.279-.003-.418-.057-.641a1.5 1.5 0 0 0-.152-.421a4.25 4.25 0 0 0-1.857-1.858c-.412-.21-.92-.333-1.707-.397q-.224-.02-.473-.03l-1.5-.034v4.056c0 .496 0 .836-.015 1.09c-.015.262-.043.343-.05.358a.75.75 0 0 1-.862.425c-.016-.004-.097-.032-.315-.18a21 21 0 0 1-.872-.653l-.067-.052c-.37-.285-.659-.507-.973-.644a2.75 2.75 0 0 0-2.192 0c-.314.137-.603.359-.973.644l-.067.052c-.393.303-.663.51-.873.653c-.217.148-.298.176-.314.18a.75.75 0 0 1-.862-.425c-.007-.015-.035-.096-.05-.358a22 22 0 0 1-.015-1.09V6.752l-1.5.033q-.249.012-.473.03c-.787.065-1.295.189-1.706.398A4.25 4.25 0 0 0 2.204 9.09c-.06.12-.09.18-.143.402c-.054.222-.055.362-.057.641Q2 10.999 2 12c0 4.714 0 7.071 1.464 8.535"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        fill: "currentColor",
-        d: "M7.75 6.752v4.056c0 .496 0 .836.015 1.09c.015.262.043.343.05.358a.75.75 0 0 0 .862.425c.016-.004.097-.032.314-.18c.21-.143.48-.35.873-.653l.067-.052c.37-.285.659-.507.973-.644a2.75 2.75 0 0 1 2.192 0c.314.137.603.36.973.645l.067.051c.393.303.663.51.873.653c.217.148.298.176.314.18a.75.75 0 0 0 .862-.425c.007-.015.035-.096.05-.358c.015-.254.015-.594.015-1.09V6.752z"
-      }
-    ),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      "path",
-      {
-        opacity: 0.4,
-        fill: "currentColor",
-        d: "M20.535 3.464C19.071 2 16.714 2 12 2S4.928 2 3.464 3.464c-.77.77-1.134 1.785-1.308 3.26l-.119 2.878q.01-.052.024-.11a1.4 1.4 0 0 1 .143-.402l.01-.02A4.25 4.25 0 0 1 4.07 7.214c.411-.21.919-.333 1.706-.397q.225-.018.473-.03l1.5-.034V10.5h8.5V6.752l1.5.033q.248.014.473.03c.787.065 1.295.189 1.707.398a4.25 4.25 0 0 1 1.857 1.858l.01.019l.046.096V6.723c-.174-1.474-.539-2.49-1.308-3.259M2.002 10.5v-.056L2 10.5z"
-      }
-    )
-  ] });
-}
-function ArrowLine_Icon(props) {
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "path",
-    {
-      fill: "none",
-      strokeWidth: 1.5,
-      d: "m9 5l6 7l-6 7",
-      stroke: "currentColor",
-      strokeLinecap: "round",
-      strokeLinejoin: "round"
-    }
-  ) });
-}
-
-const getContrastingTextColor = (hexColor) => {
-  if (!hexColor) return "#000000";
-  const color = hexColor.startsWith("#") ? hexColor.slice(1) : hexColor;
-  const r = parseInt(color.substring(0, 2), 16);
-  const g = parseInt(color.substring(2, 4), 16);
-  const b = parseInt(color.substring(4, 6), 16);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1e3;
-  return brightness > 128 ? "#000000" : "#FFFFFF";
-};
 const cardVariants = {
   initial: {
     scale: 1,
@@ -7008,29 +7351,22 @@ const iconVariants = {
   initial: { scale: 1, rotate: 0 },
   hover: { scale: 1.2, rotate: -2, transition: { duration: 0.5, ease: "easeOut" } }
 };
-const arrowVariants = {
-  initial: { opacity: 0.6, x: 0 },
-  hover: { opacity: 1, x: 3, transition: { duration: 0.3, ease: "easeOut" } }
-};
-
-const {useMemo: useMemo$7} = await importShared('react');
 
 const {useDispatch: useDispatch$d} = await importShared('react-redux');
 const LINE_ENDING = window.osPlatform === "win32" ? "\r" : "\n";
+const IS_MACOS = window.osPlatform === "darwin";
+const IS_WINDOWS = window.osPlatform === "win32";
 function ActionCard({ icon: Icon, card, className = "" }) {
   const dispatch = useDispatch$d();
   const activeTab = useTabsState("activeTab");
   const darkMode = useAppState("darkMode");
   const ipc = useIpc();
-  const { title, description, accentColor, actions, cardType, urlConfig, iconColor } = useMemo$7(
-    () => ({ ...card, iconColor: getContrastingTextColor(card.accentColor) }),
-    [card]
-  );
+  const { title, description, accentColor, actions, cardType, urlConfig } = card;
   const onClick = () => {
     const opens = actions.filter((action) => action.type === "open");
     opens.forEach((open) => ipc.file.openPath(open.action));
-    const manageUrls = (onDone) => {
-      if (urlConfig.customUrl) {
+    const manageUrls = (ptyId, onDone) => {
+      if (urlConfig.type === "custom" && urlConfig.customUrl) {
         const openUrl = () => {
           dispatch(cardsActions.setRunningCardCustomAddress({ tabId: activeTab, address: urlConfig.customUrl }));
           if (onDone) onDone();
@@ -7040,6 +7376,46 @@ function ActionCard({ icon: Icon, card, className = "" }) {
         } else {
           setTimeout(() => openUrl(), (urlConfig.timeout || 0) * 1e3);
         }
+      } else if (urlConfig.type === "findLine" && urlConfig.findLine) {
+        dispatch(reducerActions.startUrlCatching({ ptyId, tabId: activeTab, findLine: urlConfig.findLine }));
+      }
+    };
+    const getScriptCommand = (scriptPath) => {
+      const ext = scriptPath.substring(scriptPath.lastIndexOf(".")).toLowerCase();
+      if (IS_WINDOWS) {
+        switch (ext) {
+          case ".py":
+            return `python "${scriptPath}"${LINE_ENDING}`;
+          case ".js":
+            return `node "${scriptPath}"${LINE_ENDING}`;
+          default:
+            return `& "${scriptPath}"${LINE_ENDING}`;
+        }
+      } else if (IS_MACOS) {
+        if (scriptPath.endsWith(".app")) {
+          return `open -W "${scriptPath}"${LINE_ENDING}`;
+        } else if (ext === ".command") {
+          return `chmod +x "${scriptPath}" && open "${scriptPath}"${LINE_ENDING}`;
+        } else if (ext === ".py") {
+          return `python3 "${scriptPath}"${LINE_ENDING}`;
+        } else if (ext === ".js") {
+          return `node "${scriptPath}"${LINE_ENDING}`;
+        } else {
+          return `chmod +x "${scriptPath}" && bash "${scriptPath}"${LINE_ENDING}`;
+        }
+      } else {
+        switch (ext) {
+          case ".py":
+            return `python3 "${scriptPath}"${LINE_ENDING}`;
+          case ".js":
+            return `node "${scriptPath}"${LINE_ENDING}`;
+          case ".rb":
+            return `ruby "${scriptPath}"${LINE_ENDING}`;
+          case ".pl":
+            return `perl "${scriptPath}"${LINE_ENDING}`;
+          default:
+            return `chmod +x "${scriptPath}" && bash "${scriptPath}"${LINE_ENDING}`;
+        }
       }
     };
     const runCustomCommands = (ptyId) => {
@@ -7047,10 +7423,7 @@ function ActionCard({ icon: Icon, card, className = "" }) {
         if (action.type === "command") {
           ipc.pty.write(ptyId, `${action.action}${LINE_ENDING}`);
         } else if (action.type === "script") {
-          const command = window.osPlatform === "win32" ? `& "${action.action}"${LINE_ENDING}` : `"${action.action}"${LINE_ENDING}`;
-          ipc.pty.write(ptyId, command);
-        } else {
-          return;
+          ipc.pty.write(ptyId, getScriptCommand(action.action));
         }
       });
     };
@@ -7061,33 +7434,30 @@ function ActionCard({ icon: Icon, card, className = "" }) {
         const ptyID = `${activeTab}_both`;
         window.electron.ipcRenderer.send(customActionsChannels.startExe, ptyID, pathToExe);
         dispatch(cardsActions.addRunningCard({ tabId: activeTab, id: ptyID }));
-        manageUrls(() => {
+        manageUrls(ptyID, () => {
           dispatch(cardsActions.setRunningCardView({ tabId: activeTab, view: "browser" }));
         });
         break;
       }
       case "browser": {
         dispatch(cardsActions.addRunningEmpty({ tabId: activeTab, type: "browser" }));
-        manageUrls();
+        manageUrls(`${activeTab}_browser`);
         break;
       }
       case "terminal": {
         dispatch(cardsActions.addRunningEmpty({ tabId: activeTab, type: "terminal" }));
         const ptyID = `${activeTab}_terminal`;
-        setTimeout(() => {
-          runCustomCommands(ptyID);
-        }, 100);
+        manageUrls(ptyID);
+        setTimeout(() => runCustomCommands(ptyID), 100);
         break;
       }
       case "terminal_browser": {
         const ptyID = `${activeTab}_both`;
         dispatch(cardsActions.addRunningEmpty({ tabId: activeTab, type: "both" }));
-        manageUrls(() => {
+        manageUrls(ptyID, () => {
           dispatch(cardsActions.setRunningCardView({ tabId: activeTab, view: "browser" }));
         });
-        setTimeout(() => {
-          runCustomCommands(ptyID);
-        }, 100);
+        setTimeout(() => runCustomCommands(ptyID), 100);
         break;
       }
     }
@@ -7139,14 +7509,6 @@ function ActionCard({ icon: Icon, card, className = "" }) {
                 ),
                 description && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-600 dark:text-gray-300 text-xs leading-relaxed line-clamp-1", children: description })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(motion.div, { variants: arrowVariants, className: "absolute bottom-3 right-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "div",
-                {
-                  style: { backgroundColor: accentColor },
-                  className: "size-6 rounded-full flex items-center justify-center shadow-sm",
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLine_Icon, { style: { color: iconColor } })
-                }
-              ) }),
               /* @__PURE__ */ jsxRuntimeExports.jsx(
                 motion.div,
                 {
@@ -8088,6 +8450,21 @@ function AudioActions() {
   return /* @__PURE__ */ jsxRuntimeExports.jsx(CardsContainer, { cards: pinnedCards });
 }
 
+function escapeRegExp(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+function catchTerminalAddress(input, keyword) {
+  const escapedKeyword = escapeRegExp(keyword);
+  const pattern = new RegExp(`${escapedKeyword}.*?:\\s*.*?(https?:\\/\\/.*?)(?=\\s|\\u001b|$)`, "i");
+  const match = input.match(pattern);
+  if (match) {
+    return match[1];
+  }
+  return void 0;
+}
+
+const {isEmpty} = await importShared('lodash');
+
 const {Fragment,useEffect: useEffect$1} = await importShared('react');
 
 const {useDispatch: useDispatch$c} = await importShared('react-redux');
@@ -8095,6 +8472,7 @@ function CustomHook() {
   const dispatch = useDispatch$c();
   const customCards = useCustomActionsState("customCards");
   const saveCards = useCustomActionsState("saveCards");
+  const urlCatchingSession = useCustomActionsState("urlCatchingSession");
   useEffect$1(() => {
     if (saveCards) {
       window.electron.ipcRenderer.send(customActionsChannels.setCards, customCards);
@@ -8106,7 +8484,183 @@ function CustomHook() {
       dispatch(reducerActions.updateState({ key: "customCards", value: cards }));
     });
   }, []);
+  useEffect$1(() => {
+    if (!urlCatchingSession || urlCatchingSession.urlFound) return;
+    const { ptyId, tabId, findLine } = urlCatchingSession;
+    const offData = rendererIpc.pty.onData((_, dataID, data) => {
+      if (dataID !== ptyId || urlCatchingSession.urlFound) return;
+      const url = catchTerminalAddress(data, findLine);
+      if (url && !isEmpty(url)) {
+        dispatch(reducerActions.setUrlFound());
+        dispatch(cardsActions.setRunningCardAddress({ address: url, tabId }));
+        dispatch(cardsActions.setRunningCardView({ view: "browser", tabId }));
+        setTimeout(() => dispatch(reducerActions.stopUrlCatching()), 100);
+      }
+    });
+    return () => offData();
+  }, [urlCatchingSession, dispatch]);
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Fragment, {});
+}
+
+function FileCodeDuo_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, height: "1rem", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: "0.5",
+        fillRule: "evenodd",
+        clipRule: "evenodd",
+        fill: "currentColor",
+        d: "M10 22h4c3.771 0 5.657 0 6.828-1.172S22 17.771 22 14v-.437c0-.873 0-1.529-.043-2.063h-4.052c-1.097 0-2.067 0-2.848-.105c-.847-.114-1.694-.375-2.385-1.066c-.692-.692-.953-1.539-1.067-2.386c-.105-.781-.105-1.75-.105-2.848l.01-2.834q0-.124.02-.244C11.121 2 10.636 2 10.03 2C6.239 2 4.343 2 3.172 3.172C2 4.343 2 6.229 2 10v4c0 3.771 0 5.657 1.172 6.828S6.229 22 10 22"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fill: "currentColor",
+        d: "M10.702 14.264a.75.75 0 1 0-1.404-.527l-1.5 4a.75.75 0 1 0 1.404.527zm-3.172.266a.75.75 0 1 0-1.06-1.06l-1 1a.75.75 0 0 0 0 1.06l1 1a.75.75 0 0 0 1.06-1.06L7.06 15zm4.5.94a.75.75 0 1 0-1.06 1.06l.47.47l-.47.47a.75.75 0 1 0 1.06 1.06l1-1a.75.75 0 0 0 0-1.06zm-.52-13.21l-.01 2.835c0 1.097 0 2.066.105 2.848c.114.847.375 1.694 1.067 2.385c.69.691 1.538.953 2.385 1.067c.781.105 1.751.105 2.848.105h4.052q.02.232.028.5H22c0-.268 0-.402-.01-.56a5.3 5.3 0 0 0-.958-2.641c-.094-.128-.158-.204-.285-.357C19.954 7.494 18.91 6.312 18 5.5c-.81-.724-1.921-1.515-2.89-2.161c-.832-.556-1.248-.834-1.819-1.04a6 6 0 0 0-.506-.154c-.384-.095-.758-.128-1.285-.14z"
+      }
+    )
+  ] });
+}
+function Grip_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 16 16", xmlns: "http://www.w3.org/2000/svg", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+    "path",
+    {
+      fillRule: "evenodd",
+      clipRule: "evenodd",
+      fill: "currentColor",
+      d: "M7 3a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0M5.5 9.5a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3m5 0a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3m0-5a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3M7 13a1.5 1.5 0 1 1-3 0a1.5 1.5 0 0 1 3 0m3.5 1.5a1.5 1.5 0 1 0 0-3a1.5 1.5 0 0 0 0 3"
+    }
+  ) });
+}
+function TrashDuo_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fill: "currentColor",
+        d: "M2.75 6.167c0-.46.345-.834.771-.834h2.665c.529-.015.996-.378 1.176-.916l.03-.095l.115-.372c.07-.228.131-.427.217-.605c.338-.702.964-1.189 1.687-1.314c.184-.031.377-.031.6-.031h3.478c.223 0 .417 0 .6.031c.723.125 1.35.612 1.687 1.314c.086.178.147.377.217.605l.115.372l.03.095c.18.538.74.902 1.27.916h2.57c.427 0 .772.373.772.834S20.405 7 19.979 7H3.52c-.426 0-.771-.373-.771-.833"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "M11.607 22h.787c2.707 0 4.06 0 4.941-.863c.88-.864.97-2.28 1.15-5.111l.26-4.081c.098-1.537.147-2.305-.295-2.792s-1.187-.487-2.679-.487H8.23c-1.491 0-2.237 0-2.679.487s-.392 1.255-.295 2.792l.26 4.08c.18 2.833.27 4.248 1.15 5.112S8.9 22 11.607 22"
+      }
+    )
+  ] });
+}
+function PenDuo_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "M20.849 8.713a3.932 3.932 0 0 0-5.562-5.561l-.887.887l.038.111a8.75 8.75 0 0 0 2.093 3.32a8.75 8.75 0 0 0 3.43 2.13z"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fill: "currentColor",
+        d: "m14.439 4l-.039.038l.038.112a8.75 8.75 0 0 0 2.093 3.32a8.75 8.75 0 0 0 3.43 2.13l-8.56 8.56c-.578.577-.867.866-1.185 1.114a6.6 6.6 0 0 1-1.211.748c-.364.174-.751.303-1.526.561l-4.083 1.361a1.06 1.06 0 0 1-1.342-1.341l1.362-4.084c.258-.774.387-1.161.56-1.525q.309-.646.749-1.212c.248-.318.537-.606 1.114-1.183z"
+      }
+    )
+  ] });
+}
+function PlayDuo_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fillRule: "evenodd",
+        clipRule: "evenodd",
+        fill: "currentColor",
+        d: "M23 12c0-1.035-.53-2.07-1.591-2.647L8.597 2.385C6.534 1.264 4 2.724 4 5.033V12z"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "m8.597 21.615l12.812-6.968A2.99 2.99 0 0 0 23 12H4v6.967c0 2.31 2.534 3.769 4.597 2.648"
+      }
+    )
+  ] });
+}
+function FolderDuo_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fillRule: "evenodd",
+        clipRule: "evenodd",
+        fill: "currentColor",
+        d: "M3.358 12.779c-.61.941-.358 2.25.145 4.868c.363 1.885.544 2.827 1.172 3.452q.246.244.544.429C5.982 22 6.995 22 9.022 22h6.956c2.027 0 3.04 0 3.803-.472q.298-.185.544-.429c.628-.625.81-1.567 1.172-3.452c.503-2.618.755-3.927.145-4.868a3 3 0 0 0-.57-.646c-.87-.735-2.279-.735-5.094-.735H9.022c-2.815 0-4.223 0-5.094.735a3 3 0 0 0-.57.646m6.337 4.402c0-.4.343-.723.765-.723h4.08c.422 0 .765.323.765.723s-.343.723-.765.723h-4.08c-.422 0-.765-.324-.765-.723"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "M3.576 12.485q.16-.19.352-.352c.87-.735 2.279-.735 5.094-.735h6.956c2.815 0 4.223 0 5.094.735q.192.162.353.353v-2.73c0-.91 0-1.663-.086-2.264c-.09-.635-.286-1.197-.755-1.66a3 3 0 0 0-.242-.214c-.512-.408-1.125-.575-1.82-.652c-.669-.074-1.512-.074-2.545-.074h-.353c-.982 0-1.334-.006-1.653-.087a2.7 2.7 0 0 1-.536-.196c-.284-.14-.532-.351-1.227-.968l-.474-.42c-.2-.176-.335-.296-.48-.403a4.3 4.3 0 0 0-2.183-.803A8 8 0 0 0 8.414 2h-.117c-.64 0-1.063 0-1.43.061c-1.605.268-2.903 1.39-3.22 2.875c-.071.337-.071.724-.07 1.283z"
+      }
+    )
+  ] });
+}
+function CodeDuo_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fill: "currentColor",
+        d: "M16.443 7.328a.75.75 0 0 1 1.059-.056l1.737 1.564c.737.663 1.347 1.212 1.767 1.71c.44.525.754 1.088.754 1.784c0 .695-.313 1.258-.754 1.782c-.42.499-1.03 1.049-1.767 1.711l-1.737 1.564a.75.75 0 1 1-1.004-1.115l1.697-1.527c.788-.709 1.319-1.19 1.663-1.598c.33-.393.402-.622.402-.817c0-.196-.072-.425-.402-.818c-.344-.409-.875-.889-1.663-1.598l-1.697-1.527a.75.75 0 0 1-.056-1.06m-8.94 1.06a.75.75 0 0 0-1.004-1.115L4.761 8.836c-.737.663-1.347 1.212-1.767 1.71c-.44.525-.754 1.088-.754 1.784c0 .695.313 1.258.754 1.782c.42.499 1.03 1.049 1.767 1.711l1.737 1.564a.75.75 0 1 0 1.004-1.115l-1.697-1.527c-.788-.709-1.319-1.19-1.663-1.598c-.33-.393-.402-.622-.402-.817c0-.196.072-.425.402-.818c.344-.409.875-.889 1.663-1.598z"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.5,
+        fill: "currentColor",
+        d: "M14.182 4.276a.75.75 0 0 1 .53.918l-3.974 14.83a.75.75 0 1 1-1.449-.389l3.974-14.83a.75.75 0 0 1 .919-.53"
+      }
+    )
+  ] });
+}
+function BookmarkOpenDuo_Icon(props) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { ...props, width: "1em", height: "1em", viewBox: "0 0 24 24", xmlns: "http://www.w3.org/2000/svg", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.6,
+        fillRule: "evenodd",
+        clipRule: "evenodd",
+        fill: "currentColor",
+        d: "M3.464 20.536C4.93 22 7.286 22 12 22s7.071 0 8.535-1.465C22 19.072 22 16.714 22 12q.001-1.002-.004-1.867c-.002-.279-.003-.418-.057-.641a1.5 1.5 0 0 0-.152-.421a4.25 4.25 0 0 0-1.857-1.858c-.412-.21-.92-.333-1.707-.397q-.224-.02-.473-.03l-1.5-.034v4.056c0 .496 0 .836-.015 1.09c-.015.262-.043.343-.05.358a.75.75 0 0 1-.862.425c-.016-.004-.097-.032-.315-.18a21 21 0 0 1-.872-.653l-.067-.052c-.37-.285-.659-.507-.973-.644a2.75 2.75 0 0 0-2.192 0c-.314.137-.603.359-.973.644l-.067.052c-.393.303-.663.51-.873.653c-.217.148-.298.176-.314.18a.75.75 0 0 1-.862-.425c-.007-.015-.035-.096-.05-.358a22 22 0 0 1-.015-1.09V6.752l-1.5.033q-.249.012-.473.03c-.787.065-1.295.189-1.706.398A4.25 4.25 0 0 0 2.204 9.09c-.06.12-.09.18-.143.402c-.054.222-.055.362-.057.641Q2 10.999 2 12c0 4.714 0 7.071 1.464 8.535"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        fill: "currentColor",
+        d: "M7.75 6.752v4.056c0 .496 0 .836.015 1.09c.015.262.043.343.05.358a.75.75 0 0 0 .862.425c.016-.004.097-.032.314-.18c.21-.143.48-.35.873-.653l.067-.052c.37-.285.659-.507.973-.644a2.75 2.75 0 0 1 2.192 0c.314.137.603.36.973.645l.067.051c.393.303.663.51.873.653c.217.148.298.176.314.18a.75.75 0 0 0 .862-.425c.007-.015.035-.096.05-.358c.015-.254.015-.594.015-1.09V6.752z"
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "path",
+      {
+        opacity: 0.4,
+        fill: "currentColor",
+        d: "M20.535 3.464C19.071 2 16.714 2 12 2S4.928 2 3.464 3.464c-.77.77-1.134 1.785-1.308 3.26l-.119 2.878q.01-.052.024-.11a1.4 1.4 0 0 1 .143-.402l.01-.02A4.25 4.25 0 0 1 4.07 7.214c.411-.21.919-.333 1.706-.397q.225-.018.473-.03l1.5-.034V10.5h8.5V6.752l1.5.033q.248.014.473.03c.787.065 1.295.189 1.707.398a4.25 4.25 0 0 1 1.857 1.858l.01.019l.046.096V6.723c-.174-1.474-.539-2.49-1.308-3.259M2.002 10.5v-.056L2 10.5z"
+      }
+    )
+  ] });
 }
 
 const {Checkbox} = await importShared('@heroui/react');
@@ -8351,14 +8905,30 @@ function AddScript() {
   const handleAdd = () => {
     setIsLoading(true);
     ipc.file.openDlg({ properties: ["openFile"] }).then((action) => {
-      if (action) dispatch(reducerActions.addAction({ action, type: "script" }));
+      if (action) {
+        const lastSeparator = Math.max(action.lastIndexOf("/"), action.lastIndexOf("\\"));
+        if (lastSeparator > 0) {
+          const directory = action.substring(0, lastSeparator);
+          dispatch(reducerActions.addAction({ action: `cd "${directory}"`, type: "command" }));
+        }
+        dispatch(reducerActions.addAction({ action, type: "script" }));
+      }
       setIsLoading(false);
     });
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Button$3, { onPress: handleAdd, isLoading, startContent: !isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(CodeDuo_Icon, {}), fullWidth: true, children: "Add Script" });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(
+    Button$3,
+    {
+      onPress: handleAdd,
+      isLoading,
+      startContent: !isLoading && /* @__PURE__ */ jsxRuntimeExports.jsx(CodeDuo_Icon, { className: "size-4" }),
+      fullWidth: true,
+      children: "Add Script"
+    }
+  );
 }
 
-const {Button: Button$2,ButtonGroup,Code,Input: Input$1} = await importShared('@heroui/react');
+const {Button: Button$2,ButtonGroup: ButtonGroup$1,Code,Input: Input$1} = await importShared('@heroui/react');
 const {useMemo: useMemo$3,useState: useState$1} = await importShared('react');
 
 const {useDispatch: useDispatch$6} = await importShared('react-redux');
@@ -8369,6 +8939,9 @@ function ExecuteActions() {
   const ipc = useIpc();
   const [addingFile, setAddingFile] = useState$1(false);
   const [addingFolder, setAddingFolder] = useState$1(false);
+  const [addingCdFolder, setAddingCdFolder] = useState$1(false);
+  const [editingIndex, setEditingIndex] = useState$1(null);
+  const [editingValue, setEditingValue] = useState$1("");
   const actions = useMemo$3(() => editingCard?.actions || [], [editingCard]);
   const cardType = useMemo$3(() => editingCard?.cardType || [], [editingCard]);
   const handleAddCommand = () => {
@@ -8385,6 +8958,30 @@ function ExecuteActions() {
   };
   const handleRemoveCommand = (indexToRemove) => {
     dispatch(reducerActions.removeAction(indexToRemove));
+  };
+  const handleStartEdit = (index, currentValue) => {
+    setEditingIndex(index);
+    setEditingValue(currentValue);
+  };
+  const handleSaveEdit = () => {
+    if (editingIndex !== null && editingValue.trim()) {
+      dispatch(reducerActions.updateAction({ index: editingIndex, newAction: editingValue.trim() }));
+    }
+    setEditingIndex(null);
+    setEditingValue("");
+  };
+  const handleCancelEdit = () => {
+    setEditingIndex(null);
+    setEditingValue("");
+  };
+  const handleEditKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSaveEdit();
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      handleCancelEdit();
+    }
   };
   const onReorder = (items) => {
     const newOrder = items.map((actionName) => actions.find((action) => action.action === actionName));
@@ -8404,6 +9001,13 @@ function ExecuteActions() {
     ipc.file.openDlg({ properties: ["openDirectory"] }).then((action) => {
       if (action) dispatch(reducerActions.addAction({ action, type: "open" }));
       setAddingFolder(false);
+    });
+  };
+  const handleAddCdFolder = () => {
+    setAddingCdFolder(true);
+    ipc.file.openDlg({ properties: ["openDirectory"] }).then((action) => {
+      if (action) dispatch(reducerActions.addAction({ action: `cd "${action}"`, type: "command" }));
+      setAddingCdFolder(false);
     });
   };
   const renderBody = (item, index) => {
@@ -8430,13 +9034,32 @@ function ExecuteActions() {
           /* @__PURE__ */ jsxRuntimeExports.jsx(Button$2, { size: "sm", color: "danger", variant: "light", onPress: () => handleRemoveCommand(index), isIconOnly: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(TrashDuo_Icon, { className: "size-4" }) })
         ] });
       case "command":
-        return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+        return editingIndex === index ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
           /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
             index + 1,
             "."
           ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(CodeDuo_Icon, {}),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(Code, { radius: "sm", className: "w-full", children: item.action }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CodeDuo_Icon, { className: "shrink-0" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Input$1,
+            {
+              size: "sm",
+              value: editingValue,
+              onBlur: handleSaveEdit,
+              onKeyDown: handleEditKeyDown,
+              onValueChange: setEditingValue,
+              classNames: { inputWrapper: "h-7" },
+              autoFocus: true
+            }
+          )
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+            index + 1,
+            "."
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(CodeDuo_Icon, { className: "shrink-0" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Code, { radius: "sm", className: "w-full truncate", children: item.action }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(Button$2, { size: "sm", variant: "light", onPress: () => handleStartEdit(index, item.action), isIconOnly: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(PenDuo_Icon, { className: "size-4" }) }),
           /* @__PURE__ */ jsxRuntimeExports.jsx(Button$2, { size: "sm", color: "danger", variant: "light", onPress: () => handleRemoveCommand(index), isIconOnly: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(TrashDuo_Icon, { className: "size-4" }) })
         ] });
     }
@@ -8444,9 +9067,18 @@ function ExecuteActions() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full flex flex-row gap-x-4 items-center justify-center", children: [
       cardType === "executable" ? /* @__PURE__ */ jsxRuntimeExports.jsx(AddExe, {}) : cardType === "terminal_browser" || cardType === "terminal" ? /* @__PURE__ */ jsxRuntimeExports.jsx(AddScript, {}) : null,
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(ButtonGroup, { fullWidth: true, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(ButtonGroup$1, { fullWidth: true, children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(Button$2, { isLoading: addingFile, onPress: handleAddFile, startContent: !addingFile && /* @__PURE__ */ jsxRuntimeExports.jsx(FileCodeDuo_Icon, {}), children: "Add File" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(Button$2, { isLoading: addingFolder, onPress: handleAddFolder, startContent: !addingFolder && /* @__PURE__ */ jsxRuntimeExports.jsx(FolderDuo_Icon, {}), children: "Add Folder" })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(Button$2, { isLoading: addingFolder, onPress: handleAddFolder, startContent: !addingFolder && /* @__PURE__ */ jsxRuntimeExports.jsx(FolderDuo_Icon, {}), children: "Add Folder" }),
+        (cardType === "terminal_browser" || cardType === "terminal") && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Button$2,
+          {
+            isLoading: addingCdFolder,
+            onPress: handleAddCdFolder,
+            startContent: !addingCdFolder && /* @__PURE__ */ jsxRuntimeExports.jsx(FolderDuo_Icon, {}),
+            children: "CD Folder"
+          }
+        )
       ] })
     ] }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
@@ -8480,10 +9112,10 @@ function ExecuteActions() {
               children: actions.map((item, index) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
                 ReorderItem,
                 {
-                  className: "rounded-medium bg-foreground-100 cursor-grab active:cursor-grabbing flex items-center gap-x-2 p-2",
+                  className: "rounded-medium bg-foreground-100 cursor-grab active:cursor-grabbing flex flex-row items-center gap-x-2 p-2",
                   value: item.action,
                   children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(Grip_Icon, { className: "text-foreground-500" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Grip_Icon, { className: "text-foreground-500 shrink-0" }),
                     renderBody(item, index)
                   ]
                 },
@@ -8556,68 +9188,139 @@ function PreviewCard({ card, handleEdit, icon }) {
   ) });
 }
 
-const {Button: Button$1,Input,NumberInput} = await importShared('@heroui/react');
+const {Button: Button$1,ButtonGroup,Input,NumberInput} = await importShared('@heroui/react');
 const {useMemo: useMemo$2} = await importShared('react');
 
 const {useDispatch: useDispatch$4} = await importShared('react-redux');
 function UrlConfig() {
   const dispatch = useDispatch$4();
   const editingCard = useCustomActionsState("editingCard");
+  const urlConfigType = useMemo$2(() => editingCard?.urlConfig.type || "nothing", [editingCard]);
   const customUrl = useMemo$2(() => editingCard?.urlConfig.customUrl, [editingCard]);
   const openImmediately = useMemo$2(() => editingCard?.urlConfig.openImmediately, [editingCard]);
   const timeout = useMemo$2(() => editingCard?.urlConfig.timeout, [editingCard]);
+  const findLine = useMemo$2(() => editingCard?.urlConfig.findLine, [editingCard]);
+  const setUrlConfigType = (value) => dispatch(reducerActions.setUrlConfigType(value));
   const setCustomUrl = (value) => dispatch(reducerActions.setCustomUrl(value));
   const setOpenImmediately = (value) => dispatch(reducerActions.setOpenImmediately(value));
   const setTimeoutValue = (value) => dispatch(reducerActions.setTimeoutValue(value));
+  const setFindLine = (value) => dispatch(reducerActions.setFindLine(value));
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-y-3", children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground-600", children: "Set and customize how to open url after card start:" }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-row gap-x-4 items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Input, { value: customUrl, onValueChange: setCustomUrl, placeholder: "Enter custom URL...", isClearable: true }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(AnimatePresence, { children: customUrl && /* @__PURE__ */ jsxRuntimeExports.jsx(
-      motion.div,
-      {
-        className: "overflow-hidden",
-        exit: { opacity: 0, height: 0 },
-        initial: { opacity: 0, height: 0 },
-        animate: { opacity: 1, height: "auto" },
-        children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center space-x-4 border-t border-gray-700 pt-4 mt-2", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-gray-300", children: "Open URL:" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center space-x-2", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-foreground-600", children: "URL Detection Method:" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(ButtonGroup, { fullWidth: true, children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button$1,
+        {
+          onPress: () => setUrlConfigType("nothing"),
+          variant: urlConfigType === "nothing" ? "flat" : "light",
+          color: urlConfigType === "nothing" ? "primary" : "default",
+          children: "No Browser"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button$1,
+        {
+          onPress: () => setUrlConfigType("custom"),
+          variant: urlConfigType === "custom" ? "flat" : "light",
+          color: urlConfigType === "custom" ? "primary" : "default",
+          children: "Custom URL"
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        Button$1,
+        {
+          onPress: () => setUrlConfigType("findLine"),
+          variant: urlConfigType === "findLine" ? "flat" : "light",
+          color: urlConfigType === "findLine" ? "primary" : "default",
+          children: "Scan Terminal"
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(AnimatePresence, { children: [
+      urlConfigType === "custom" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        motion.div,
+        {
+          className: "overflow-hidden",
+          exit: { opacity: 0, height: 0 },
+          initial: { opacity: 0, height: 0 },
+          animate: { opacity: 1, height: "auto" },
+          children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col gap-y-3 border-t border-foreground-200 pt-4 mt-2", children: [
             /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Button$1,
+              Input,
               {
-                onPress: () => setOpenImmediately(true),
-                variant: openImmediately ? "flat" : "light",
-                color: openImmediately ? "primary" : "default",
-                children: "Immediately"
+                value: customUrl,
+                label: "Custom URL",
+                labelPlacement: "outside",
+                onValueChange: setCustomUrl,
+                description: "Specify the exact URL to open in the browser",
+                placeholder: "Enter custom URL (e.g., http://localhost:7860)",
+                isClearable: true
               }
             ),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              Button$1,
-              {
-                onPress: () => setOpenImmediately(false),
-                variant: openImmediately ? "light" : "flat",
-                color: openImmediately ? "default" : "primary",
-                children: "After Timeout"
-              }
-            )
-          ] }),
-          !openImmediately && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center space-x-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-            NumberInput,
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-x-4 w-full", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm text-foreground-500 shrink-0", children: "Open URL:" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center space-x-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Button$1,
+                  {
+                    size: "sm",
+                    onPress: () => setOpenImmediately(true),
+                    variant: openImmediately ? "flat" : "light",
+                    color: openImmediately ? "primary" : "default",
+                    children: "Immediately"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  Button$1,
+                  {
+                    size: "sm",
+                    onPress: () => setOpenImmediately(false),
+                    variant: openImmediately ? "light" : "flat",
+                    color: openImmediately ? "default" : "primary",
+                    children: "After Timeout"
+                  }
+                )
+              ] }),
+              !openImmediately && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                NumberInput,
+                {
+                  size: "sm",
+                  minValue: 1,
+                  maxValue: 999,
+                  value: timeout,
+                  placeholder: "Seconds",
+                  "aria-label": "Timeout Seconds",
+                  onValueChange: setTimeoutValue,
+                  classNames: { inputWrapper: "max-h-10" },
+                  endContent: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-foreground-500", children: "Seconds" })
+                }
+              )
+            ] })
+          ] })
+        }
+      ),
+      urlConfigType === "findLine" && /* @__PURE__ */ jsxRuntimeExports.jsx(
+        motion.div,
+        {
+          className: "overflow-hidden",
+          exit: { opacity: 0, height: 0 },
+          initial: { opacity: 0, height: 0 },
+          animate: { opacity: 1, height: "auto" },
+          children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex flex-col gap-y-3 border-t border-foreground-200 pt-4 mt-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+            Input,
             {
-              size: "sm",
-              minValue: 1,
-              maxValue: 999,
-              value: timeout,
-              "aria-label": "Timeout Seconds",
-              placeholder: "Timeout Seconds",
-              onValueChange: setTimeoutValue,
-              classNames: { inputWrapper: "max-h-10" },
-              endContent: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-xs text-foreground-500", children: "Seconds" })
+              value: findLine,
+              labelPlacement: "outside",
+              label: "Line Must Contain",
+              onValueChange: setFindLine,
+              placeholder: 'e.g., "Running on local URL:" or "Uvicorn running on"',
+              description: "Enter text to search for in terminal output. The URL will be extracted from that line.",
+              isClearable: true
             }
           ) })
-        ] })
-      }
-    ) })
+        }
+      )
+    ] })
   ] });
 }
 

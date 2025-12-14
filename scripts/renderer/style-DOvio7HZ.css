@@ -1,4 +1,4 @@
-/*! tailwindcss v4.1.16 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.1.18 | MIT License | https://tailwindcss.com */
 @layer properties {
   @supports (((-webkit-hyphens: none)) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color: rgb(from red r g b)))) {
     *, :before, :after, ::backdrop {
@@ -67,7 +67,6 @@
     --color-gray-100: oklch(96.7% .003 264.542);
     --color-gray-300: oklch(87.2% .01 258.338);
     --color-gray-600: oklch(44.6% .03 256.802);
-    --color-gray-700: oklch(37.3% .034 259.733);
     --color-gray-900: oklch(21% .034 264.665);
     --color-stone-900: oklch(21.6% .006 56.043);
     --color-white: #fff;
@@ -83,7 +82,6 @@
     --radius-2xl: 1rem;
     --radius-3xl: 1.5rem;
     --ease-in-out: cubic-bezier(.4, 0, .2, 1);
-    --default-transition-duration: .15s;
     --default-transition-timing-function: cubic-bezier(.4, 0, .2, 1);
     --default-font-family: var(--font-sans);
     --default-mono-font-family: var(--font-mono);
@@ -497,20 +495,12 @@
     top: calc(var(--spacing) * 4);
   }
 
-  .right-3 {
-    right: calc(var(--spacing) * 3);
-  }
-
   .right-4 {
     right: calc(var(--spacing) * 4);
   }
 
   .bottom-0 {
     bottom: calc(var(--spacing) * 0);
-  }
-
-  .bottom-3 {
-    bottom: calc(var(--spacing) * 3);
   }
 
   .left-1\/2 {
@@ -607,11 +597,6 @@
     height: calc(var(--spacing) * 5);
   }
 
-  .size-6 {
-    width: calc(var(--spacing) * 6);
-    height: calc(var(--spacing) * 6);
-  }
-
   .size-9 {
     width: calc(var(--spacing) * 9);
     height: calc(var(--spacing) * 9);
@@ -640,6 +625,10 @@
   .size-full {
     width: 100%;
     height: 100%;
+  }
+
+  .h-7 {
+    height: calc(var(--spacing) * 7);
   }
 
   .h-\[1px\] {
@@ -796,12 +785,6 @@
     margin-inline-end: calc(calc(var(--spacing) * 2) * calc(1 - var(--tw-space-x-reverse)));
   }
 
-  :where(.space-x-4 > :not(:last-child)) {
-    --tw-space-x-reverse: 0;
-    margin-inline-start: calc(calc(var(--spacing) * 4) * var(--tw-space-x-reverse));
-    margin-inline-end: calc(calc(var(--spacing) * 4) * calc(1 - var(--tw-space-x-reverse)));
-  }
-
   .gap-y-3 {
     row-gap: calc(var(--spacing) * 3);
   }
@@ -873,6 +856,10 @@
     border-color: hsl(var(--heroui-foreground-100) / 1);
   }
 
+  .border-foreground-200 {
+    border-color: hsl(var(--heroui-foreground-200) / 1);
+  }
+
   .border-foreground\/5 {
     border-color: hsl(var(--heroui-foreground) / 1);
   }
@@ -885,10 +872,6 @@
 
   .border-gray-600 {
     border-color: var(--color-gray-600);
-  }
-
-  .border-gray-700 {
-    border-color: var(--color-gray-700);
   }
 
   .\!bg-transparent {
@@ -1074,135 +1057,12 @@
     color: hsl(var(--heroui-foreground-600) / 1);
   }
 
-  .text-gray-300 {
-    color: var(--color-gray-300);
-  }
-
   .text-gray-600 {
     color: var(--color-gray-600);
   }
 
   .text-gray-900 {
     color: var(--color-gray-900);
-  }
-
-  .dark {
-    color-scheme: dark;
-    --heroui-background: 0 0% 0%;
-    --heroui-foreground-50: 240 5.88% 10%;
-    --heroui-foreground-100: 240 3.7% 15.88%;
-    --heroui-foreground-200: 240 5.26% 26.08%;
-    --heroui-foreground-300: 240 5.2% 33.92%;
-    --heroui-foreground-400: 240 3.83% 46.08%;
-    --heroui-foreground-500: 240 5.03% 64.9%;
-    --heroui-foreground-600: 240 4.88% 83.92%;
-    --heroui-foreground-700: 240 5.88% 90%;
-    --heroui-foreground-800: 240 4.76% 95.88%;
-    --heroui-foreground-900: 0 0% 98.04%;
-    --heroui-foreground: 210 5.56% 92.94%;
-    --heroui-focus: 212.02 100% 46.67%;
-    --heroui-overlay: 0 0% 0%;
-    --heroui-divider: 0 0% 100%;
-    --heroui-content1: 240 5.88% 10%;
-    --heroui-content1-foreground: 0 0% 98.04%;
-    --heroui-content2: 240 3.7% 15.88%;
-    --heroui-content2-foreground: 240 4.76% 95.88%;
-    --heroui-content3: 240 5.26% 26.08%;
-    --heroui-content3-foreground: 240 5.88% 90%;
-    --heroui-content4: 240 5.2% 33.92%;
-    --heroui-content4-foreground: 240 4.88% 83.92%;
-    --heroui-default-50: 240 5.88% 10%;
-    --heroui-default-100: 240 3.7% 15.88%;
-    --heroui-default-200: 240 5.26% 26.08%;
-    --heroui-default-300: 240 5.2% 33.92%;
-    --heroui-default-400: 240 3.83% 46.08%;
-    --heroui-default-500: 240 5.03% 64.9%;
-    --heroui-default-600: 240 4.88% 83.92%;
-    --heroui-default-700: 240 5.88% 90%;
-    --heroui-default-800: 240 4.76% 95.88%;
-    --heroui-default-900: 0 0% 98.04%;
-    --heroui-default-foreground: 0 0% 100%;
-    --heroui-default: 240 5.26% 26.08%;
-    --heroui-primary-50: 211.84 100% 9.61%;
-    --heroui-primary-100: 211.84 100% 19.22%;
-    --heroui-primary-200: 212.24 100% 28.82%;
-    --heroui-primary-300: 212.14 100% 38.43%;
-    --heroui-primary-400: 212.02 100% 46.67%;
-    --heroui-primary-500: 212.14 92.45% 58.43%;
-    --heroui-primary-600: 212.24 92.45% 68.82%;
-    --heroui-primary-700: 211.84 92.45% 79.22%;
-    --heroui-primary-800: 211.84 92.45% 89.61%;
-    --heroui-primary-900: 212.5 92.31% 94.9%;
-    --heroui-primary-foreground: 0 0% 100%;
-    --heroui-primary: 219.92 100% 46.86%;
-    --heroui-secondary-50: 270 66.67% 9.41%;
-    --heroui-secondary-100: 270 66.67% 18.82%;
-    --heroui-secondary-200: 270 66.67% 28.24%;
-    --heroui-secondary-300: 270 66.67% 37.65%;
-    --heroui-secondary-400: 270 66.67% 47.06%;
-    --heroui-secondary-500: 270 59.26% 57.65%;
-    --heroui-secondary-600: 270 59.26% 68.24%;
-    --heroui-secondary-700: 270 59.26% 78.82%;
-    --heroui-secondary-800: 270 59.26% 89.41%;
-    --heroui-secondary-900: 270 61.54% 94.9%;
-    --heroui-secondary-foreground: 0 0% 100%;
-    --heroui-secondary: 280 100% 50%;
-    --heroui-success-50: 145.71 77.78% 8.82%;
-    --heroui-success-100: 146.2 79.78% 17.45%;
-    --heroui-success-200: 145.79 79.26% 26.47%;
-    --heroui-success-300: 146.01 79.89% 35.1%;
-    --heroui-success-400: 145.96 79.46% 43.92%;
-    --heroui-success-500: 146.01 62.45% 55.1%;
-    --heroui-success-600: 145.79 62.57% 66.47%;
-    --heroui-success-700: 146.2 61.74% 77.45%;
-    --heroui-success-800: 145.71 61.4% 88.82%;
-    --heroui-success-900: 146.67 64.29% 94.51%;
-    --heroui-success-foreground: 0 0% 0%;
-    --heroui-success: 145.96 79.46% 43.92%;
-    --heroui-warning-50: 37.14 75% 10.98%;
-    --heroui-warning-100: 37.14 75% 21.96%;
-    --heroui-warning-200: 36.96 73.96% 33.14%;
-    --heroui-warning-300: 37.01 74.22% 44.12%;
-    --heroui-warning-400: 37.03 91.27% 55.1%;
-    --heroui-warning-500: 37.01 91.26% 64.12%;
-    --heroui-warning-600: 36.96 91.24% 73.14%;
-    --heroui-warning-700: 37.14 91.3% 81.96%;
-    --heroui-warning-800: 37.14 91.3% 90.98%;
-    --heroui-warning-900: 54.55 91.67% 95.29%;
-    --heroui-warning-foreground: 0 0% 0%;
-    --heroui-warning: 37.03 91.27% 55.1%;
-    --heroui-danger-50: 340 84.91% 10.39%;
-    --heroui-danger-100: 339.33 86.54% 20.39%;
-    --heroui-danger-200: 339.11 85.99% 30.78%;
-    --heroui-danger-300: 339 86.54% 40.78%;
-    --heroui-danger-400: 339.2 90.36% 51.18%;
-    --heroui-danger-500: 339 90% 60.78%;
-    --heroui-danger-600: 339.11 90.6% 70.78%;
-    --heroui-danger-700: 339.33 90% 80.39%;
-    --heroui-danger-800: 340 91.84% 90.39%;
-    --heroui-danger-900: 339.13 92% 95.1%;
-    --heroui-danger-foreground: 0 0% 100%;
-    --heroui-danger: 0 72.22% 50.59%;
-    --heroui-divider-weight: 1px;
-    --heroui-disabled-opacity: .5;
-    --heroui-font-size-tiny: .75rem;
-    --heroui-font-size-small: .875rem;
-    --heroui-font-size-medium: 1rem;
-    --heroui-font-size-large: 1.125rem;
-    --heroui-line-height-tiny: 1rem;
-    --heroui-line-height-small: 1.25rem;
-    --heroui-line-height-medium: 1.5rem;
-    --heroui-line-height-large: 1.75rem;
-    --heroui-radius-small: 8px;
-    --heroui-radius-medium: 12px;
-    --heroui-radius-large: 14px;
-    --heroui-border-width-small: 1px;
-    --heroui-border-width-medium: 2px;
-    --heroui-border-width-large: 3px;
-    --heroui-box-shadow-small: 0px 0px 5px 0px #0000000d, 0px 2px 10px 0px #0003, inset 0px 0px 1px 0px #ffffff26;
-    --heroui-box-shadow-medium: 0px 0px 15px 0px #0000000f, 0px 2px 30px 0px #00000038, inset 0px 0px 1px 0px #ffffff26;
-    --heroui-box-shadow-large: 0px 0px 30px 0px #00000012, 0px 30px 60px 0px #00000042, inset 0px 0px 1px 0px #ffffff26;
-    --heroui-hover-opacity: .9;
   }
 
   .light {
@@ -1330,11 +1190,6 @@
 
   .shadow-lg {
     --tw-shadow: 0 10px 15px -3px var(--tw-shadow-color, #0000001a), 0 4px 6px -4px var(--tw-shadow-color, #0000001a);
-    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
-  }
-
-  .shadow-sm {
-    --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, #0000001a), 0 1px 2px -1px var(--tw-shadow-color, #0000001a);
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow);
   }
 

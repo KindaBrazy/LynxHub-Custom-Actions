@@ -1,6 +1,6 @@
 import { importShared } from './__federation_fn_import-JrT3xvdd.js';
-import { t as isRefObject, k as usePresence, n as LayoutGroupContext, j as jsxRuntimeExports, S as SwitchLayoutGroupContext, r as resolveMotionValue, s as createMotionProxy, u as useConstant, M as MotionConfigContext, a as useIsomorphicLayoutEffect } from './create-proxy-BAEgznKV.js';
-import { aZ as isDragging, aj as isObject, L as interpolate, a6 as addDomEvent, aa as addPointerInfo, W as mixNumber, o as frameData, f as frame, b1 as isPrimaryPointer, bH as extractEventInfo, al as pipe, d as cancelFrame, z as secondsToMilliseconds, an as millisecondsToSeconds, I as progress, c as clamp, $ as createBox, bI as measurePageBox, bJ as convertBoxToBoundingBox, bK as convertBoundingBoxToBox, bL as addValueToWillChange, bM as animateMotionValue, bz as percent, bN as Feature, E as noop, p as px, bp as complex, ac as addScaleCorrector, C as microtask, x as isMotionValue, w as motionValue, af as addUniqueItem, D as removeItem, aX as time, au as circOut, bO as scalePoint, l as statsBuffer, am as SubscriptionManager, y as getValueTransition, bG as frameSteps, bP as hasTransform, bQ as translateAxis, bR as transformBox, bS as hasScale, bT as applyBoxDelta, bU as has2DTranslate, bV as applyTreeDeltas, bW as createDelta, q as activeAnimations, bX as scaleCorrectors, a9 as getOptimisedAppearId, G as animations, bY as gestureAnimations, H as createDomVisualElement, v as collectMotionValues, ag as moveItem } from './gestures-WYWBo3Uv.js';
+import { t as isRefObject, k as usePresence, n as LayoutGroupContext, j as jsxRuntimeExports, S as SwitchLayoutGroupContext, r as resolveMotionValue, s as createMotionProxy, u as useConstant, M as MotionConfigContext, a as useIsomorphicLayoutEffect } from './create-proxy-lkpfAnnn.js';
+import { aZ as isDragging, aj as isObject, L as interpolate, a6 as addDomEvent, aa as addPointerInfo, W as mixNumber, o as frameData, f as frame, b1 as isPrimaryPointer, bH as extractEventInfo, al as pipe, d as cancelFrame, z as secondsToMilliseconds, an as millisecondsToSeconds, I as progress, c as clamp, $ as createBox, bI as measurePageBox, bJ as convertBoxToBoundingBox, bK as convertBoundingBoxToBox, bL as addValueToWillChange, bM as animateMotionValue, bz as percent, bN as Feature, E as noop, C as microtask, x as isMotionValue, w as motionValue, af as addUniqueItem, D as removeItem, aX as time, p as px, au as circOut, bO as scalePoint, l as statsBuffer, am as SubscriptionManager, y as getValueTransition, bG as frameSteps, bP as hasTransform, bQ as translateAxis, bR as transformBox, bS as hasScale, bT as applyBoxDelta, bU as has2DTranslate, bV as applyTreeDeltas, bW as createDelta, q as activeAnimations, bX as scaleCorrectors, a9 as getOptimisedAppearId, G as animations, bY as gestureAnimations, H as createDomVisualElement, v as collectMotionValues, ag as moveItem } from './gestures-BBGq__hy.js';
 
 function setDragLock(axis) {
     if (axis === "x" || axis === "y") {
@@ -956,75 +956,6 @@ const globalProjectionState = {
     hasEverUpdated: false,
 };
 
-function pixelsToPercent(pixels, axis) {
-    if (axis.max === axis.min)
-        return 0;
-    return (pixels / (axis.max - axis.min)) * 100;
-}
-/**
- * We always correct borderRadius as a percentage rather than pixels to reduce paints.
- * For example, if you are projecting a box that is 100px wide with a 10px borderRadius
- * into a box that is 200px wide with a 20px borderRadius, that is actually a 10%
- * borderRadius in both states. If we animate between the two in pixels that will trigger
- * a paint each time. If we animate between the two in percentage we'll avoid a paint.
- */
-const correctBorderRadius = {
-    correct: (latest, node) => {
-        if (!node.target)
-            return latest;
-        /**
-         * If latest is a string, if it's a percentage we can return immediately as it's
-         * going to be stretched appropriately. Otherwise, if it's a pixel, convert it to a number.
-         */
-        if (typeof latest === "string") {
-            if (px.test(latest)) {
-                latest = parseFloat(latest);
-            }
-            else {
-                return latest;
-            }
-        }
-        /**
-         * If latest is a number, it's a pixel value. We use the current viewportBox to calculate that
-         * pixel value as a percentage of each axis
-         */
-        const x = pixelsToPercent(latest, node.target.x);
-        const y = pixelsToPercent(latest, node.target.y);
-        return `${x}% ${y}%`;
-    },
-};
-
-const correctBoxShadow = {
-    correct: (latest, { treeScale, projectionDelta }) => {
-        const original = latest;
-        const shadow = complex.parse(latest);
-        // TODO: Doesn't support multiple shadows
-        if (shadow.length > 5)
-            return original;
-        const template = complex.createTransformer(latest);
-        const offset = typeof shadow[0] !== "number" ? 1 : 0;
-        // Calculate the overall context scale
-        const xScale = projectionDelta.x.scale * treeScale.x;
-        const yScale = projectionDelta.y.scale * treeScale.y;
-        shadow[0 + offset] /= xScale;
-        shadow[1 + offset] /= yScale;
-        /**
-         * Ideally we'd correct x and y scales individually, but because blur and
-         * spread apply to both we have to take a scale average and apply that instead.
-         * We could potentially improve the outcome of this by incorporating the ratio between
-         * the two scales.
-         */
-        const averageScale = mixNumber(xScale, yScale, 0.5);
-        // Blur
-        if (typeof shadow[2 + offset] === "number")
-            shadow[2 + offset] /= averageScale;
-        // Spread
-        if (typeof shadow[3 + offset] === "number")
-            shadow[3 + offset] /= averageScale;
-        return template(shadow);
-    },
-};
-
 const {useContext: useContext$2,Component} = await importShared('react');
 
 /**
@@ -1045,7 +976,6 @@ class MeasureLayoutWithContext extends Component {
     componentDidMount() {
         const { visualElement, layoutGroup, switchLayoutGroup, layoutId } = this.props;
         const { projection } = visualElement;
-        addScaleCorrector(defaultScaleCorrectors);
         if (projection) {
             if (layoutGroup.group)
                 layoutGroup.group.add(projection);
@@ -1144,22 +1074,6 @@ function MeasureLayout(props) {
     const layoutGroup = useContext$2(LayoutGroupContext);
     return (jsxRuntimeExports.jsx(MeasureLayoutWithContext, { ...props, layoutGroup: layoutGroup, switchLayoutGroup: useContext$2(SwitchLayoutGroupContext), isPresent: isPresent, safeToRemove: safeToRemove }));
 }
-const defaultScaleCorrectors = {
-    borderRadius: {
-        ...correctBorderRadius,
-        applyTo: [
-            "borderTopLeftRadius",
-            "borderTopRightRadius",
-            "borderBottomLeftRadius",
-            "borderBottomRightRadius",
-        ],
-    },
-    borderTopLeftRadius: correctBorderRadius,
-    borderTopRightRadius: correctBorderRadius,
-    borderBottomLeftRadius: correctBorderRadius,
-    borderBottomRightRadius: correctBorderRadius,
-    boxShadow: correctBoxShadow,
-};
 
 function animateSingleValue(value, keyframes, options) {
     const motionValue$1 = isMotionValue(value) ? value : motionValue(value);
@@ -1690,6 +1604,7 @@ function createProjectionNode({ attachResizeListener, defaultParent, measureScro
              */
             this.eventHandlers = new Map();
             this.hasTreeAnimated = false;
+            this.layoutVersion = 0;
             // Note: Currently only running on root node
             this.updateScheduled = false;
             this.scheduleUpdate = () => this.update();
@@ -1729,6 +1644,7 @@ function createProjectionNode({ attachResizeListener, defaultParent, measureScro
              * Frame calculations
              */
             this.resolvedRelativeTargetAt = 0.0;
+            this.linkedParentVersion = 0;
             this.hasProjected = false;
             this.isVisible = true;
             this.animationProgress = 0;
@@ -2082,6 +1998,7 @@ function createProjectionNode({ attachResizeListener, defaultParent, measureScro
             }
             const prevLayout = this.layout;
             this.layout = this.measure(false);
+            this.layoutVersion++;
             this.layoutCorrected = createBox();
             this.isLayoutDirty = false;
             this.projectionDelta = undefined;
@@ -2301,25 +2218,23 @@ function createProjectionNode({ attachResizeListener, defaultParent, measureScro
             if (!this.layout || !(layout || layoutId))
                 return;
             this.resolvedRelativeTargetAt = frameData.timestamp;
+            const relativeParent = this.getClosestProjectingParent();
+            if (relativeParent &&
+                this.linkedParentVersion !== relativeParent.layoutVersion &&
+                !relativeParent.options.layoutRoot) {
+                this.removeRelativeTarget();
+            }
             /**
              * If we don't have a targetDelta but do have a layout, we can attempt to resolve
              * a relativeParent. This will allow a component to perform scale correction
              * even if no animation has started.
              */
             if (!this.targetDelta && !this.relativeTarget) {
-                const relativeParent = this.getClosestProjectingParent();
-                if (relativeParent &&
-                    relativeParent.layout &&
-                    this.animationProgress !== 1) {
-                    this.relativeParent = relativeParent;
-                    this.forceRelativeParentToResolveTarget();
-                    this.relativeTarget = createBox();
-                    this.relativeTargetOrigin = createBox();
-                    calcRelativePosition(this.relativeTargetOrigin, this.layout.layoutBox, relativeParent.layout.layoutBox);
-                    copyBoxInto(this.relativeTarget, this.relativeTargetOrigin);
+                if (relativeParent && relativeParent.layout) {
+                    this.createRelativeTarget(relativeParent, this.layout.layoutBox, relativeParent.layout.layoutBox);
                 }
                 else {
-                    this.relativeParent = this.relativeTarget = undefined;
+                    this.removeRelativeTarget();
                 }
             }
             /**
@@ -2369,19 +2284,13 @@ function createProjectionNode({ attachResizeListener, defaultParent, measureScro
              */
             if (this.attemptToResolveRelativeTarget) {
                 this.attemptToResolveRelativeTarget = false;
-                const relativeParent = this.getClosestProjectingParent();
                 if (relativeParent &&
                     Boolean(relativeParent.resumingFrom) ===
                         Boolean(this.resumingFrom) &&
                     !relativeParent.options.layoutScroll &&
                     relativeParent.target &&
                     this.animationProgress !== 1) {
-                    this.relativeParent = relativeParent;
-                    this.forceRelativeParentToResolveTarget();
-                    this.relativeTarget = createBox();
-                    this.relativeTargetOrigin = createBox();
-                    calcRelativePosition(this.relativeTargetOrigin, this.target, relativeParent.target);
-                    copyBoxInto(this.relativeTarget, this.relativeTargetOrigin);
+                    this.createRelativeTarget(relativeParent, this.target, relativeParent.target);
                 }
                 else {
                     this.relativeParent = this.relativeTarget = undefined;
@@ -2412,6 +2321,18 @@ function createProjectionNode({ attachResizeListener, defaultParent, measureScro
                 this.targetDelta ||
                 this.options.layoutRoot) &&
                 this.layout);
+        }
+        createRelativeTarget(relativeParent, layout, parentLayout) {
+            this.relativeParent = relativeParent;
+            this.linkedParentVersion = relativeParent.layoutVersion;
+            this.forceRelativeParentToResolveTarget();
+            this.relativeTarget = createBox();
+            this.relativeTargetOrigin = createBox();
+            calcRelativePosition(this.relativeTargetOrigin, layout, parentLayout);
+            copyBoxInto(this.relativeTarget, this.relativeTargetOrigin);
+        }
+        removeRelativeTarget() {
+            this.relativeParent = this.relativeTarget = undefined;
         }
         calcProjection() {
             const lead = this.getLead();
