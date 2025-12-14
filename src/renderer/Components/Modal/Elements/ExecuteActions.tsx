@@ -144,12 +144,12 @@ export function ExecuteActions() {
             <CodeDuo_Icon className="shrink-0" />
             <Input
               size="sm"
-              autoFocus
               value={editingValue}
-              onValueChange={setEditingValue}
-              onKeyDown={handleEditKeyDown}
               onBlur={handleSaveEdit}
+              onKeyDown={handleEditKeyDown}
+              onValueChange={setEditingValue}
               classNames={{inputWrapper: 'h-7'}}
+              autoFocus
             />
           </>
         ) : (
