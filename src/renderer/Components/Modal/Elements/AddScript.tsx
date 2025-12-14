@@ -22,7 +22,11 @@ export function AddScript() {
   };
 
   return (
-    <Button onPress={handleAdd} isLoading={isLoading} startContent={!isLoading && <CodeDuo_Icon />} fullWidth>
+    <Button
+      onPress={handleAdd}
+      isLoading={isLoading}
+      startContent={!isLoading && <CodeDuo_Icon className="size-4" />}
+      fullWidth>
       Add Script
     </Button>
   );
