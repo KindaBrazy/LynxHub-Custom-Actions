@@ -4,12 +4,20 @@ import {useSelector} from 'react-redux';
 import {formatWebAddress} from '../../../src/cross/CrossUtils';
 import {CustomCard, CustomCardType, CustomCategory, CustomExecuteActions} from '../cross/CrossTypes';
 
+export type UrlCatchingSession = {
+  ptyId: string;
+  tabId: string;
+  findLine: string;
+  urlFound: boolean;
+};
+
 export type CustomActionsState = {
   modals: {isOpen: boolean; tabID: string}[];
   customCards: CustomCard[];
   view: 'list' | 'form';
   editingCard?: CustomCard;
   saveCards?: boolean;
+  urlCatchingSession?: UrlCatchingSession;
 };
 
 type CustomActionsStateTypes = {
@@ -22,6 +30,7 @@ const initialState: CustomActionsState = {
   view: 'list',
   editingCard: undefined,
   saveCards: false,
+  urlCatchingSession: undefined,
 };
 
 const customActionsSlice = createSlice({
@@ -55,7 +64,7 @@ const customActionsSlice = createSlice({
         title: '',
         accentColor: '#AA00FF',
         cardType: 'terminal_browser',
-        urlConfig: {openImmediately: true, timeout: 5},
+        urlConfig: {type: 'nothing', openImmediately: true, timeout: 5},
         categories: {pinned: true},
         actions: [],
       };
@@ -115,6 +124,9 @@ const customActionsSlice = createSlice({
     setEditingCard: (state, action: PayloadAction<CustomCard | undefined>) => {
       state.editingCard = action.payload;
     },
+    setUrlConfigType: (state, action: PayloadAction<'custom' | 'findLine' | 'nothing'>) => {
+      if (state.editingCard) state.editingCard.urlConfig.type = action.payload;
+    },
     setCustomUrl: (state, action: PayloadAction<string>) => {
       if (state.editingCard) state.editingCard.urlConfig.customUrl = action.payload;
     },
@@ -123,6 +135,9 @@ const customActionsSlice = createSlice({
     },
     setTimeoutValue: (state, action: PayloadAction<number>) => {
       if (state.editingCard) state.editingCard.urlConfig.timeout = action.payload;
+    },
+    setFindLine: (state, action: PayloadAction<string>) => {
+      if (state.editingCard) state.editingCard.urlConfig.findLine = action.payload;
     },
     setCategories: (state, action: PayloadAction<{id: CustomCategory; value: boolean}>) => {
       if (state.editingCard) state.editingCard.categories[action.payload.id] = action.payload.value;
@@ -140,6 +155,22 @@ const customActionsSlice = createSlice({
     },
     clearSaveCards: state => {
       state.saveCards = false;
+    },
+    startUrlCatching: (state, action: PayloadAction<{ptyId: string; tabId: string; findLine: string}>) => {
+      state.urlCatchingSession = {
+        ptyId: action.payload.ptyId,
+        tabId: action.payload.tabId,
+        findLine: action.payload.findLine,
+        urlFound: false,
+      };
+    },
+    stopUrlCatching: state => {
+      state.urlCatchingSession = undefined;
+    },
+    setUrlFound: state => {
+      if (state.urlCatchingSession) {
+        state.urlCatchingSession.urlFound = true;
+      }
     },
   },
 });

@@ -11,7 +11,15 @@ export type CustomCategory = keyof CustomCategories;
 
 export type CustomCardType = 'executable' | 'browser' | 'terminal' | 'terminal_browser';
 
-export type CustomUrlConfig = {customUrl?: string; openImmediately?: boolean; timeout?: number};
+export type CustomUrlConfigType = 'custom' | 'findLine' | 'nothing';
+
+export type CustomUrlConfig = {
+  type: CustomUrlConfigType;
+  customUrl?: string;
+  openImmediately?: boolean;
+  timeout?: number;
+  findLine?: string;
+};
 
 export type CustomExecuteActions = {action: string; type: 'script' | 'exe' | 'open' | 'command'};
 

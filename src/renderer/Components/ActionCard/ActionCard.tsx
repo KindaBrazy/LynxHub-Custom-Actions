@@ -9,6 +9,7 @@ import {SvgProps} from '../../../../../src/renderer/src/assets/icons/SvgIconsCon
 import {CustomCard} from '../../../cross/CrossTypes';
 import {customActionsChannels} from '../../../cross/CrossUtils';
 import {useIpc} from '../../ObjectsHolder';
+import {reducerActions} from '../../reducer';
 import {ArrowLine_Icon} from '../SvgIcons';
 import {
   arrowVariants,
@@ -46,8 +47,8 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
     const opens = actions.filter(action => action.type === 'open');
     opens.forEach(open => ipc.file.openPath(open.action));
 
-    const manageUrls = (onDone?: () => void) => {
-      if (urlConfig.customUrl) {
+    const manageUrls = (ptyId: string, onDone?: () => void) => {
+      if (urlConfig.type === 'custom' && urlConfig.customUrl) {
         const openUrl = () => {
           dispatch(cardsActions.setRunningCardCustomAddress({tabId: activeTab, address: urlConfig.customUrl!}));
           if (onDone) onDone();
@@ -58,6 +59,9 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
         } else {
           setTimeout(() => openUrl(), (urlConfig.timeout || 0) * 1000);
         }
+      } else if (urlConfig.type === 'findLine' && urlConfig.findLine) {
+        // Start URL catching session in redux (handled by CustomHooks)
+        dispatch(reducerActions.startUrlCatching({ptyId, tabId: activeTab, findLine: urlConfig.findLine}));
       }
     };
 
@@ -85,8 +89,6 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
             command = `chmod +x "${action.action}" && "${action.action}"${LINE_ENDING}`;
           }
           ipc.pty.write(ptyId, command);
-        } else {
-          return;
         }
       });
     };
@@ -100,7 +102,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
         window.electron.ipcRenderer.send(customActionsChannels.startExe, ptyID, pathToExe);
 
         dispatch(cardsActions.addRunningCard({tabId: activeTab, id: ptyID}));
-        manageUrls(() => {
+        manageUrls(ptyID, () => {
           dispatch(cardsActions.setRunningCardView({tabId: activeTab, view: 'browser'}));
         });
 
@@ -108,26 +110,23 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
       }
       case 'browser': {
         dispatch(cardsActions.addRunningEmpty({tabId: activeTab, type: 'browser'}));
-        manageUrls();
+        manageUrls(`${activeTab}_browser`);
         break;
       }
       case 'terminal': {
         dispatch(cardsActions.addRunningEmpty({tabId: activeTab, type: 'terminal'}));
         const ptyID = `${activeTab}_terminal`;
-        setTimeout(() => {
-          runCustomCommands(ptyID);
-        }, 100);
+        manageUrls(ptyID);
+        setTimeout(() => runCustomCommands(ptyID), 100);
         break;
       }
       case 'terminal_browser': {
         const ptyID = `${activeTab}_both`;
         dispatch(cardsActions.addRunningEmpty({tabId: activeTab, type: 'both'}));
-        manageUrls(() => {
+        manageUrls(ptyID, () => {
           dispatch(cardsActions.setRunningCardView({tabId: activeTab, view: 'browser'}));
         });
-        setTimeout(() => {
-          runCustomCommands(ptyID);
-        }, 100);
+        setTimeout(() => runCustomCommands(ptyID), 100);
         break;
       }
     }
