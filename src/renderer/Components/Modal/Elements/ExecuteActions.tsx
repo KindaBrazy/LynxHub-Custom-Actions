@@ -101,8 +101,8 @@ export function ExecuteActions() {
         return (
           <>
             <span>{index + 1}.</span>
-            <CodeDuo_Icon />
-            <Code radius="sm" className="w-full">
+            <CodeDuo_Icon className="shrink-0" />
+            <Code radius="sm" className="w-full truncate">
               {item.action}
             </Code>
             <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
@@ -162,11 +162,11 @@ export function ExecuteActions() {
                   <Reorder.Item
                     className={
                       'rounded-medium bg-foreground-100 cursor-grab active:cursor-grabbing' +
-                      ' flex items-center gap-x-2 p-2'
+                      ' flex flex-row items-center gap-x-2 p-2'
                     }
                     key={item.action}
                     value={item.action}>
-                    <Grip_Icon className="text-foreground-500" />
+                    <Grip_Icon className="text-foreground-500 shrink-0" />
                     {renderBody(item, index)}
                   </Reorder.Item>
                 ))}
