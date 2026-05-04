@@ -21,11 +21,6 @@ export const glowVariants: Variants = {
   hover: {opacity: 0.2, transition: {duration: 0.5, ease: 'easeOut'}},
 };
 
-export const backgroundVariants: Variants = {
-  initial: {opacity: 0},
-  hover: {opacity: 0.05, transition: {duration: 0.3}},
-};
-
 export const iconVariants: Variants = {
   initial: {scale: 1, rotate: 0},
   hover: {scale: 1.2, rotate: -2, transition: {duration: 0.5, ease: 'easeOut'}},

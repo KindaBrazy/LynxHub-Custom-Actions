@@ -1,3 +1,4 @@
+import {Description} from '@heroui-v3/react';
 import {useAppState} from '@lynx/redux/reducers/app';
 import {cardsActions} from '@lynx/redux/reducers/cards';
 import {useTabsState} from '@lynx/redux/reducers/tabs';
@@ -11,7 +12,7 @@ import {useDispatch} from 'react-redux';
 import {CustomCard} from '../../../cross/CrossTypes';
 import {customActionsChannels} from '../../../cross/CrossUtils';
 import {reducerActions} from '../../reducer';
-import {backgroundVariants, cardVariants, glowVariants, iconVariants} from './ActionCard_Utils';
+import {cardVariants, glowVariants, iconVariants} from './ActionCard_Utils';
 
 type Props = {
   icon: (props: SvgProps) => ReactElement;
@@ -154,52 +155,45 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
       onClick={onClick}
       initial="initial"
       whileHover="hover"
-      style={{width: '150px', height: '105px'}}
-      className={`relative group cursor-pointer select-none ${className}`}>
+      style={{width: '145px', height: '105px'}}
+      className={`relative group cursor-pointer ${className}`}>
       {/* Glow effect */}
       <motion.div
         variants={glowVariants}
         style={{backgroundColor: accentColor + '40'}}
-        className="absolute -inset-1 rounded-2xl blur"
+        className="absolute -inset-1 rounded-3xl blur"
       />
 
       {/* Main card */}
       <motion.div
         className={
-          `relative bg-white dark:bg-gray-900 rounded-2xl ${description ? 'p-2' : 'p-5'} border` +
-          ' border-foreground-100 transition-colors duration-300 hover:border-foreground-200 shadow-lg' +
-          ' shadow-gray-100 dark:shadow-gray-900/50 w-full h-full flex flex-col'
+          `relative bg-surface rounded-3xl ${description ? '' : 'items-center justify-center'} border p-4 ` +
+          ' border-surface-secondary transition-colors duration-300 hover:border-surface-tertiary shadow-surface' +
+          ' w-full h-full flex flex-col'
         }
         variants={cardVariants}>
-        {/* Animated background gradient */}
-        <motion.div
-          variants={backgroundVariants}
-          className="absolute inset-0 rounded-2xl"
-          style={{backgroundColor: accentColor + '0D'}}
-        />
-
         {/* Icon container with floating animation */}
-        <div className="relative mb-1 flex justify-center">
+        <div className="relative flex justify-start items-center gap-x-1">
           <motion.div variants={iconVariants}>
             <Icon className="size-9" />
           </motion.div>
-        </div>
 
-        {/* Content */}
-        <div className={`relative flex-1 text-center ${!description ? 'flex flex-col justify-center' : ''}`}>
           <motion.h3
             variants={{
               initial: {color: darkMode ? '#ffffff' : '#000000'},
               hover: {color: accentColor, transition: {duration: 0.3}},
             }}
-            className={`text-sm font-bold text-gray-900 dark:text-white ${description ? 'mb-1' : 'mb-8'}`}>
+            className={`text-sm font-bold text-foreground`}>
             {title}
           </motion.h3>
-
-          {description && (
-            <p className="text-gray-600 dark:text-gray-300 text-xs leading-relaxed line-clamp-1">{description}</p>
-          )}
         </div>
+
+        {/* Content */}
+        {description && (
+          <div className={`relative flex-1 text-center flex flex-col justify-center`}>
+            <Description>{description}</Description>
+          </div>
+        )}
 
         {/* Ripple effect on tap */}
         <motion.div

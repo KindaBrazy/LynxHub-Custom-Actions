@@ -45,10 +45,12 @@ export default function CustomActionsModal({state}: Props) {
 
   useEffect(() => {
     const onKeyUp = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && view === 'form') {
-        handleBackToList();
-      } else {
-        state.close();
+      if (e.key === 'Escape') {
+        if (view === 'form') {
+          handleBackToList();
+        } else {
+          state.close();
+        }
       }
     };
 
