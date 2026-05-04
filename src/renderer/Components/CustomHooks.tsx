@@ -1,6 +1,6 @@
 import {cardsActions} from '@lynx/redux/reducers/cards';
 import ptyIpc from '@lynx_shared/ipc/pty';
-import {isEmpty} from 'lodash';
+import {isEmpty} from 'lodash-es';
 import {Fragment, useEffect} from 'react';
 import {useDispatch} from 'react-redux';
 
