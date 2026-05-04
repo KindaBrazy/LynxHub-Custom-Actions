@@ -4,7 +4,7 @@ import TabModal from '@lynx/components/TabModal';
 import {topToast} from '@lynx/layouts/ToastProviders';
 import {AppDispatch} from '@lynx/redux/store';
 import {ArrowLeft, Diskette} from '@solar-icons/react-perf/BoldDuotone';
-import {useMemo} from 'react';
+import {useEffect, useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {reducerActions, useCustomActionsState} from '../../reducer';
@@ -43,8 +43,25 @@ export default function CustomActionsModal({state}: Props) {
   };
   const deleteCard = () => dispatch(reducerActions.removeCard());
 
+  useEffect(() => {
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && view === 'form') {
+        handleBackToList();
+      } else {
+        state.close();
+      }
+    };
+
+    document.addEventListener('keyup', onKeyUp);
+    return () => document.removeEventListener('keyup', onKeyUp);
+  }, [handleBackToList, view, state]);
+
   return (
-    <TabModal isOpen={state.isOpen} dialogClassName="px-0" onOpenChange={state.setOpen}>
+    <TabModal
+      isOpen={state.isOpen}
+      dialogClassName="px-0"
+      onOpenChange={state.setOpen}
+      isKeyboardDismissDisabled={true}>
       {view !== 'form' && <Modal.CloseTrigger />}
       <Modal.Header className="flex-row items-center px-4">
         <div>
