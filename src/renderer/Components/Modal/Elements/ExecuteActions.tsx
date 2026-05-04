@@ -1,11 +1,12 @@
 import {Button, ButtonGroup, Code, Input} from '@heroui/react';
+import {Terminal_Icon} from '@lynx_assets/icons';
+import filesIpc from '@lynx_shared/ipc/files';
 import {AnimatePresence, motion, Reorder} from 'framer-motion';
+import {Plus} from 'lucide-react';
 import {KeyboardEvent, useMemo, useState} from 'react';
 import {useDispatch} from 'react-redux';
 
-import {Add_Icon, Terminal_Icon} from '../../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {CustomExecuteActions} from '../../../../cross/CrossTypes';
-import {useIpc} from '../../../ObjectsHolder';
 import {reducerActions, useCustomActionsState} from '../../../reducer';
 import {
   BookmarkOpenDuo_Icon,
@@ -24,8 +25,6 @@ export function ExecuteActions() {
   const dispatch = useDispatch();
   const [commandInput, setCommandInput] = useState<string>('');
   const editingCard = useCustomActionsState('editingCard');
-
-  const ipc = useIpc();
 
   const [addingFile, setAddingFile] = useState<boolean>(false);
   const [addingFolder, setAddingFolder] = useState<boolean>(false);
@@ -90,7 +89,7 @@ export function ExecuteActions() {
 
   const handleAddFile = () => {
     setAddingFile(true);
-    ipc.file.openDlg({properties: ['openFile']}).then(action => {
+    filesIpc.openDlg({properties: ['openFile']}).then(action => {
       if (action) dispatch(reducerActions.addAction({action, type: 'open'}));
       setAddingFile(false);
     });
@@ -98,7 +97,7 @@ export function ExecuteActions() {
 
   const handleAddFolder = () => {
     setAddingFolder(true);
-    ipc.file.openDlg({properties: ['openDirectory']}).then(action => {
+    filesIpc.openDlg({properties: ['openDirectory']}).then(action => {
       if (action) dispatch(reducerActions.addAction({action, type: 'open'}));
       setAddingFolder(false);
     });
@@ -106,7 +105,7 @@ export function ExecuteActions() {
 
   const handleAddCdFolder = () => {
     setAddingCdFolder(true);
-    ipc.file.openDlg({properties: ['openDirectory']}).then(action => {
+    filesIpc.openDlg({properties: ['openDirectory']}).then(action => {
       if (action) dispatch(reducerActions.addAction({action: `cd "${action}"`, type: 'command'}));
       setAddingCdFolder(false);
     });
@@ -205,7 +204,7 @@ export function ExecuteActions() {
               onKeyDown={handleCommandKeyDown}
               placeholder="Enter command and press Enter..."
             />
-            <Button variant="flat" onPress={handleAddCommand} startContent={<Add_Icon />}>
+            <Button variant="flat" startContent={<Plus />} onPress={handleAddCommand}>
               Add
             </Button>
           </div>

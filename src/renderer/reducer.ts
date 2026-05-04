@@ -1,7 +1,7 @@
+import {formatWebAddress} from '@lynx_common/utils';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {useSelector} from 'react-redux';
 
-import {formatWebAddress} from '../../../src/cross/CrossUtils';
 import {CustomCard, CustomCardType, CustomCategory, CustomExecuteActions} from '../cross/CrossTypes';
 
 export type UrlCatchingSession = {

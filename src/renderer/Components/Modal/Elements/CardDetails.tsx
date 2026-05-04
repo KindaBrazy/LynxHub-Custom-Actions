@@ -1,10 +1,12 @@
 import {Button, Input, Textarea} from '@heroui/react';
-import {ColorPicker} from 'antd';
-import {AggregationColor} from 'antd/es/color-picker/color';
+// import {ColorPicker} from 'antd';
+// import {AggregationColor} from 'antd/es/color-picker/color';
 import {useDispatch} from 'react-redux';
 
 import {reducerActions, useCustomActionsState} from '../../../reducer';
 import {CardIconById, CardIconsList} from '../../CardIcons';
+
+// TODO replace antd color picker with heroui
 
 export function CardDetails() {
   const dispatch = useDispatch();
@@ -13,7 +15,7 @@ export function CardDetails() {
   const changeIcon = (icon: string) => {
     dispatch(reducerActions.setIcon(icon));
   };
-  const changeAccent = (color: AggregationColor) => {
+  const changeAccent = (color: any) => {
     dispatch(reducerActions.setAccentColor(color.toHexString()));
   };
   const onTitleChange = (value: string) => {
@@ -58,14 +60,14 @@ export function CardDetails() {
           <label htmlFor="accent-color" className="text-sm text-foreground-500">
             Accent Color:
           </label>
-          <ColorPicker
+          {/*<ColorPicker
             size="large"
             defaultFormat="hex"
             onChangeComplete={changeAccent}
             value={editingCard?.accentColor}
             showText
             disabledFormat
-          />
+          />*/}
         </div>
       </div>
     </div>

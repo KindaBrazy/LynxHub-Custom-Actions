@@ -1,8 +1,8 @@
 import {Card} from '@heroui/react';
 import {motion} from 'framer-motion';
+import {Plus} from 'lucide-react';
 import {useDispatch} from 'react-redux';
 
-import {Add_Icon} from '../../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {reducerActions} from '../../../reducer';
 
 export function NewCard() {
@@ -20,7 +20,7 @@ export function NewCard() {
         onPress={handleCreateNew}
         isPressable>
         <div className="flex size-12 items-center justify-center rounded-full bg-foreground-300 dark:bg-foreground-200">
-          <Add_Icon />
+          <Plus />
         </div>
         <p className="font-semibold text-foreground-500 group-hover:text-foreground transition-colors duration-300">
           Create New

@@ -1,8 +1,10 @@
 import {Select, SelectItem, SharedSelection} from '@heroui/react';
+import {Terminal_Icon} from '@lynx_assets/icons';
+import {Play} from '@solar-icons/react-perf/Bold';
+import {Earth} from '@solar-icons/react-perf/BoldDuotone';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 
-import {Play_Icon, Terminal_Icon, Web_Icon} from '../../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {CustomCardType} from '../../../../cross/CrossTypes';
 import {reducerActions, useCustomActionsState} from '../../../reducer';
 
@@ -23,16 +25,16 @@ export function CardType() {
   const startContent = useMemo(() => {
     switch (cardType) {
       case 'executable':
-        return <Play_Icon />;
+        return <Play />;
       case 'browser':
-        return <Web_Icon />;
+        return <Earth />;
       case 'terminal':
         return <Terminal_Icon />;
       case 'terminal_browser':
         return (
           <>
             <Terminal_Icon />
-            <Web_Icon />
+            <Earth />
           </>
         );
     }
@@ -48,21 +50,21 @@ export function CardType() {
         startContent={startContent}
         onSelectionChange={onSelectionChange}
         disallowEmptySelection>
-        <SelectItem key="executable" startContent={<Play_Icon />} description="Run and manage a program">
+        <SelectItem key="executable" startContent={<Play />} description="Run and manage a program">
           Executable
         </SelectItem>
         <SelectItem
           startContent={
             <div>
               <Terminal_Icon />
-              <Web_Icon />
+              <Earth />
             </div>
           }
           key="terminal_browser"
           description="Open a terminal and a browser simultaneously.">
           Terminal & Browser
         </SelectItem>
-        <SelectItem key="browser" startContent={<Web_Icon />} description="Open a browser with a custom URL.">
+        <SelectItem key="browser" startContent={<Earth />} description="Open a browser with a custom URL.">
           Browser
         </SelectItem>
         <SelectItem

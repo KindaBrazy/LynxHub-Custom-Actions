@@ -1,21 +1,19 @@
 import {Button} from '@heroui/react';
+import filesIpc from '@lynx_shared/ipc/files';
 import {useState} from 'react';
 import {useDispatch} from 'react-redux';
 
-import {useIpc} from '../../../ObjectsHolder';
 import {reducerActions} from '../../../reducer';
 import {CodeDuo_Icon} from '../../SvgIcons';
 
 export function AddScript() {
   const dispatch = useDispatch();
 
-  const ipc = useIpc();
-
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleAdd = () => {
     setIsLoading(true);
-    ipc.file.openDlg({properties: ['openFile']}).then(action => {
+    filesIpc.openDlg({properties: ['openFile']}).then(action => {
       if (action) {
         const lastSeparator = Math.max(action.lastIndexOf('/'), action.lastIndexOf('\\'));
         if (lastSeparator > 0) {

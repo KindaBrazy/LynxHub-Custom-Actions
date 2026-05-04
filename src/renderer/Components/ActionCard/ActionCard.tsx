@@ -1,14 +1,15 @@
+import {useAppState} from '@lynx/redux/reducers/app';
+import {cardsActions} from '@lynx/redux/reducers/cards';
+import {useTabsState} from '@lynx/redux/reducers/tabs';
+import {SvgProps} from '@lynx_assets/icons/types';
+import filesIpc from '@lynx_shared/ipc/files';
+import ptyIpc from '@lynx_shared/ipc/pty';
 import {motion} from 'framer-motion';
 import {ReactElement} from 'react';
 import {useDispatch} from 'react-redux';
 
-import {useAppState} from '../../../../../src/renderer/src/App/Redux/Reducer/AppReducer';
-import {cardsActions} from '../../../../../src/renderer/src/App/Redux/Reducer/CardsReducer';
-import {useTabsState} from '../../../../../src/renderer/src/App/Redux/Reducer/TabsReducer';
-import {SvgProps} from '../../../../../src/renderer/src/assets/icons/SvgIconsContainer';
 import {CustomCard} from '../../../cross/CrossTypes';
 import {customActionsChannels} from '../../../cross/CrossUtils';
-import {useIpc} from '../../ObjectsHolder';
 import {reducerActions} from '../../reducer';
 import {backgroundVariants, cardVariants, glowVariants, iconVariants} from './ActionCard_Utils';
 
@@ -29,12 +30,11 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   const activeTab = useTabsState('activeTab');
   const darkMode = useAppState('darkMode');
 
-  const ipc = useIpc();
   const {title, description, accentColor, actions, cardType, urlConfig} = card;
 
   const onClick = () => {
     const opens = actions.filter(action => action.type === 'open');
-    opens.forEach(open => ipc.file.openPath(open.action));
+    opens.forEach(open => filesIpc.openPath(open.action));
 
     const manageUrls = (ptyId: string, onDone?: () => void) => {
       if (urlConfig.type === 'custom' && urlConfig.customUrl) {
@@ -102,9 +102,9 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
     const runCustomCommands = (ptyId: string) => {
       actions.forEach(action => {
         if (action.type === 'command') {
-          ipc.pty.write(ptyId, `${action.action}${LINE_ENDING}`);
+          ptyIpc.write(ptyId, `${action.action}${LINE_ENDING}`);
         } else if (action.type === 'script') {
-          ipc.pty.write(ptyId, getScriptCommand(action.action));
+          ptyIpc.write(ptyId, getScriptCommand(action.action));
         }
       });
     };

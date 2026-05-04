@@ -1,4 +1,5 @@
-import StorageManager from '../../../../src/main/Managements/Storage/StorageManager';
+import StorageManager from '@lynx_main/storage/storageOperations';
+
 import {CustomCard} from '../../cross/CrossTypes';
 import {storageKeys} from '../../cross/CrossUtils';
 

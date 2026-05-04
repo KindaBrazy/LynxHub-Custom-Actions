@@ -1,9 +1,9 @@
+import {cardsActions} from '@lynx/redux/reducers/cards';
+import ptyIpc from '@lynx_shared/ipc/pty';
 import {isEmpty} from 'lodash';
 import {Fragment, useEffect} from 'react';
 import {useDispatch} from 'react-redux';
 
-import {cardsActions} from '../../../../src/renderer/src/App/Redux/Reducer/CardsReducer';
-import rendererIpc from '../../../../src/renderer/src/App/RendererIpc';
 import {CustomCard} from '../../cross/CrossTypes';
 import {customActionsChannels} from '../../cross/CrossUtils';
 import {reducerActions, useCustomActionsState} from '../reducer';
@@ -36,7 +36,7 @@ export function CustomHook() {
 
     const {ptyId, tabId, findLine} = urlCatchingSession;
 
-    const offData = rendererIpc.pty.onData((_, dataID, data) => {
+    const offData = ptyIpc.onData((dataID, data) => {
       if (dataID !== ptyId || urlCatchingSession.urlFound) return;
 
       const url = catchTerminalAddress(data, findLine);

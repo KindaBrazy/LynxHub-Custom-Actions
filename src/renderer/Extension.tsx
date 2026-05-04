@@ -1,6 +1,7 @@
 import './index.css';
 
-import {type ExtensionRendererApi} from '../../../src/cross/plugin/ExtensionTypes_Renderer_Api';
+import {ExtensionRendererApi} from '@lynx/plugins/extensions/types/api';
+
 import {
   AllActions,
   AudioActions,
@@ -12,15 +13,12 @@ import {
 import {CustomHook} from './Components/CustomHooks';
 import ModalManager from './Components/Modal/ModalManager';
 import ToolsPage from './Components/ToolsPage';
-import {setIpc} from './ObjectsHolder';
 import reducer from './reducer';
 
-export function InitialExtensions(lynxAPI: ExtensionRendererApi, _extensionId: string) {
-  setIpc(lynxAPI.rendererIpc);
-
+export function InitialExtensions(lynxAPI: ExtensionRendererApi) {
   lynxAPI.addReducer([{name: 'customActions', reducer}]);
 
-  lynxAPI.customizePages.tools.addComponent(ToolsPage);
+  lynxAPI.customizePages.tools.add.cardsContainer(ToolsPage);
 
   lynxAPI.customizePages.home.add.pinCategory(PinnedActions);
   lynxAPI.customizePages.home.add.recentlyCategory(RecentlyActions);

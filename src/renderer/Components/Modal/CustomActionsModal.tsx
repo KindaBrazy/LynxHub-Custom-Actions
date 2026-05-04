@@ -1,11 +1,11 @@
 import {Button, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader} from '@heroui/react';
+import LynxScroll from '@lynx/components/LynxScroll';
+import {topToast} from '@lynx/layouts/ToastProviders';
+import {AppDispatch} from '@lynx/redux/store';
+import {ArrowLeft, Diskette} from '@solar-icons/react-perf/BoldDuotone';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 
-import LynxScroll from '../../../../../src/renderer/src/App/Components/Reusable/LynxScroll';
-import {AppDispatch} from '../../../../../src/renderer/src/App/Redux/Store';
-import {lynxTopToast} from '../../../../../src/renderer/src/App/Utils/UtilHooks';
-import {ArrowDuo_Icon, DiskDuo_Icon} from '../../../../../src/renderer/src/assets/icons/SvgIcons/SvgIcons';
 import {reducerActions, useCustomActionsState} from '../../reducer';
 import {TrashDuo_Icon} from '../SvgIcons';
 import CustomActionsManager from './CustomActionsManager';
@@ -47,7 +47,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
 
   const saveCard = () => {
     dispatch(reducerActions.saveCard());
-    lynxTopToast(dispatch).success('Card saved successfully!');
+    topToast.success('Card saved successfully!');
   };
   const deleteCard = () => dispatch(reducerActions.removeCard());
 
@@ -71,7 +71,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
               <div>
                 {view === 'form' && (
                   <Button variant="light" onPress={handleBackToList} isIconOnly>
-                    <ArrowDuo_Icon className="size-5" />
+                    <ArrowLeft className="size-5" />
                   </Button>
                 )}
               </div>
@@ -97,7 +97,7 @@ export default function CustomActionsModal({show, isOpen, tabID}: Props) {
                       variant="light"
                       onPress={saveCard}
                       isDisabled={saveDisabled}
-                      startContent={<DiskDuo_Icon />}>
+                      startContent={<Diskette />}>
                       Save Card
                     </Button>
                     <Button color="warning" variant="light" onPress={handleBackToList}>

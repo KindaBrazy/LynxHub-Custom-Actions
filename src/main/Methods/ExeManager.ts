@@ -3,10 +3,9 @@ import fs from 'node:fs';
 import {platform} from 'node:os';
 import path from 'node:path';
 
+import {ptyChannels} from '@lynx_common/consts/ipcChannels/pty';
+import type MainWindowManager from '@lynx_main/mainWindow';
 import treeKill from 'tree-kill';
-
-import {ptyChannels} from '../../../../src/cross/IpcChannelAndTypes';
-import ElectronAppManager from '../../../../src/main/Managements/ElectronAppManager';
 
 /** Manages child processes for executables, using Node's built-in child_process module. */
 export default class ExeManager {
@@ -15,7 +14,7 @@ export default class ExeManager {
 
   public id: string;
 
-  constructor(id: string, exePath: string, appManager: ElectronAppManager) {
+  constructor(id: string, exePath: string, appManager: MainWindowManager) {
     this.id = id;
 
     let validatedExe: string | undefined = undefined;
