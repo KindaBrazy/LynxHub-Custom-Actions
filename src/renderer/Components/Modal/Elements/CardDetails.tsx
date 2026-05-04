@@ -12,7 +12,7 @@ import {
   TextArea,
 } from '@heroui-v3/react';
 import {Shuffle} from '@solar-icons/react-perf/BoldDuotone';
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {reducerActions, useCustomActionsState} from '../../../reducer';
@@ -22,7 +22,12 @@ export function CardDetails() {
   const dispatch = useDispatch();
   const editingCard = useCustomActionsState('editingCard');
 
-  const [color, setColor] = useState(parseColor('#325578'));
+  const [title, setTitle] = useState<string>(editingCard?.title || '');
+  const [desc, setDesc] = useState<string>(editingCard?.description || '');
+
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const [color, setColor] = useState(parseColor(editingCard?.accentColor || '#325578'));
   const colorPresets = [
     '#ef4444',
     '#f97316',
@@ -45,30 +50,47 @@ export function CardDetails() {
     dispatch(reducerActions.setAccentColor(color.toString('hex')));
   }, [color]);
 
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, []);
+
   const changeIcon = (icon: string) => {
     dispatch(reducerActions.setIcon(icon));
   };
-  const onTitleChange = (value: string) => {
-    dispatch(reducerActions.setTitle(value));
-  };
-  const onDescChange = (value: string) => {
-    dispatch(reducerActions.setDescription(value));
-  };
+
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      dispatch(reducerActions.setTitle(title));
+    }, 150);
+  }, [title]);
+  useEffect(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      dispatch(reducerActions.setDescription(desc));
+    }, 150);
+  }, [desc]);
 
   return (
     <div className="flex flex-col gap-y-4">
       <div className="md:col-span-2 space-y-4">
         <Input
-          value={editingCard?.title || ''}
+          value={title || ''}
           placeholder="Card Title (required)"
-          onChange={e => onTitleChange(e.target.value)}
+          onChange={e => setTitle(e.target.value)}
           fullWidth
         />
 
         <TextArea
-          value={editingCard?.description || ''}
+          value={desc || ''}
+          onChange={e => setDesc(e.target.value)}
           placeholder="Card Description (optional)"
-          onChange={e => onDescChange(e.target.value)}
           fullWidth
         />
       </div>
@@ -93,7 +115,7 @@ export function CardDetails() {
         <div>
           <ColorPicker value={color} onChange={setColor}>
             <ColorPicker.Trigger>
-              <ColorSwatch size="lg" />
+              <ColorSwatch size="xl" />
               <Label>Accent Color</Label>
             </ColorPicker.Trigger>
             <ColorPicker.Popover className="gap-2">
@@ -132,14 +154,6 @@ export function CardDetails() {
               </ColorField>
             </ColorPicker.Popover>
           </ColorPicker>
-          {/*<ColorPicker
-            size="large"
-            defaultFormat="hex"
-            onChangeComplete={changeAccent}
-            value={editingCard?.accentColor}
-            showText
-            disabledFormat
-          />*/}
         </div>
       </div>
     </div>

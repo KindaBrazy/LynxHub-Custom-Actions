@@ -155,7 +155,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
       onClick={onClick}
       initial="initial"
       whileHover="hover"
-      style={{width: '145px', height: '105px'}}
+      style={{width: '145px', height: '88px'}}
       className={`relative group cursor-pointer ${className}`}>
       {/* Glow effect */}
       <motion.div
@@ -169,7 +169,7 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
         className={
           `relative bg-surface rounded-3xl ${description ? '' : 'items-center justify-center'} border p-4 ` +
           ' border-surface-secondary transition-colors duration-300 hover:border-surface-tertiary shadow-surface' +
-          ' w-full h-full flex flex-col'
+          ' w-full h-full flex flex-col gap-y-1'
         }
         variants={cardVariants}>
         {/* Icon container with floating animation */}
@@ -183,17 +183,13 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
               initial: {color: darkMode ? '#ffffff' : '#000000'},
               hover: {color: accentColor, transition: {duration: 0.3}},
             }}
-            className={`text-sm font-bold text-foreground`}>
+            className={`text-sm font-semibold text-foreground`}>
             {title}
           </motion.h3>
         </div>
 
         {/* Content */}
-        {description && (
-          <div className={`relative flex-1 text-center flex flex-col justify-center`}>
-            <Description>{description}</Description>
-          </div>
-        )}
+        {description && <Description className="truncate">{description}</Description>}
 
         {/* Ripple effect on tap */}
         <motion.div
