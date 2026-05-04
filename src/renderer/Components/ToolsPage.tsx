@@ -1,21 +1,19 @@
+import {useOverlayState} from '@heroui-v3/react';
 import {ToolsCard} from '@lynx/components/ToolsCard';
-import {useTabsState} from '@lynx/redux/reducers/tabs';
-import {useCallback} from 'react';
-import {useDispatch} from 'react-redux';
 
-import {reducerActions} from '../reducer';
+import CustomActionsModal from './Modal/CustomActionsModal';
 
 const title: string = 'Custom Actions';
 const description: string = 'Create, customize and manage custom cards with custom scripts, actions.';
 const icon: string = 'https://raw.githubusercontent.com/KindaBrazy/LynxHub-Custom-Actions/refs/heads/metadata/icon.png';
 
 export default function ToolsPage() {
-  const activeTab = useTabsState('activeTab');
-  const dispatch = useDispatch();
+  const modalState = useOverlayState();
 
-  const openModal = useCallback(() => {
-    dispatch(reducerActions.openModal({tabID: activeTab}));
-  }, [activeTab]);
-
-  return <ToolsCard icon={icon} title={title} onPress={openModal} description={description} />;
+  return (
+    <>
+      <CustomActionsModal state={modalState} />
+      <ToolsCard icon={icon} title={title} onPress={modalState.open} description={description} />
+    </>
+  );
 }
