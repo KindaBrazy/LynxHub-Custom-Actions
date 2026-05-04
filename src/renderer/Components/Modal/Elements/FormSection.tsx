@@ -12,7 +12,7 @@ export default function FormSection({title, children}: Props) {
       initial={{opacity: 0, scale: 0.95}}
       animate={{opacity: 1, scale: 1, transition: {duration: 0.2}}}
       exit={{opacity: 0, scale: 0.95, transition: {duration: 0.1}}}>
-      <h3 className="text-sm font-medium text-semi-muted">{title}</h3>
+      <h3 className="text-sm font-base text-semi-muted">{title}</h3>
       <div className="flex flex-col gap-y-4 rounded-3xl bg-surface-secondary p-4">{children}</div>
     </motion.div>
   );

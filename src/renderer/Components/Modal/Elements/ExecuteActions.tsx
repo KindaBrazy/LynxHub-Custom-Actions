@@ -119,7 +119,7 @@ export function ExecuteActions() {
           <>
             <span>{index + 1}.</span>
             <PlayDuo_Icon />
-            <span className="w-full text-small ml-1.5 truncate">{item.action}</span>
+            <span className="w-full text-sm ml-1.5 truncate">{item.action}</span>
             <Button
               size="sm"
               className="shrink-0"
@@ -135,7 +135,7 @@ export function ExecuteActions() {
           <>
             <span>{index + 1}.</span>
             <BookmarkOpenDuo_Icon />
-            <span className="w-full text-small ml-1.5 truncate">{item.action}</span>
+            <span className="w-full text-sm ml-1.5 truncate">{item.action}</span>
             <Button
               size="sm"
               className="shrink-0"
