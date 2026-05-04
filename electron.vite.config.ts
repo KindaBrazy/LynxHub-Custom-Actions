@@ -30,10 +30,8 @@ export default defineConfig({
         shared: {
           antd: {generate: false},
           react: {generate: false},
-          lodash: {generate: false},
           'react-dom': {generate: false},
           'react-redux': {generate: false},
-          '@heroui/react': {generate: false},
         },
       }),
     ],
