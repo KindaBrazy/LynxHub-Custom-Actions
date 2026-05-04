@@ -1,4 +1,4 @@
-import {Card} from '@heroui/react';
+import {Card} from '@heroui-v3/react';
 import {motion} from 'framer-motion';
 import {Plus} from 'lucide-react';
 import {useDispatch} from 'react-redux';
@@ -11,18 +11,19 @@ export function NewCard() {
   const handleCreateNew = () => dispatch(reducerActions.addCard());
 
   return (
-    <motion.div transition={{duration: 0.2}} whileHover={{y: -5, scale: 1.05}}>
+    <motion.div transition={{duration: 0.2}} whileHover={{y: -2, scale: 1.02}}>
       <Card
         className={
-          'w-[170px] h-[150px] group flex flex-col items-center justify-center' +
-          ' p-4 gap-y-4 border-2 border-dashed border-gray-600 hover:border-secondary'
+          'w-42.5 h-37.5 group items-center justify-center cursor-pointer ' +
+          ' border-2 border-dashed border-muted hover:border-foreground' +
+          ' transition duration-200'
         }
-        onPress={handleCreateNew}
-        isPressable>
-        <div className="flex size-12 items-center justify-center rounded-full bg-foreground-300 dark:bg-foreground-200">
+        variant="secondary"
+        onClick={handleCreateNew}>
+        <div className="flex size-12 items-center justify-center rounded-full bg-surface-tertiary">
           <Plus />
         </div>
-        <p className="font-semibold text-foreground-500 group-hover:text-foreground transition-colors duration-300">
+        <p className="font-semibold text-muted group-hover:text-foreground transition-colors duration-300">
           Create New
         </p>
       </Card>

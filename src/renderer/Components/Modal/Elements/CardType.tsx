@@ -1,4 +1,4 @@
-import {Select, SelectItem, SharedSelection} from '@heroui/react';
+import {Description, Key, Label, ListBox, Select} from '@heroui-v3/react';
 import {Terminal_Icon} from '@lynx_assets/icons';
 import {Play} from '@solar-icons/react-perf/Bold';
 import {Earth} from '@solar-icons/react-perf/BoldDuotone';
@@ -14,65 +14,67 @@ export function CardType() {
 
   const cardType = useMemo(() => editingCard?.cardType || 'terminal_browser', [editingCard]);
 
-  const onSelectionChange = (selected: SharedSelection) => {
-    if (selected !== 'all') {
-      const value = Array.from(selected)[0].toString() as CustomCardType;
-      value.toString();
-      dispatch(reducerActions.setCardType(value));
-    }
-  };
+  const onSelectionChange = (key: Key | null) => {
+    if (!key || typeof key === 'number') return;
 
-  const startContent = useMemo(() => {
-    switch (cardType) {
-      case 'executable':
-        return <Play />;
-      case 'browser':
-        return <Earth />;
-      case 'terminal':
-        return <Terminal_Icon />;
-      case 'terminal_browser':
-        return (
-          <>
-            <Terminal_Icon />
-            <Earth />
-          </>
-        );
-    }
-  }, [cardType]);
+    dispatch(reducerActions.setCardType(key as CustomCardType));
+  };
 
   return (
     <div className="flex flex-col gap-y-3">
-      <span className="text-foreground-600">Select the card type that fits your needs:</span>
-      <Select
-        selectionMode="single"
-        label="Select Card Type"
-        selectedKeys={[cardType]}
-        startContent={startContent}
-        onSelectionChange={onSelectionChange}
-        disallowEmptySelection>
-        <SelectItem key="executable" startContent={<Play />} description="Run and manage a program">
-          Executable
-        </SelectItem>
-        <SelectItem
-          startContent={
-            <div>
-              <Terminal_Icon />
-              <Earth />
-            </div>
-          }
-          key="terminal_browser"
-          description="Open a terminal and a browser simultaneously.">
-          Terminal & Browser
-        </SelectItem>
-        <SelectItem key="browser" startContent={<Earth />} description="Open a browser with a custom URL.">
-          Browser
-        </SelectItem>
-        <SelectItem
-          key="terminal"
-          startContent={<Terminal_Icon />}
-          description="Open a terminal to run custom commands or scripts.">
-          Terminal
-        </SelectItem>
+      <Select value={cardType} onChange={onSelectionChange} placeholder="Select Card Type" fullWidth>
+        <Label>Select the card type that fits your needs:</Label>
+        <Select.Trigger>
+          <Select.Value />
+          <Select.Indicator />
+        </Select.Trigger>
+        <Select.Popover>
+          <ListBox>
+            <ListBox.Item id="executable" key="executable" textValue="Executable">
+              <div className="flex flex-col">
+                <Label className="flex items-center gap-x-2">
+                  <Play />
+                  Executable
+                </Label>
+                <Description>Run and manage a program</Description>
+              </div>
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+            <ListBox.Item id="terminal_browser" key="terminal_browser" textValue="Terminal & Browser">
+              <div className="flex flex-col">
+                <Label className="flex items-center gap-x-2">
+                  <div className="flex flex-row items-center gap-x-1">
+                    <Terminal_Icon />
+                    <Earth />
+                  </div>
+                  Terminal & Browser
+                </Label>
+                <Description>Open a terminal and a browser simultaneously.</Description>
+              </div>
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+            <ListBox.Item id="browser" key="browser" textValue="Browser">
+              <div className="flex flex-col">
+                <Label className="flex items-center gap-x-2">
+                  <Earth />
+                  Browser
+                </Label>
+                <Description>Open a browser with a custom URL.</Description>
+              </div>
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+            <ListBox.Item id="terminal" key="terminal" textValue="Terminal">
+              <div className="flex flex-col">
+                <Label className="flex items-center gap-x-2">
+                  <Terminal_Icon />
+                  Terminal
+                </Label>
+                <Description>Open a terminal to run custom commands or scripts.</Description>
+              </div>
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          </ListBox>
+        </Select.Popover>
       </Select>
     </div>
   );

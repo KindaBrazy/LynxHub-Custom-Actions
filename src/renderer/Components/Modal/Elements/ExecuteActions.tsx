@@ -1,4 +1,4 @@
-import {Button, ButtonGroup, Code, Input} from '@heroui/react';
+import {Button, ButtonGroup, Input, InputGroup} from '@heroui-v3/react';
 import {Terminal_Icon} from '@lynx_assets/icons';
 import filesIpc from '@lynx_shared/ipc/files';
 import {AnimatePresence, motion, Reorder} from 'framer-motion';
@@ -120,7 +120,12 @@ export function ExecuteActions() {
             <span>{index + 1}.</span>
             <PlayDuo_Icon />
             <span className="w-full text-small ml-1.5 truncate">{item.action}</span>
-            <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
+            <Button
+              size="sm"
+              className="shrink-0"
+              variant="danger-soft"
+              onPress={() => handleRemoveCommand(index)}
+              isIconOnly>
               <TrashDuo_Icon className="size-4" />
             </Button>
           </>
@@ -131,7 +136,12 @@ export function ExecuteActions() {
             <span>{index + 1}.</span>
             <BookmarkOpenDuo_Icon />
             <span className="w-full text-small ml-1.5 truncate">{item.action}</span>
-            <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
+            <Button
+              size="sm"
+              className="shrink-0"
+              variant="danger-soft"
+              onPress={() => handleRemoveCommand(index)}
+              isIconOnly>
               <TrashDuo_Icon className="size-4" />
             </Button>
           </>
@@ -142,12 +152,11 @@ export function ExecuteActions() {
             <span>{index + 1}.</span>
             <CodeDuo_Icon className="shrink-0" />
             <Input
-              size="sm"
               value={editingValue}
               onBlur={handleSaveEdit}
               onKeyDown={handleEditKeyDown}
-              onValueChange={setEditingValue}
-              classNames={{inputWrapper: 'h-7'}}
+              onChange={e => setEditingValue(e.target.value)}
+              fullWidth
               autoFocus
             />
           </>
@@ -155,13 +164,23 @@ export function ExecuteActions() {
           <>
             <span>{index + 1}.</span>
             <CodeDuo_Icon className="shrink-0" />
-            <Code radius="sm" className="w-full truncate">
+            <span className="w-full truncate bg-surface-secondary py-1.5 px-2 rounded-full font-JetBrainsMono">
               {item.action}
-            </Code>
-            <Button size="sm" variant="light" onPress={() => handleStartEdit(index, item.action)} isIconOnly>
+            </span>
+            <Button
+              size="sm"
+              variant="tertiary"
+              className="shrink-0"
+              onPress={() => handleStartEdit(index, item.action)}
+              isIconOnly>
               <PenDuo_Icon className="size-4" />
             </Button>
-            <Button size="sm" color="danger" variant="light" onPress={() => handleRemoveCommand(index)} isIconOnly>
+            <Button
+              size="sm"
+              className="shrink-0"
+              variant="danger-soft"
+              onPress={() => handleRemoveCommand(index)}
+              isIconOnly>
               <TrashDuo_Icon className="size-4" />
             </Button>
           </>
@@ -177,18 +196,18 @@ export function ExecuteActions() {
         ) : cardType === 'terminal_browser' || cardType === 'terminal' ? (
           <AddScript />
         ) : null}
-        <ButtonGroup fullWidth>
-          <Button isLoading={addingFile} onPress={handleAddFile} startContent={!addingFile && <FileCodeDuo_Icon />}>
+        <ButtonGroup variant="secondary">
+          <Button isPending={addingFile} onPress={handleAddFile}>
+            {!addingFile && <FileCodeDuo_Icon />}
             Add File
           </Button>
-          <Button isLoading={addingFolder} onPress={handleAddFolder} startContent={!addingFolder && <FolderDuo_Icon />}>
+          <Button isPending={addingFolder} onPress={handleAddFolder}>
+            {!addingFolder && <FolderDuo_Icon />}
             Add Folder
           </Button>
           {(cardType === 'terminal_browser' || cardType === 'terminal') && (
-            <Button
-              isLoading={addingCdFolder}
-              onPress={handleAddCdFolder}
-              startContent={!addingCdFolder && <FolderDuo_Icon />}>
+            <Button isPending={addingCdFolder} onPress={handleAddCdFolder}>
+              {!addingCdFolder && <FolderDuo_Icon />}
               CD Folder
             </Button>
           )}
@@ -197,14 +216,19 @@ export function ExecuteActions() {
       <div>
         {(cardType === 'terminal_browser' || cardType === 'terminal') && (
           <div className="flex items-center gap-x-4">
-            <Input
-              value={commandInput}
-              onValueChange={setCommandInput}
-              startContent={<Terminal_Icon />}
-              onKeyDown={handleCommandKeyDown}
-              placeholder="Enter command and press Enter..."
-            />
-            <Button variant="flat" startContent={<Plus />} onPress={handleAddCommand}>
+            <InputGroup fullWidth>
+              <InputGroup.Prefix>
+                <Terminal_Icon />
+              </InputGroup.Prefix>
+              <InputGroup.Input
+                value={commandInput}
+                onKeyDown={handleCommandKeyDown}
+                placeholder="Enter command and press Enter..."
+                onChange={e => setCommandInput(e.target.value)}
+              />
+            </InputGroup>
+            <Button variant="tertiary" onPress={handleAddCommand}>
+              <Plus />
               Add
             </Button>
           </div>
@@ -219,14 +243,14 @@ export function ExecuteActions() {
               animate={{opacity: 1, height: 'auto', marginTop: '1rem'}}>
               <Reorder.Group
                 axis="y"
-                className="space-y-2"
                 onReorder={onReorder}
+                className="flex flex-col gap-y-2 p-1"
                 values={actions.map(item => item.action)}>
                 {actions.map((item, index) => (
                   <Reorder.Item
                     className={
-                      'rounded-medium bg-foreground-100 cursor-grab active:cursor-grabbing' +
-                      ' flex flex-row items-center gap-x-2 p-2'
+                      'rounded-full bg-surface shadow-surface cursor-grab active:cursor-grabbing' +
+                      ' flex flex-row items-center gap-x-2 p-1.5 px-2'
                     }
                     key={item.action}
                     value={item.action}>

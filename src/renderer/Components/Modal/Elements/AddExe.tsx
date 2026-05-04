@@ -1,10 +1,10 @@
-import {Button} from '@heroui/react';
+import {Button} from '@heroui-v3/react';
 import filesIpc from '@lynx_shared/ipc/files';
+import {Play} from '@solar-icons/react-perf/Bold';
 import {useState} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {reducerActions} from '../../../reducer';
-import {PlayDuo_Icon} from '../../SvgIcons';
 
 export function AddExe() {
   const dispatch = useDispatch();
@@ -20,7 +20,8 @@ export function AddExe() {
   };
 
   return (
-    <Button onPress={handleAdd} isLoading={isLoading} startContent={!isLoading && <PlayDuo_Icon />} fullWidth>
+    <Button onPress={handleAdd} isPending={isLoading} fullWidth>
+      <Play />
       Add Executable
     </Button>
   );

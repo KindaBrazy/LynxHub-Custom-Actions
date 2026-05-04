@@ -59,7 +59,6 @@ export function CardDetails() {
     <div className="flex flex-col gap-y-4">
       <div className="md:col-span-2 space-y-4">
         <Input
-          variant="secondary"
           value={editingCard?.title || ''}
           placeholder="Card Title (required)"
           onChange={e => onTitleChange(e.target.value)}
@@ -67,7 +66,6 @@ export function CardDetails() {
         />
 
         <TextArea
-          variant="secondary"
           value={editingCard?.description || ''}
           placeholder="Card Description (optional)"
           onChange={e => onDescChange(e.target.value)}
@@ -83,9 +81,9 @@ export function CardDetails() {
               <Button
                 size="lg"
                 key={icon}
-                className="size-20"
+                variant={'ghost'}
                 onPress={() => changeIcon(icon)}
-                variant={isSelected ? 'secondary' : 'ghost'}
+                className={`size-20 ${isSelected ? 'bg-accent-soft-hover' : ''}`}
                 isIconOnly>
                 <Target className="size-14" />
               </Button>

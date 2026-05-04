@@ -1,8 +1,7 @@
 /* eslint max-len: 0 */
 
+import {SvgProps} from '@lynx_assets/icons/types';
 import {ReactElement} from 'react';
-
-import {SvgProps} from '../../../../src/renderer/src/assets/icons/SvgIconsContainer';
 
 function Image_Icon(props: SvgProps): ReactElement {
   return (

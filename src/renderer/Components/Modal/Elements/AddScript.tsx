@@ -1,10 +1,10 @@
-import {Button} from '@heroui/react';
+import {Button} from '@heroui-v3/react';
 import filesIpc from '@lynx_shared/ipc/files';
+import {Code} from '@solar-icons/react-perf/BoldDuotone';
 import {useState} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {reducerActions} from '../../../reducer';
-import {CodeDuo_Icon} from '../../SvgIcons';
 
 export function AddScript() {
   const dispatch = useDispatch();
@@ -27,11 +27,8 @@ export function AddScript() {
   };
 
   return (
-    <Button
-      onPress={handleAdd}
-      isLoading={isLoading}
-      startContent={!isLoading && <CodeDuo_Icon className="size-4" />}
-      fullWidth>
+    <Button onPress={handleAdd} isPending={isLoading} fullWidth>
+      <Code />
       Add Script
     </Button>
   );

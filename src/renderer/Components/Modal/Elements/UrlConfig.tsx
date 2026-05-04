@@ -1,4 +1,4 @@
-import {Button, ButtonGroup, Input, NumberInput} from '@heroui/react';
+import {Button, ButtonGroup, Description, Input, Label, NumberField, Separator, TextField} from '@heroui-v3/react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
@@ -28,20 +28,17 @@ export function UrlConfig() {
       <ButtonGroup fullWidth>
         <Button
           onPress={() => setUrlConfigType('nothing')}
-          variant={urlConfigType === 'nothing' ? 'flat' : 'light'}
-          color={urlConfigType === 'nothing' ? 'primary' : 'default'}>
+          variant={urlConfigType === 'nothing' ? 'primary' : 'secondary'}>
           No Browser
         </Button>
         <Button
           onPress={() => setUrlConfigType('custom')}
-          variant={urlConfigType === 'custom' ? 'flat' : 'light'}
-          color={urlConfigType === 'custom' ? 'primary' : 'default'}>
+          variant={urlConfigType === 'custom' ? 'primary' : 'secondary'}>
           Custom URL
         </Button>
         <Button
           onPress={() => setUrlConfigType('findLine')}
-          variant={urlConfigType === 'findLine' ? 'flat' : 'light'}
-          color={urlConfigType === 'findLine' ? 'primary' : 'default'}>
+          variant={urlConfigType === 'findLine' ? 'primary' : 'secondary'}>
           Scan Terminal
         </Button>
       </ButtonGroup>
@@ -49,52 +46,41 @@ export function UrlConfig() {
       <AnimatePresence>
         {urlConfigType === 'custom' && (
           <motion.div
-            className="overflow-hidden"
             exit={{opacity: 0, height: 0}}
             initial={{opacity: 0, height: 0}}
+            className="flex flex-col gap-y-3"
             animate={{opacity: 1, height: 'auto'}}>
-            <div className="flex flex-col gap-y-3 border-t border-foreground-200 pt-4 mt-2">
-              <Input
-                value={customUrl}
-                label="Custom URL"
-                labelPlacement="outside"
-                onValueChange={setCustomUrl}
-                description="Specify the exact URL to open in the browser"
-                placeholder="Enter custom URL (e.g., http://localhost:7860)"
-                isClearable
-              />
-              <div className="flex items-center gap-x-4 w-full">
-                <span className="text-sm text-foreground-500 shrink-0">Open URL:</span>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="sm"
-                    onPress={() => setOpenImmediately(true)}
-                    variant={openImmediately ? 'flat' : 'light'}
-                    color={openImmediately ? 'primary' : 'default'}>
-                    Immediately
-                  </Button>
-                  <Button
-                    size="sm"
-                    onPress={() => setOpenImmediately(false)}
-                    variant={openImmediately ? 'light' : 'flat'}
-                    color={openImmediately ? 'default' : 'primary'}>
-                    After Timeout
-                  </Button>
-                </div>
-                {!openImmediately && (
-                  <NumberInput
-                    size="sm"
-                    minValue={1}
-                    maxValue={999}
-                    value={timeout}
-                    placeholder="Seconds"
-                    aria-label="Timeout Seconds"
-                    onValueChange={setTimeoutValue}
-                    classNames={{inputWrapper: 'max-h-10'}}
-                    endContent={<span className="text-xs text-foreground-500">Seconds</span>}
-                  />
-                )}
+            <Separator />
+            <TextField value={customUrl} onChange={setCustomUrl}>
+              <Label>Custom URL</Label>
+              <Input placeholder="Enter custom URL (e.g., http://localhost:7860)" />
+              <Description>Specify the exact URL to open in the browser</Description>
+            </TextField>
+            <div className="flex items-center gap-x-4 w-full">
+              <span className="text-sm text-foreground-500 shrink-0">Open URL:</span>
+              <div className="flex items-center space-x-2">
+                <Button
+                  size="sm"
+                  onPress={() => setOpenImmediately(true)}
+                  variant={openImmediately ? 'primary' : 'secondary'}>
+                  Immediately
+                </Button>
+                <Button
+                  size="sm"
+                  onPress={() => setOpenImmediately(false)}
+                  variant={openImmediately ? 'secondary' : 'primary'}>
+                  After Timeout (Seconds)
+                </Button>
               </div>
+              {!openImmediately && (
+                <NumberField minValue={1} maxValue={999} value={timeout} onChange={setTimeoutValue} fullWidth>
+                  <NumberField.Group>
+                    <NumberField.DecrementButton />
+                    <NumberField.Input />
+                    <NumberField.IncrementButton />
+                  </NumberField.Group>
+                </NumberField>
+              )}
             </div>
           </motion.div>
         )}
@@ -106,15 +92,13 @@ export function UrlConfig() {
             initial={{opacity: 0, height: 0}}
             animate={{opacity: 1, height: 'auto'}}>
             <div className="flex flex-col gap-y-3 border-t border-foreground-200 pt-4 mt-2">
-              <Input
-                value={findLine}
-                labelPlacement="outside"
-                label="Line Must Contain"
-                onValueChange={setFindLine}
-                placeholder='e.g., "Running on local URL:" or "Uvicorn running on"'
-                description="Enter text to search for in terminal output. The URL will be extracted from that line."
-                isClearable
-              />
+              <TextField value={findLine} onChange={setFindLine}>
+                <Label>Line Must Contain</Label>
+                <Input placeholder='e.g., "Running on local URL:" or "Uvicorn running on"' />
+                <Description>
+                  Enter text to search for in terminal output. The URL will be extracted from that line.
+                </Description>
+              </TextField>
             </div>
           </motion.div>
         )}
