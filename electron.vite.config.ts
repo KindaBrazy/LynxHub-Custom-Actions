@@ -39,6 +39,7 @@ export default defineConfig({
           'react-redux': {generate: false},
           '@heroui-v3/react': {generate: false},
           '@heroui-v3/styles': {generate: false},
+          'react-aria': {generate: false},
         },
       }),
     ],
