@@ -15,6 +15,12 @@ export default defineConfig({
         output: {entryFileNames: 'mainEntry.cjs', format: 'cjs'},
       },
     },
+    resolve: {
+      alias: {
+        '@lynx_common': resolve(__dirname, '..', 'src/common'),
+        '@lynx_main': resolve(__dirname, '..', 'src/main'),
+      },
+    },
   },
   renderer: {
     root: resolve('extension/src/renderer'),
@@ -36,6 +42,16 @@ export default defineConfig({
         },
       }),
     ],
+    resolve: {
+      alias: {
+        '@lynx_module': resolve(__dirname, '..', 'module/src'),
+        '@lynx_extension': resolve(__dirname, '..', 'extension/src'),
+        '@lynx_common': resolve(__dirname, '..', 'src/common'),
+        '@lynx': resolve(__dirname, '..', 'src/renderer/mainWindow'),
+        '@lynx_shared': resolve(__dirname, '..', 'src/renderer/shared'),
+        '@lynx_assets': resolve(__dirname, '..', 'src/renderer/shared/assets'),
+      },
+    },
     build: {
       outDir: resolve('extension_out/renderer'),
       rollupOptions: {
