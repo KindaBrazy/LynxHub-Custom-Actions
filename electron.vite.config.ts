@@ -28,10 +28,11 @@ export default defineConfig({
           Extension: resolve('extension/src/renderer/Extension.tsx'),
         },
         shared: {
-          antd: {generate: false},
           react: {generate: false},
           'react-dom': {generate: false},
           'react-redux': {generate: false},
+          '@heroui-v3/react': {generate: false},
+          '@heroui-v3/styles': {generate: false},
         },
       }),
     ],
