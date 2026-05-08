@@ -2,17 +2,22 @@
   "$schema": "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Statics/refs/heads/schema/plugins/versioning.schema.json",
   "versions": [
     {
+      "version": "0.3.1",
+      "commit": "ad45f77",
+      "engines": {
+        "extensionApi": "^2.0.0"
+      },
+      "stage": "early_access",
+      "platforms": ["win32", "linux", "darwin"]
+    },
+    {
       "version": "0.3.0",
       "commit": "5f0ba6b",
       "engines": {
         "extensionApi": "^1.0.0"
       },
       "stage": "public",
-      "platforms": [
-        "win32",
-        "linux",
-        "darwin"
-      ]
+      "platforms": ["win32", "linux", "darwin"]
     },
     {
       "version": "0.2.3",
@@ -21,9 +26,7 @@
         "extensionApi": "^1.0.0"
       },
       "stage": "public",
-      "platforms": [
-        "win32"
-      ]
+      "platforms": ["win32"]
     },
     {
       "version": "0.2.2",
@@ -32,9 +35,7 @@
         "extensionApi": "^1.0.0"
       },
       "stage": "public",
-      "platforms": [
-        "win32"
-      ]
+      "platforms": ["win32"]
     },
     {
       "version": "0.2.0",
@@ -43,12 +44,26 @@
         "extensionApi": "^1.0.0"
       },
       "stage": "public",
-      "platforms": [
-        "win32"
-      ]
+      "platforms": ["win32"]
     }
   ],
   "changes": [
+    {
+      "version": "0.3.1",
+      "date": "2026-05-09",
+      "items": [
+        {
+          "⚡ Improvements": [
+            "Updated UI to v3.",
+            "Updated API to latest LynxHub API version.",
+            "Updated cards size and alignment."
+          ]
+        },
+        {
+          "🐛 Bug Fixes": ["Fixed changing title and description performance."]
+        }
+      ]
+    },
     {
       "version": "0.3.0",
       "date": "2025-12-14",
@@ -82,9 +97,7 @@
       "date": "2025-10-29",
       "items": [
         {
-          "🐛 Bug Fixes": [
-            "Fixed action card deletion, restored after the app restarts."
-          ]
+          "🐛 Bug Fixes": ["Fixed action card deletion, restored after the app restarts."]
         }
       ]
     },
@@ -107,9 +120,7 @@
       "date": "2025-10-24",
       "items": [
         {
-          "⚡ Improvements": [
-            "Support LynxHub Version 3.3.0"
-          ]
+          "⚡ Improvements": ["Support LynxHub Version 3.3.0"]
         }
       ]
     }
