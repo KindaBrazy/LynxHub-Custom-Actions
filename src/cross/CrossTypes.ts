@@ -30,7 +30,6 @@ export type CustomCard = {
   title: string;
   description?: string;
   icon?: string;
-  accentColor: string;
   categories: CustomCategories;
   actions: CustomExecuteActions[];
 };

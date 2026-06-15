@@ -18,7 +18,7 @@ websites, and streamline your entire workflow with a single click.
 
 ## ✨ Key Features
 
-- 🎨 **Visually Rich Cards**: Design beautiful cards with custom titles, descriptions, icons, and accent colors.
+- 🎨 **Visually Rich Cards**: Design beautiful cards with custom titles, descriptions, and icons.
 - 🚀 **Powerful Card Types**: Choose from four distinct card types to match your needs: `Executable`, `Terminal`,
   `Browser`, or a hybrid `Terminal & Browser`.
 - 🔗 **Chainable Actions**: Execute multiple actions in sequence—run a script, open a project folder, and launch a local

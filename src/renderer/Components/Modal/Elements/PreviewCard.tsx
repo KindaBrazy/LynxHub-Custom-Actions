@@ -15,9 +15,7 @@ export function PreviewCard({card, handleEdit, icon}: Props) {
         onClick={() => handleEdit(card)}
         className="w-42.5 h-37.5 cursor-pointer items-center justify-center group transition duration-200">
         <div className="flex size-[3.3rem] items-center justify-center shrink-0">{icon}</div>
-        <p className="font-semibold" style={{color: card.accentColor}}>
-          {card.title}
-        </p>
+        <p className="font-semibold">{card.title}</p>
         <Pen className={'absolute top-4 right-4 opacity-0 group-hover:opacity-70 transition-opacity duration-300'} />
       </Card>
     </motion.div>

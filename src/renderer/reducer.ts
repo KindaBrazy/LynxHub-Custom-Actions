@@ -62,7 +62,6 @@ const customActionsSlice = createSlice({
       state.editingCard = {
         id: 'temp',
         title: '',
-        accentColor: '#AA00FF',
         cardType: 'terminal_browser',
         urlConfig: {type: 'nothing', openImmediately: true, timeout: 5},
         categories: {pinned: true},
@@ -104,9 +103,6 @@ const customActionsSlice = createSlice({
         state.editingCard.title = action.payload;
         state.editingCard.id = targetId;
       }
-    },
-    setAccentColor: (state, action: PayloadAction<string>) => {
-      if (state.editingCard) state.editingCard.accentColor = action.payload;
     },
     setCardType: (state, action: PayloadAction<CustomCardType>) => {
       if (state.editingCard) state.editingCard.cardType = action.payload;
