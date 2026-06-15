@@ -26,14 +26,13 @@ export default function CustomActionsModal({state}: Props) {
         : editingCard
           ? `Editing ${editingCard.title || 'New Card'}`
           : 'Create New Custom Card',
-    [editingCard],
+    [editingCard, view],
   );
 
   const saveDisabled = useMemo(() => !editingCard?.title || !editingCard.icon, [editingCard]);
 
   const handleBackToList = () => {
     dispatch(reducerActions.setView('list'));
-    dispatch(reducerActions.setEditingCard(undefined));
   };
 
   const saveCard = () => {
@@ -57,6 +56,13 @@ export default function CustomActionsModal({state}: Props) {
     return () => document.removeEventListener('keyup', onKeyUp);
   }, [handleBackToList, view, state]);
 
+  useEffect(() => {
+    if (!state.isOpen) {
+      dispatch(reducerActions.setView('list'));
+      dispatch(reducerActions.setEditingCard(undefined));
+    }
+  }, [state.isOpen, dispatch]);
+
   return (
     <TabModal
       isOpen={state.isOpen}
@@ -64,8 +70,8 @@ export default function CustomActionsModal({state}: Props) {
       onOpenChange={state.setOpen}
       isKeyboardDismissDisabled={true}>
       {view !== 'form' && <Modal.CloseTrigger />}
-      <Modal.Header className="flex-row items-center px-4">
-        <div>
+      <Modal.Header className="flex-row items-center gap-x-2 px-4">
+        <div className="w-10 h-10 flex items-center justify-center">
           {view === 'form' && (
             <Button variant="ghost" onPress={handleBackToList} isIconOnly>
               <ArrowLeft className="size-5" />

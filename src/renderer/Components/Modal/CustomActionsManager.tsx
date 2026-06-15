@@ -33,9 +33,9 @@ export default function CustomActionsManager() {
   return (
     <motion.div
       animate={{opacity: 1, scale: 1, y: 0}}
-      exit={{opacity: 0, scale: 0.9, y: 20}}
-      initial={{opacity: 0, scale: 0.9, y: 20}}
-      transition={{duration: 0.3, ease: 'easeOut'}}
+      exit={{opacity: 0, scale: 0.95, y: 10}}
+      initial={{opacity: 0, scale: 0.95, y: 10}}
+      transition={{duration: 0.15, ease: 'easeOut'}}
       className="size-full flex items-center justify-center">
       <div className="size-full p-2">
         <AnimatePresence mode="wait">
@@ -43,10 +43,10 @@ export default function CustomActionsManager() {
             <motion.div
               key="list-view"
               className="p-6"
-              exit={{opacity: 0, x: 50}}
+              exit={{opacity: 0, x: 15}}
               animate={{opacity: 1, x: 0}}
-              transition={{duration: 0.3}}
-              initial={{opacity: 0, x: -50}}>
+              initial={{opacity: 0, x: -15}}
+              transition={{duration: 0.12, ease: 'easeOut'}}>
               <div className="flex flex-row flex-wrap gap-4">
                 {cards.map(card => {
                   const TargetIcon = CardIconById(card.icon);
@@ -66,10 +66,10 @@ export default function CustomActionsManager() {
             <motion.div
               key="form-view"
               className="h-full"
-              exit={{opacity: 0, x: -50}}
+              exit={{opacity: 0, x: -15}}
               animate={{opacity: 1, x: 0}}
-              transition={{duration: 0.3}}
-              initial={{opacity: 0, x: 50}}>
+              initial={{opacity: 0, x: 15}}
+              transition={{duration: 0.12, ease: 'easeOut'}}>
               <div className="space-y-8 pr-2 pb-4">
                 <LayoutGroup>
                   <FormSection title="Card Type">
