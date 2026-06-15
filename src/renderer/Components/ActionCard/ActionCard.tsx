@@ -170,6 +170,7 @@ export default function ActionCard({icon: Icon, card}: Props) {
         }
         title={title}
         onPress={onClick}
+        avatarClassName="ring-cyan-600"
         icon={<Icon className="size-8" />}
       />
       <CustomActionsModal state={modalState} />
