@@ -10,7 +10,7 @@ import {
   Label,
   parseColor,
   TextArea,
-} from '@heroui-v3/react';
+} from '@heroui/react';
 import {Shuffle} from '@solar-icons/react-perf/BoldDuotone';
 import {useEffect, useRef, useState} from 'react';
 import {useDispatch} from 'react-redux';

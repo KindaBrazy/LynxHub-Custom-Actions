@@ -1,4 +1,4 @@
-import {Button, ButtonGroup, Input, InputGroup} from '@heroui-v3/react';
+import {Button, ButtonGroup, Input, InputGroup} from '@heroui/react';
 import {Terminal_Icon} from '@lynx_assets/icons';
 import filesIpc from '@lynx_shared/ipc/files';
 import {AnimatePresence, motion, Reorder} from 'framer-motion';

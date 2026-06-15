@@ -1,4 +1,4 @@
-import {Button} from '@heroui-v3/react';
+import {Button} from '@heroui/react';
 import filesIpc from '@lynx_shared/ipc/files';
 import {Play} from '@solar-icons/react-perf/Bold';
 import {useState} from 'react';

@@ -1,4 +1,4 @@
-import {Button, ButtonGroup, Description, Input, Label, NumberField, Separator, TextField} from '@heroui-v3/react';
+import {Button, ButtonGroup, Description, Input, Label, NumberField, Separator, TextField} from '@heroui/react';
 import {AnimatePresence, motion} from 'framer-motion';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';

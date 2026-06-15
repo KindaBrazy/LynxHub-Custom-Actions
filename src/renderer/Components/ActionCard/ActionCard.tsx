@@ -1,4 +1,4 @@
-import {Description} from '@heroui-v3/react';
+import {Description} from '@heroui/react';
 import {useAppState} from '@lynx/redux/reducers/app';
 import {cardsActions} from '@lynx/redux/reducers/cards';
 import {useTabsState} from '@lynx/redux/reducers/tabs';

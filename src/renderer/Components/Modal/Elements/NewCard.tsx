@@ -1,4 +1,4 @@
-import {Card} from '@heroui-v3/react';
+import {Card} from '@heroui/react';
 import {motion} from 'framer-motion';
 import {Plus} from 'lucide-react';
 import {useDispatch} from 'react-redux';

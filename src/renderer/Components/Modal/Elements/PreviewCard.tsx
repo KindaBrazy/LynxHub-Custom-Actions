@@ -1,4 +1,4 @@
-import {Card} from '@heroui-v3/react';
+import {Card} from '@heroui/react';
 import {Pen} from '@solar-icons/react-perf/BoldDuotone';
 import {motion} from 'framer-motion';
 import {ReactNode} from 'react';

@@ -1,4 +1,4 @@
-import {Button, Modal, UseOverlayStateReturn} from '@heroui-v3/react';
+import {Button, Modal, UseOverlayStateReturn} from '@heroui/react';
 import LynxScroll from '@lynx/components/LynxScroll';
 import TabModal from '@lynx/components/TabModal';
 import {topToast} from '@lynx/layouts/ToastProviders';

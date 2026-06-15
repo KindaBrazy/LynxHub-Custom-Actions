@@ -1,4 +1,4 @@
-import {Description, Key, Label, ListBox, Select} from '@heroui-v3/react';
+import {Description, Key, Label, ListBox, Select} from '@heroui/react';
 import {Terminal_Icon} from '@lynx_assets/icons';
 import {Play} from '@solar-icons/react-perf/Bold';
 import {Earth} from '@solar-icons/react-perf/BoldDuotone';
