@@ -1,23 +1,19 @@
-import {Description} from '@heroui/react';
-import {useAppState} from '@lynx/redux/reducers/app';
+import {ToolsCard} from '@lynx/components/ToolsCard';
 import {cardsActions} from '@lynx/redux/reducers/cards';
 import {useTabsState} from '@lynx/redux/reducers/tabs';
 import {SvgProps} from '@lynx_assets/icons/types';
 import filesIpc from '@lynx_shared/ipc/files';
 import ptyIpc from '@lynx_shared/ipc/pty';
-import {motion} from 'framer-motion';
 import {ReactElement} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {CustomCard} from '../../../cross/CrossTypes';
 import {customActionsChannels} from '../../../cross/CrossUtils';
 import {reducerActions} from '../../reducer';
-import {cardVariants, glowVariants, iconVariants} from './ActionCard_Utils';
 
 type Props = {
   icon: (props: SvgProps) => ReactElement;
   onClick?: () => void;
-  className?: string;
   card: CustomCard;
 };
 
@@ -25,13 +21,12 @@ const LINE_ENDING = window.osPlatform === 'win32' ? '\r' : '\n';
 const IS_MACOS = window.osPlatform === 'darwin';
 const IS_WINDOWS = window.osPlatform === 'win32';
 
-export default function ActionCard({icon: Icon, card, className = ''}: Props) {
+export default function ActionCard({icon: Icon, card}: Props) {
   const dispatch = useDispatch();
 
   const activeTab = useTabsState('activeTab');
-  const darkMode = useAppState('darkMode');
 
-  const {title, description, accentColor, actions, cardType, urlConfig} = card;
+  const {title, description, actions, cardType, urlConfig} = card;
 
   const onClick = () => {
     const opens = actions.filter(action => action.type === 'open');
@@ -150,57 +145,15 @@ export default function ActionCard({icon: Icon, card, className = ''}: Props) {
   };
 
   return (
-    <motion.div
-      whileTap="tap"
-      onClick={onClick}
-      initial="initial"
-      whileHover="hover"
-      style={{width: '145px', height: '88px'}}
-      className={`relative group cursor-pointer ${className}`}>
-      {/* Glow effect */}
-      <motion.div
-        variants={glowVariants}
-        style={{backgroundColor: accentColor + '40'}}
-        className="absolute -inset-1 rounded-3xl blur"
-      />
-
-      {/* Main card */}
-      <motion.div
-        className={
-          `relative bg-surface rounded-3xl ${description ? '' : 'items-center justify-center'} border p-4 ` +
-          ' border-surface-secondary transition-colors duration-300 hover:border-surface-tertiary shadow-surface' +
-          ' w-full h-full flex flex-col gap-y-1'
-        }
-        variants={cardVariants}>
-        {/* Icon container with floating animation */}
-        <div className="relative flex justify-start items-center gap-x-1">
-          <motion.div variants={iconVariants}>
-            <Icon className="size-9" />
-          </motion.div>
-
-          <motion.h3
-            variants={{
-              initial: {color: darkMode ? '#ffffff' : '#000000'},
-              hover: {color: accentColor, transition: {duration: 0.3}},
-            }}
-            className={`text-sm font-semibold text-foreground`}>
-            {title}
-          </motion.h3>
-        </div>
-
-        {/* Content */}
-        {description && <Description className="truncate">{description}</Description>}
-
-        {/* Ripple effect on tap */}
-        <motion.div
-          variants={{
-            tap: {opacity: 0.2, transition: {duration: 0.3}},
-            initial: {opacity: 0.04},
-          }}
-          style={{backgroundColor: accentColor}}
-          className="absolute inset-0 rounded-2xl pointer-events-none"
-        />
-      </motion.div>
-    </motion.div>
+    <ToolsCard
+      description={
+        description ||
+        'No description provided. Click to execute this action, run scripts, or open the' +
+          ' configured URL in your workspace.'
+      }
+      title={title}
+      onPress={onClick}
+      icon={<Icon className="size-8" />}
+    />
   );
 }
