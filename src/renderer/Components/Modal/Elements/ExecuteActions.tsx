@@ -1,23 +1,14 @@
 import {Button, ButtonGroup, Input, InputGroup} from '@heroui/react';
 import {Terminal_Icon} from '@lynx_assets/icons';
 import filesIpc from '@lynx_shared/ipc/files';
+import {Bookmark, Code, FileCheck, FolderOpen, Pen, Play, TrashBin2} from '@solar-icons/react-perf/BoldDuotone';
 import {AnimatePresence, motion, Reorder} from 'framer-motion';
-import {Plus} from 'lucide-react';
+import {GripVertical, Plus} from 'lucide-react';
 import {KeyboardEvent, useMemo, useState} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {CustomExecuteActions} from '../../../../cross/CrossTypes';
 import {reducerActions, useCustomActionsState} from '../../../reducer';
-import {
-  BookmarkOpenDuo_Icon,
-  CodeDuo_Icon,
-  FileCodeDuo_Icon,
-  FolderDuo_Icon,
-  Grip_Icon,
-  PenDuo_Icon,
-  PlayDuo_Icon,
-  TrashDuo_Icon,
-} from '../../SvgIcons';
 import {AddExe} from './AddExe';
 import {AddScript} from './AddScript';
 
@@ -118,7 +109,7 @@ export function ExecuteActions() {
         return (
           <>
             <span>{index + 1}.</span>
-            <PlayDuo_Icon />
+            <Play />
             <span className="w-full text-sm ml-1.5 truncate">{item.action}</span>
             <Button
               size="sm"
@@ -126,7 +117,7 @@ export function ExecuteActions() {
               variant="danger-soft"
               onPress={() => handleRemoveCommand(index)}
               isIconOnly>
-              <TrashDuo_Icon className="size-4" />
+              <TrashBin2 className="size-4" />
             </Button>
           </>
         );
@@ -134,7 +125,7 @@ export function ExecuteActions() {
         return (
           <>
             <span>{index + 1}.</span>
-            <BookmarkOpenDuo_Icon />
+            <Bookmark />
             <span className="w-full text-sm ml-1.5 truncate">{item.action}</span>
             <Button
               size="sm"
@@ -142,7 +133,7 @@ export function ExecuteActions() {
               variant="danger-soft"
               onPress={() => handleRemoveCommand(index)}
               isIconOnly>
-              <TrashDuo_Icon className="size-4" />
+              <TrashBin2 className="size-4" />
             </Button>
           </>
         );
@@ -150,7 +141,7 @@ export function ExecuteActions() {
         return editingIndex === index ? (
           <>
             <span>{index + 1}.</span>
-            <CodeDuo_Icon className="shrink-0" />
+            <Code className="shrink-0" />
             <Input
               value={editingValue}
               onBlur={handleSaveEdit}
@@ -163,7 +154,7 @@ export function ExecuteActions() {
         ) : (
           <>
             <span>{index + 1}.</span>
-            <CodeDuo_Icon className="shrink-0" />
+            <Code className="shrink-0" />
             <span className="w-full truncate bg-surface-secondary py-1.5 px-2 rounded-full font-JetBrainsMono">
               {item.action}
             </span>
@@ -173,7 +164,7 @@ export function ExecuteActions() {
               className="shrink-0"
               onPress={() => handleStartEdit(index, item.action)}
               isIconOnly>
-              <PenDuo_Icon className="size-4" />
+              <Pen className="size-4" />
             </Button>
             <Button
               size="sm"
@@ -181,7 +172,7 @@ export function ExecuteActions() {
               variant="danger-soft"
               onPress={() => handleRemoveCommand(index)}
               isIconOnly>
-              <TrashDuo_Icon className="size-4" />
+              <TrashBin2 className="size-4" />
             </Button>
           </>
         );
@@ -198,16 +189,16 @@ export function ExecuteActions() {
         ) : null}
         <ButtonGroup variant="secondary">
           <Button isPending={addingFile} onPress={handleAddFile}>
-            {!addingFile && <FileCodeDuo_Icon />}
+            {!addingFile && <FileCheck />}
             Add File
           </Button>
           <Button isPending={addingFolder} onPress={handleAddFolder}>
-            {!addingFolder && <FolderDuo_Icon />}
+            {!addingFolder && <FolderOpen />}
             Add Folder
           </Button>
           {(cardType === 'terminal_browser' || cardType === 'terminal') && (
             <Button isPending={addingCdFolder} onPress={handleAddCdFolder}>
-              {!addingCdFolder && <FolderDuo_Icon />}
+              {!addingCdFolder && <FolderOpen />}
               CD Folder
             </Button>
           )}
@@ -254,7 +245,7 @@ export function ExecuteActions() {
                     }
                     key={item.action}
                     value={item.action}>
-                    <Grip_Icon className="text-foreground-500 shrink-0" />
+                    <GripVertical className="text-muted shrink-0 size-4" />
                     {renderBody(item, index)}
                   </Reorder.Item>
                 ))}

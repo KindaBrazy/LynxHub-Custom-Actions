@@ -2,7 +2,6 @@
 @import '@heroui/styles';
 
 @source './**/*.{js,ts,jsx,tsx}';
-@source '../../../src/renderer/main_window/components/SpotlightCard.tsx';
 @source '../../../src/renderer/main_window/components/ToolsCard.tsx';
 
 @custom-variant dark (&:is(.dark *));
@@ -11,13 +10,14 @@
   --font-JetBrainsMono: JetBrainsMono, sans-serif;
   --font-Nunito: Nunito, sans-serif;
 
+  --color-LynxOrange: #ff5f00;
+  --color-LynxNearBlack: #191919;
+  --color-LynxRaisinBlack: #212121;
+
   --color-LynxBlue: var(--color-LynxBlue);
   --color-LynxPurple: var(--color-LynxPurple);
 
   --color-semi-muted: var(--semi-muted);
-
-  --color-LynxOrange: #ff5f00;
-  --color-LynxRaisinBlack: #212121;
 
   --color-LynxWhiteSecond: #f6f6f6;
   --color-LynxWhiteThird: #ececec;
@@ -25,6 +25,12 @@
   --color-LynxWhiteFifth: #d0d0d0;
 
   --color-DarkGray: #424242;
+}
+
+:root {
+  color-scheme: light dark;
+  background-color: #212121;
+  font-family: Nunito, sans-serif;
 }
 
 :root,

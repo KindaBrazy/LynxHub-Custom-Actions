@@ -3,12 +3,11 @@ import LynxScroll from '@lynx/components/LynxScroll';
 import TabModal from '@lynx/components/TabModal';
 import {topToast} from '@lynx/layouts/ToastProviders';
 import {AppDispatch} from '@lynx/redux/store';
-import {ArrowLeft, Diskette} from '@solar-icons/react-perf/BoldDuotone';
+import {ArrowLeft, Diskette, TrashBin2} from '@solar-icons/react-perf/BoldDuotone';
 import {useEffect, useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {reducerActions, useCustomActionsState} from '../../reducer';
-import {TrashDuo_Icon} from '../SvgIcons';
 import CustomActionsManager from './CustomActionsManager';
 
 type Props = {state: UseOverlayStateReturn};
@@ -87,7 +86,7 @@ export default function CustomActionsModal({state}: Props) {
         {view === 'form' && (
           <>
             <Button onPress={deleteCard} variant="danger-soft">
-              <TrashDuo_Icon />
+              <TrashBin2 />
               Delete
             </Button>
             <div className="flex flex-row items-center gap-x-2">
