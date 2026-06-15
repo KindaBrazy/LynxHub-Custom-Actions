@@ -15,7 +15,7 @@ export function NewCard() {
       <Card
         className={
           'w-42.5 h-37.5 group items-center justify-center cursor-pointer ' +
-          ' border-2 border-dashed border-muted/30 hover:border-foreground' +
+          ' border-2 border-dashed border-muted/30 hover:border-muted/60' +
           ' transition duration-200'
         }
         variant="secondary"
