@@ -120,3 +120,5 @@ All custom action IPC communication is prefixed to prevent namespace collision:
    - Before saving custom URLs, pass them through `formatWebAddress` utility to ensure protocols (`http://` / `https://`) are formatted correctly.
 4. **IPC Cleanup**:
    - Ensure you clean up IPC listeners and process trees (`treeKill`) when the application closes or when process execution fails, preventing orphan process generation.
+5. **Linter & Verification**:
+   - Whenever code changes are made, run the parent repository's `fix-linter-ext` script to ensure everything is correct and free of lint issues.
