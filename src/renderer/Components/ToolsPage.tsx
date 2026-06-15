@@ -1,27 +1,24 @@
+import {useOverlayState} from '@heroui/react';
 import {ToolsCard} from '@lynx/components/ToolsCard';
-import {useTabsState} from '@lynx/redux/reducers/tabs';
 import {Widget6} from '@solar-icons/react-perf/BoldDuotone';
-import {useDispatch} from 'react-redux';
 
-import {reducerActions} from '../reducer';
+import CustomActionsModal from './Modal/CustomActionsModal';
 
 export default function ToolsPage() {
-  const dispatch = useDispatch();
-  const activeTab = useTabsState('activeTab');
-
-  const onPress = () => {
-    dispatch(reducerActions.openModal({tabID: activeTab}));
-  };
+  const state = useOverlayState();
 
   return (
-    <ToolsCard
-      description={
-        'Create, customize, and manage custom shortcut cards with your own scripts, ' +
-        'APIs, or shell commands to automate your daily developer workflows.'
-      }
-      onPress={onPress}
-      title="Custom Actions"
-      icon={<Widget6 className="size-8 text-cyan-500" />}
-    />
+    <>
+      <ToolsCard
+        description={
+          'Create, customize, and manage custom shortcut cards with your own scripts, ' +
+          'APIs, or shell commands to automate your daily developer workflows.'
+        }
+        onPress={state.open}
+        title="Custom Actions"
+        icon={<Widget6 className="size-8 text-cyan-500" />}
+      />
+      <CustomActionsModal state={state} />
+    </>
   );
 }

@@ -12,7 +12,6 @@ export type UrlCatchingSession = {
 };
 
 export type CustomActionsState = {
-  modals: {isOpen: boolean; tabID: string}[];
   customCards: CustomCard[];
   view: 'list' | 'form';
   editingCard?: CustomCard;
@@ -25,7 +24,6 @@ type CustomActionsStateTypes = {
 };
 
 const initialState: CustomActionsState = {
-  modals: [],
   customCards: [],
   view: 'list',
   editingCard: undefined,
@@ -45,17 +43,6 @@ const customActionsSlice = createSlice({
       }>,
     ) => {
       state[action.payload.key] = action.payload.value;
-    },
-    openModal: (state, action: PayloadAction<{tabID: string}>) => {
-      state.modals.push({isOpen: true, tabID: action.payload.tabID});
-    },
-    closeModal: (state, action: PayloadAction<{tabID: string}>) => {
-      state.modals = state.modals.map(item =>
-        item.tabID === action.payload.tabID ? {...item, isOpen: false} : {...item},
-      );
-    },
-    removeModal: (state, action: PayloadAction<{tabID: string}>) => {
-      state.modals = state.modals.filter(item => item.tabID !== action.payload.tabID);
     },
 
     addCard: state => {

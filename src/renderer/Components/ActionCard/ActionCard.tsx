@@ -1,4 +1,4 @@
-import {Button} from '@heroui/react';
+import {Button, useOverlayState} from '@heroui/react';
 import {ToolsCard} from '@lynx/components/ToolsCard';
 import {cardsActions} from '@lynx/redux/reducers/cards';
 import {useTabsState} from '@lynx/redux/reducers/tabs';
@@ -12,6 +12,7 @@ import {useDispatch} from 'react-redux';
 import {CustomCard} from '../../../cross/CrossTypes';
 import {customActionsChannels} from '../../../cross/CrossUtils';
 import {reducerActions} from '../../reducer';
+import CustomActionsModal from '../Modal/CustomActionsModal';
 
 type Props = {
   icon: (props: SvgProps) => ReactElement;
@@ -146,27 +147,32 @@ export default function ActionCard({icon: Icon, card}: Props) {
     }
   };
 
+  const modalState = useOverlayState();
+
   const openConfig = () => {
     dispatch(reducerActions.setEditingCard(card));
     dispatch(reducerActions.setView('form'));
-    dispatch(reducerActions.openModal({tabID: activeTab}));
+    modalState.open();
   };
 
   return (
-    <ToolsCard
-      footer={
-        <Button variant="tertiary" onPress={openConfig} className="shrink-0" isIconOnly>
-          <Pen className="text-semi-muted" />
-        </Button>
-      }
-      description={
-        description ||
-        'No description provided. Click to execute this action, run scripts, or open the' +
-          ' configured URL in your workspace.'
-      }
-      title={title}
-      onPress={onClick}
-      icon={<Icon className="size-8" />}
-    />
+    <>
+      <ToolsCard
+        footer={
+          <Button variant="tertiary" onPress={openConfig} className="shrink-0" isIconOnly>
+            <Pen className="text-semi-muted" />
+          </Button>
+        }
+        description={
+          description ||
+          'No description provided. Click to execute this action, run scripts, or open the' +
+            ' configured URL in your workspace.'
+        }
+        title={title}
+        onPress={onClick}
+        icon={<Icon className="size-8" />}
+      />
+      <CustomActionsModal state={modalState} />
+    </>
   );
 }

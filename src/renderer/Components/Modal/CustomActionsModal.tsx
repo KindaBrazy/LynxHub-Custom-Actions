@@ -2,7 +2,6 @@ import {Button, Modal, UseOverlayStateReturn} from '@heroui/react';
 import LynxScroll from '@lynx/components/LynxScroll';
 import TabModal from '@lynx/components/TabModal';
 import {topToast} from '@lynx/layouts/ToastProviders';
-import {useTabsState} from '@lynx/redux/reducers/tabs';
 import {AppDispatch} from '@lynx/redux/store';
 import {ArrowLeft, Diskette, TrashBin2} from '@solar-icons/react-perf/BoldDuotone';
 import {useEffect, useMemo} from 'react';
@@ -11,38 +10,10 @@ import {useDispatch} from 'react-redux';
 import {reducerActions, useCustomActionsState} from '../../reducer';
 import CustomActionsManager from './CustomActionsManager';
 
-type Props = {state?: UseOverlayStateReturn};
+type Props = {state: UseOverlayStateReturn};
 
 export default function CustomActionsModal({state}: Props) {
   const dispatch = useDispatch<AppDispatch>();
-
-  const activeTab = useTabsState('activeTab');
-  const modals = useCustomActionsState('modals');
-
-  const isOpen = useMemo(() => {
-    if (state) return state.isOpen;
-    return modals.some(m => m.tabID === activeTab && m.isOpen);
-  }, [state, modals, activeTab]);
-
-  const setOpen = (open: boolean) => {
-    if (state) {
-      state.setOpen(open);
-    } else {
-      if (open) {
-        dispatch(reducerActions.openModal({tabID: activeTab}));
-      } else {
-        dispatch(reducerActions.closeModal({tabID: activeTab}));
-      }
-    }
-  };
-
-  const handleClose = () => {
-    if (state) {
-      state.close();
-    } else {
-      dispatch(reducerActions.closeModal({tabID: activeTab}));
-    }
-  };
 
   // State for view management
   const view = useCustomActionsState('view');
@@ -77,24 +48,28 @@ export default function CustomActionsModal({state}: Props) {
         if (view === 'form') {
           handleBackToList();
         } else {
-          handleClose();
+          state.close();
         }
       }
     };
 
     document.addEventListener('keyup', onKeyUp);
     return () => document.removeEventListener('keyup', onKeyUp);
-  }, [handleBackToList, view, handleClose]);
+  }, [handleBackToList, view, state]);
 
   useEffect(() => {
-    if (!isOpen) {
+    if (!state.isOpen) {
       dispatch(reducerActions.setView('list'));
       dispatch(reducerActions.setEditingCard(undefined));
     }
-  }, [isOpen, dispatch]);
+  }, [state.isOpen, dispatch]);
 
   return (
-    <TabModal isOpen={isOpen} dialogClassName="px-0" onOpenChange={setOpen} isKeyboardDismissDisabled={true}>
+    <TabModal
+      isOpen={state.isOpen}
+      dialogClassName="px-0"
+      onOpenChange={state.setOpen}
+      isKeyboardDismissDisabled={true}>
       {view !== 'form' && <Modal.CloseTrigger />}
       <Modal.Header className="flex-row items-center gap-x-2 px-4">
         <div className="w-10 h-10 flex items-center justify-center">
