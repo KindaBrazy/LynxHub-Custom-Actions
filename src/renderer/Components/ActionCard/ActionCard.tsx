@@ -1,9 +1,11 @@
+import {Button} from '@heroui/react';
 import {ToolsCard} from '@lynx/components/ToolsCard';
 import {cardsActions} from '@lynx/redux/reducers/cards';
 import {useTabsState} from '@lynx/redux/reducers/tabs';
 import {SvgProps} from '@lynx_assets/icons/types';
 import filesIpc from '@lynx_shared/ipc/files';
 import ptyIpc from '@lynx_shared/ipc/pty';
+import {Pen} from '@solar-icons/react-perf/BoldDuotone';
 import {ReactElement} from 'react';
 import {useDispatch} from 'react-redux';
 
@@ -144,8 +146,19 @@ export default function ActionCard({icon: Icon, card}: Props) {
     }
   };
 
+  const openConfig = () => {
+    dispatch(reducerActions.setEditingCard(card));
+    dispatch(reducerActions.setView('form'));
+    dispatch(reducerActions.openModal({tabID: activeTab}));
+  };
+
   return (
     <ToolsCard
+      footer={
+        <Button variant="tertiary" onPress={openConfig} className="shrink-0" isIconOnly>
+          <Pen className="text-semi-muted" />
+        </Button>
+      }
       description={
         description ||
         'No description provided. Click to execute this action, run scripts, or open the' +

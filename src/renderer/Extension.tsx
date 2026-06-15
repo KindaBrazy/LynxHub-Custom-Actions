@@ -11,6 +11,7 @@ import {
   TextActions,
 } from './Components/CardsContainer';
 import {CustomHook} from './Components/CustomHooks';
+import CustomActionsModal from './Components/Modal/CustomActionsModal';
 import ToolsPage from './Components/ToolsPage';
 import reducer from './reducer';
 
@@ -27,4 +28,5 @@ export function InitialExtensions(lynxAPI: ExtensionRendererApi) {
   lynxAPI.customizePages.audio.add.cardsContainer(AudioActions);
 
   lynxAPI.addCustomHook(CustomHook);
+  lynxAPI.addModal(CustomActionsModal);
 }
