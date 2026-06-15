@@ -71,6 +71,7 @@ const customActionsSlice = createSlice({
     },
     removeCard: state => {
       state.customCards = state.customCards.filter(item => item.id !== state.editingCard?.id);
+      state.editingCard = undefined;
       state.view = 'list';
       state.saveCards = true;
     },
@@ -90,6 +91,7 @@ const customActionsSlice = createSlice({
       }
 
       state.view = 'list';
+      state.editingCard = undefined;
       state.saveCards = true;
     },
     setTitle: (state, action: PayloadAction<string>) => {

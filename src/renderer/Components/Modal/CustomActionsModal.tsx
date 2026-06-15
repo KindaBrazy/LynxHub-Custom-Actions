@@ -33,6 +33,7 @@ export default function CustomActionsModal({state}: Props) {
 
   const handleBackToList = () => {
     dispatch(reducerActions.setView('list'));
+    dispatch(reducerActions.setEditingCard(undefined));
   };
 
   const saveCard = () => {

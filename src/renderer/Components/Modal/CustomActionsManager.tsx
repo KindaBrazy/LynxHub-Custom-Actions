@@ -38,68 +38,54 @@ export default function CustomActionsManager() {
       transition={{duration: 0.15, ease: 'easeOut'}}
       className="size-full flex items-center justify-center">
       <div className="size-full p-2">
-        <AnimatePresence mode="wait">
-          {view === 'list' ? (
-            <motion.div
-              key="list-view"
-              className="p-6"
-              exit={{opacity: 0, x: 15}}
-              animate={{opacity: 1, x: 0}}
-              initial={{opacity: 0, x: -15}}
-              transition={{duration: 0.12, ease: 'easeOut'}}>
-              <div className="flex flex-row flex-wrap gap-4">
-                {cards.map(card => {
-                  const TargetIcon = CardIconById(card.icon);
-                  return (
-                    <PreviewCard
-                      card={card}
-                      handleEdit={handleEdit}
-                      key={`${card.id}_custom_action`}
-                      icon={<TargetIcon className="size-full" />}
-                    />
-                  );
-                })}
-                <NewCard />
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="form-view"
-              className="h-full"
-              exit={{opacity: 0, x: -15}}
-              animate={{opacity: 1, x: 0}}
-              initial={{opacity: 0, x: 15}}
-              transition={{duration: 0.12, ease: 'easeOut'}}>
-              <div className="space-y-8 pr-2 pb-4">
-                <LayoutGroup>
-                  <FormSection title="Card Type">
-                    <CardType />
-                  </FormSection>
+        {view === 'list' ? (
+          <div className="p-6">
+            <div className="flex flex-row flex-wrap gap-4">
+              {cards.map(card => {
+                const TargetIcon = CardIconById(card.icon);
+                return (
+                  <PreviewCard
+                    card={card}
+                    handleEdit={handleEdit}
+                    key={`${card.id}_custom_action`}
+                    icon={<TargetIcon className="size-full" />}
+                  />
+                );
+              })}
+              <NewCard />
+            </div>
+          </div>
+        ) : (
+          <div className="h-full">
+            <div className="space-y-8 pr-2 pb-4">
+              <LayoutGroup>
+                <FormSection title="Card Type">
+                  <CardType />
+                </FormSection>
 
-                  <AnimatePresence>
-                    {cardType !== 'terminal' && (
-                      <FormSection title="URL Configuration">
-                        <UrlConfig />
-                      </FormSection>
-                    )}
-                  </AnimatePresence>
+                <AnimatePresence>
+                  {cardType !== 'terminal' && (
+                    <FormSection title="URL Configuration">
+                      <UrlConfig />
+                    </FormSection>
+                  )}
+                </AnimatePresence>
 
-                  <FormSection title="Execute Actions">
-                    <ExecuteActions />
-                  </FormSection>
+                <FormSection title="Execute Actions">
+                  <ExecuteActions />
+                </FormSection>
 
-                  <FormSection title="Card Details">
-                    <CardDetails />
-                  </FormSection>
+                <FormSection title="Card Details">
+                  <CardDetails />
+                </FormSection>
 
-                  <FormSection title="Add To Categories">
-                    <AddToCategories />
-                  </FormSection>
-                </LayoutGroup>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <FormSection title="Add To Categories">
+                  <AddToCategories />
+                </FormSection>
+              </LayoutGroup>
+            </div>
+          </div>
+        )}
       </div>
     </motion.div>
   );

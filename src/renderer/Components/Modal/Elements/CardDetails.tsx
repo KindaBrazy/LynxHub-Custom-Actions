@@ -24,7 +24,14 @@ export function CardDetails() {
     dispatch(reducerActions.setIcon(icon));
   };
 
+  const isFirstTitleRender = useRef(true);
+  const isFirstDescRender = useRef(true);
+
   useEffect(() => {
+    if (isFirstTitleRender.current) {
+      isFirstTitleRender.current = false;
+      return;
+    }
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
@@ -33,6 +40,10 @@ export function CardDetails() {
     }, 150);
   }, [title]);
   useEffect(() => {
+    if (isFirstDescRender.current) {
+      isFirstDescRender.current = false;
+      return;
+    }
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
