@@ -14,7 +14,9 @@ export default function startExecute(appManager: MainWindowManager) {
       processMap.get(id)?.stop();
       processMap.delete(id);
     }
-    const manager = new ExeManager(id, exePath, appManager);
+    const manager = new ExeManager(id, exePath, appManager, exitId => {
+      processMap.delete(exitId);
+    });
     processMap.set(id, manager);
   });
 

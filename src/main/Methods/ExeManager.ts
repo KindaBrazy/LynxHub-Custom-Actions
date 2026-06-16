@@ -14,7 +14,7 @@ export default class ExeManager {
 
   public id: string;
 
-  constructor(id: string, exePath: string, appManager: MainWindowManager) {
+  constructor(id: string, exePath: string, appManager: MainWindowManager, onExitCallback?: (id: string) => void) {
     this.id = id;
 
     let validatedExe: string | undefined = undefined;
@@ -84,12 +84,18 @@ export default class ExeManager {
         ?.send(ptyChannels.onData, this.id, `\r\nError: Could not start process. ${err.message}\r\n`);
       appManager?.getWebContent()?.send(ptyChannels.onExit, this.id);
       this.isRunning = false;
+      if (onExitCallback) {
+        onExitCallback(this.id);
+      }
     });
 
     // Listen for the process 'exit' event.
     this.process.on('exit', () => {
       appManager?.getWebContent()?.send(ptyChannels.onExit, this.id);
       this.isRunning = false;
+      if (onExitCallback) {
+        onExitCallback(this.id);
+      }
     });
   }
 
