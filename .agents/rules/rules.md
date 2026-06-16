@@ -121,4 +121,9 @@ All custom action IPC communication is prefixed to prevent namespace collision:
 4. **IPC Cleanup**:
    - Ensure you clean up IPC listeners and process trees (`treeKill`) when the application closes or when process execution fails, preventing orphan process generation.
 5. **Linter & Verification**:
-   - Whenever code changes are made, run the parent repository's `fix-linter-ext` script to ensure everything is correct and free of lint issues.
+   - Whenever code changes are made, run the parent repository's `validate:ext` command to ensure everything is correct and free of typescript type and linter issues.
+6. **UI Implementation**:
+   - For any UI implementation, always read and follow the instructions in [AGENTS.md](file:///d:/Programming/LynxHub/.agents/AGENTS.md).
+7. **Icons Usage**:
+   - For icons usage, always read and follow [icon-usage](file:///d:/Programming/LynxHub/.agents/skills/icon-usage).
+
