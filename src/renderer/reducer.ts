@@ -1,6 +1,5 @@
 import {formatWebAddress} from '@lynx_common/utils';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
-import {useSelector} from 'react-redux';
 
 import {CustomCard, CustomCardType, CustomCategory, CustomEnvVar, CustomExecuteActions} from '../cross/CrossTypes';
 
@@ -17,10 +16,6 @@ export type CustomActionsState = {
   editingCard?: CustomCard;
   saveCards?: boolean;
   urlCatchingSession?: UrlCatchingSession;
-};
-
-type CustomActionsStateTypes = {
-  [K in keyof CustomActionsState]: CustomActionsState[K];
 };
 
 const initialState: CustomActionsState = {
@@ -181,6 +176,23 @@ const customActionsSlice = createSlice({
       if (state.urlCatchingSession) {
         state.urlCatchingSession.urlFound = true;
       }
+    },
+    importCards: (state, action: PayloadAction<CustomCard[]>) => {
+      const existingIds = new Set(state.customCards.map(c => c.id));
+      const newCards = action.payload.map(card => {
+        let newId = card.id;
+        let newTitle = card.title;
+        let counter = 1;
+        while (existingIds.has(newId)) {
+          newId = `${card.id}_import_${counter}`;
+          newTitle = `${card.title} (Imported ${counter})`;
+          counter++;
+        }
+        existingIds.add(newId);
+        return {...card, id: newId, title: newTitle};
+      });
+      state.customCards = [...state.customCards, ...newCards];
+      state.saveCards = true;
     },
   },
 });

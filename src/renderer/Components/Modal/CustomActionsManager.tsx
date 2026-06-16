@@ -18,7 +18,12 @@ import {UrlConfig} from './Elements/UrlConfig';
 
 /* eslint max-len: 0 */
 
-export default function CustomActionsManager() {
+type Props = {
+  selectedCardIds?: string[];
+  onToggleSelect?: (id: string) => void;
+};
+
+export default function CustomActionsManager({selectedCardIds, onToggleSelect}: Props) {
   const dispatch = useDispatch();
 
   const cards = useSelector(selectCustomCards);
@@ -51,6 +56,8 @@ export default function CustomActionsManager() {
                     handleEdit={handleEdit}
                     key={`${card.id}_custom_action`}
                     icon={<TargetIcon className="size-full" />}
+                    isSelected={selectedCardIds?.includes(card.id)}
+                    onSelect={onToggleSelect ? () => onToggleSelect(card.id) : undefined}
                   />
                 );
               })}

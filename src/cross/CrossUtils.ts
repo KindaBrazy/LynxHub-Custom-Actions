@@ -3,6 +3,8 @@ export const customActionsChannels = {
   getCards: 'customActions_getCards',
 
   startExe: 'customActions_startExe',
+  exportToFile: 'customActions_exportToFile',
+  importFromFile: 'customActions_importFromFile',
 };
 
 export const storageKeys = {
