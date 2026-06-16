@@ -25,7 +25,7 @@ export function UrlConfig() {
 
   return (
     <div className="flex flex-col gap-y-3">
-      <span className="text-foreground-600">URL Detection Method:</span>
+      <span className="text-muted">URL Detection Method:</span>
       <ButtonGroup fullWidth>
         <Button
           onPress={() => setUrlConfigType('nothing')}
@@ -58,7 +58,7 @@ export function UrlConfig() {
               <Description>Specify the exact URL to open in the browser</Description>
             </TextField>
             <div className="flex items-center gap-x-4 w-full">
-              <span className="text-sm text-foreground-500 shrink-0">Open URL:</span>
+              <span className="text-sm text-muted shrink-0">Open URL:</span>
               <div className="flex items-center space-x-2">
                 <Button
                   size="sm"
@@ -92,7 +92,7 @@ export function UrlConfig() {
             exit={{opacity: 0, height: 0}}
             initial={{opacity: 0, height: 0}}
             animate={{opacity: 1, height: 'auto'}}>
-            <div className="flex flex-col gap-y-3 border-t border-foreground-200 pt-4 mt-2">
+            <div className="flex flex-col gap-y-3 border-t border-border pt-4 mt-2">
               <TextField value={findLine} onChange={setFindLine}>
                 <Label>Line Must Contain</Label>
                 <Input placeholder='e.g., "Running on local URL:" or "Uvicorn running on"' />
