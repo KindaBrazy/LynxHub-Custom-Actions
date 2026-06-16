@@ -4,7 +4,7 @@ import TabModal from '@lynx/components/TabModal';
 import {topToast} from '@lynx/layouts/ToastProviders';
 import {AppDispatch} from '@lynx/redux/store';
 import {ArrowLeft, Diskette, TrashBin2} from '@solar-icons/react-perf/BoldDuotone';
-import {useEffect, useMemo} from 'react';
+import {useEffect, useMemo, useRef} from 'react';
 import {useDispatch} from 'react-redux';
 
 import {reducerActions, useCustomActionsState} from '../../reducer';
@@ -57,11 +57,23 @@ export default function CustomActionsModal({state}: Props) {
     return () => document.removeEventListener('keyup', onKeyUp);
   }, [handleBackToList, view, state]);
 
+  const prevIsOpen = useRef(state.isOpen);
+
   useEffect(() => {
-    if (!state.isOpen) {
+    if (prevIsOpen.current && !state.isOpen) {
       dispatch(reducerActions.setView('list'));
       dispatch(reducerActions.setEditingCard(undefined));
     }
+    prevIsOpen.current = state.isOpen;
+  }, [state.isOpen, dispatch]);
+
+  useEffect(() => {
+    return () => {
+      if (state.isOpen) {
+        dispatch(reducerActions.setView('list'));
+        dispatch(reducerActions.setEditingCard(undefined));
+      }
+    };
   }, [state.isOpen, dispatch]);
 
   return (
