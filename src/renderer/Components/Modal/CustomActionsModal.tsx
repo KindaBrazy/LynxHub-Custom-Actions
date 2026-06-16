@@ -225,7 +225,7 @@ export default function CustomActionsModal({state}: Props) {
           </>
         ) : (
           <div className="flex flex-row justify-between items-center w-full">
-            <span className="text-xs text-default-400">
+            <span className="text-xs text-muted">
               {customCards.length} card{customCards.length !== 1 ? 's' : ''} configured
               {selectedCardIds.length > 0 && ` (${selectedCardIds.length} selected)`}
             </span>
