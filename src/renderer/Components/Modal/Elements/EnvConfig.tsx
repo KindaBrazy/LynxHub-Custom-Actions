@@ -38,14 +38,12 @@ export function EnvConfig() {
           {env.map((item, index) => (
             <div key={index} className="flex items-center gap-x-2 w-full">
               <Input
-                size="sm"
                 value={item.key}
                 className="w-1/3"
                 placeholder="KEY (e.g., PORT)"
                 onChange={e => handleUpdate(index, e.target.value, item.value)}
               />
               <Input
-                size="sm"
                 value={item.value}
                 className="flex-1"
                 placeholder="VALUE"
@@ -61,7 +59,6 @@ export function EnvConfig() {
 
       <div className="flex items-center gap-x-2 w-full">
         <Input
-          size="sm"
           value={newKey}
           className="w-1/3"
           placeholder="New Key (e.g., NODE_ENV)"
@@ -74,7 +71,6 @@ export function EnvConfig() {
               handleAdd();
             }
           }}
-          size="sm"
           value={newValue}
           className="flex-1"
           placeholder="Value (e.g., production)"
