@@ -1,13 +1,14 @@
 import {Button, Input, TextArea} from '@heroui/react';
 import {useEffect, useRef, useState} from 'react';
 import {useDispatch} from 'react-redux';
+import {useSelector} from 'react-redux';
 
-import {reducerActions, useCustomActionsState} from '../../../reducer';
+import {reducerActions, selectEditingCard} from '../../../reducer';
 import {CardIconById, CardIconsList} from '../../CardIcons';
 
 export function CardDetails() {
   const dispatch = useDispatch();
-  const editingCard = useCustomActionsState('editingCard');
+  const editingCard = useSelector(selectEditingCard);
 
   const [title, setTitle] = useState<string>(editingCard?.title || '');
   const [desc, setDesc] = useState<string>(editingCard?.description || '');

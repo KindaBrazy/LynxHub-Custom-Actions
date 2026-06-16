@@ -163,9 +163,12 @@ const customActionsSlice = createSlice({
   },
 });
 
-export const useCustomActionsState = <T extends keyof CustomActionsState>(
-  propertyName: T,
-): CustomActionsStateTypes[T] => useSelector((state: any) => state.customActions[propertyName]);
+export const selectCustomCards = (state: any): CustomCard[] => state.customActions.customCards;
+export const selectView = (state: any): 'list' | 'form' => state.customActions.view;
+export const selectEditingCard = (state: any): CustomCard | undefined => state.customActions.editingCard;
+export const selectSaveCards = (state: any): boolean | undefined => state.customActions.saveCards;
+export const selectUrlCatchingSession = (state: any): UrlCatchingSession | undefined =>
+  state.customActions.urlCatchingSession;
 
 export const reducerActions = customActionsSlice.actions;
 

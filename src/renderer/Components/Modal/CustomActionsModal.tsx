@@ -6,8 +6,9 @@ import {AppDispatch} from '@lynx/redux/store';
 import {ArrowLeft, Diskette, TrashBin2} from '@solar-icons/react-perf/BoldDuotone';
 import {useEffect, useMemo, useRef} from 'react';
 import {useDispatch} from 'react-redux';
+import {useSelector} from 'react-redux';
 
-import {reducerActions, useCustomActionsState} from '../../reducer';
+import {reducerActions, selectEditingCard, selectView} from '../../reducer';
 import CustomActionsManager from './CustomActionsManager';
 
 type Props = {state: UseOverlayStateReturn};
@@ -16,8 +17,8 @@ export default function CustomActionsModal({state}: Props) {
   const dispatch = useDispatch<AppDispatch>();
 
   // State for view management
-  const view = useCustomActionsState('view');
-  const editingCard = useCustomActionsState('editingCard');
+  const view = useSelector(selectView);
+  const editingCard = useSelector(selectEditingCard);
 
   const formTitle = useMemo(
     () =>

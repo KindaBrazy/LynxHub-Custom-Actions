@@ -3,17 +3,18 @@ import ptyIpc from '@lynx_shared/ipc/pty';
 import {isEmpty} from 'lodash-es';
 import {Fragment, useEffect} from 'react';
 import {useDispatch} from 'react-redux';
+import {useSelector} from 'react-redux';
 
 import {CustomCard} from '../../cross/CrossTypes';
 import {customActionsChannels} from '../../cross/CrossUtils';
-import {reducerActions, useCustomActionsState} from '../reducer';
+import {reducerActions, selectCustomCards, selectSaveCards, selectUrlCatchingSession} from '../reducer';
 import {catchTerminalAddress} from './ActionCard/ActionCard_TerminalUtils';
 
 export function CustomHook() {
   const dispatch = useDispatch();
-  const customCards = useCustomActionsState('customCards');
-  const saveCards = useCustomActionsState('saveCards');
-  const urlCatchingSession = useCustomActionsState('urlCatchingSession');
+  const customCards = useSelector(selectCustomCards);
+  const saveCards = useSelector(selectSaveCards);
+  const urlCatchingSession = useSelector(selectUrlCatchingSession);
 
   // Save cards to storage
   useEffect(() => {

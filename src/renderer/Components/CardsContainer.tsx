@@ -1,8 +1,9 @@
 import {compact} from 'lodash-es';
 import {useMemo} from 'react';
+import {useSelector} from 'react-redux';
 
 import {CustomCard} from '../../cross/CrossTypes';
-import {useCustomActionsState} from '../reducer';
+import {selectCustomCards} from '../reducer';
 import ActionCard from './ActionCard/ActionCard';
 import {CardIconById} from './CardIcons';
 
@@ -11,14 +12,14 @@ type ContainerProps = {
 };
 
 function CardsContainer({cards}: ContainerProps) {
-  return cards.map((card, cardIndex) => {
+  return cards.map(card => {
     const icon = CardIconById(card.icon);
-    return <ActionCard card={card} icon={icon} key={cardIndex} />;
+    return <ActionCard card={card} icon={icon} key={card.id} />;
   });
 }
 
 export function PinnedActions() {
-  const customCards = useCustomActionsState('customCards');
+  const customCards = useSelector(selectCustomCards);
   const pinnedCards = useMemo(
     () => compact(customCards.map(card => (card.categories.pinned ? card : null))),
     [customCards],
@@ -27,7 +28,7 @@ export function PinnedActions() {
   return <CardsContainer cards={pinnedCards} />;
 }
 export function RecentlyActions() {
-  const customCards = useCustomActionsState('customCards');
+  const customCards = useSelector(selectCustomCards);
   const pinnedCards = useMemo(
     () => compact(customCards.map(card => (card.categories.recentlyUsed ? card : null))),
     [customCards],
@@ -36,7 +37,7 @@ export function RecentlyActions() {
   return <CardsContainer cards={pinnedCards} />;
 }
 export function AllActions() {
-  const customCards = useCustomActionsState('customCards');
+  const customCards = useSelector(selectCustomCards);
   const pinnedCards = useMemo(
     () => compact(customCards.map(card => (card.categories.all ? card : null))),
     [customCards],
@@ -45,7 +46,7 @@ export function AllActions() {
   return <CardsContainer cards={pinnedCards} />;
 }
 export function ImageActions() {
-  const customCards = useCustomActionsState('customCards');
+  const customCards = useSelector(selectCustomCards);
   const pinnedCards = useMemo(
     () => compact(customCards.map(card => (card.categories.image ? card : null))),
     [customCards],
@@ -54,7 +55,7 @@ export function ImageActions() {
   return <CardsContainer cards={pinnedCards} />;
 }
 export function TextActions() {
-  const customCards = useCustomActionsState('customCards');
+  const customCards = useSelector(selectCustomCards);
   const pinnedCards = useMemo(
     () => compact(customCards.map(card => (card.categories.text ? card : null))),
     [customCards],
@@ -63,7 +64,7 @@ export function TextActions() {
   return <CardsContainer cards={pinnedCards} />;
 }
 export function AudioActions() {
-  const customCards = useCustomActionsState('customCards');
+  const customCards = useSelector(selectCustomCards);
   const pinnedCards = useMemo(
     () => compact(customCards.map(card => (card.categories.audio ? card : null))),
     [customCards],

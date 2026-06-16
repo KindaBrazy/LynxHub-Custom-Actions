@@ -6,16 +6,17 @@ import {AnimatePresence, motion, Reorder} from 'framer-motion';
 import {GripVertical, Plus} from 'lucide-react';
 import {KeyboardEvent, useMemo, useState} from 'react';
 import {useDispatch} from 'react-redux';
+import {useSelector} from 'react-redux';
 
 import {CustomExecuteActions} from '../../../../cross/CrossTypes';
-import {reducerActions, useCustomActionsState} from '../../../reducer';
+import {reducerActions, selectEditingCard} from '../../../reducer';
 import {AddExe} from './AddExe';
 import {AddScript} from './AddScript';
 
 export function ExecuteActions() {
   const dispatch = useDispatch();
   const [commandInput, setCommandInput] = useState<string>('');
-  const editingCard = useCustomActionsState('editingCard');
+  const editingCard = useSelector(selectEditingCard);
 
   const [addingFile, setAddingFile] = useState<boolean>(false);
   const [addingFolder, setAddingFolder] = useState<boolean>(false);

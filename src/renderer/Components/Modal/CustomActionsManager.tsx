@@ -1,9 +1,10 @@
 import {AnimatePresence, LayoutGroup, motion} from 'framer-motion';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
+import {useSelector} from 'react-redux';
 
 import {CustomCard} from '../../../cross/CrossTypes';
-import {reducerActions, useCustomActionsState} from '../../reducer';
+import {reducerActions, selectCustomCards, selectEditingCard, selectView} from '../../reducer';
 import {CardIconById} from '../CardIcons';
 import {AddToCategories} from './Elements/AddToCategories';
 import {CardDetails} from './Elements/CardDetails';
@@ -19,9 +20,9 @@ import {UrlConfig} from './Elements/UrlConfig';
 export default function CustomActionsManager() {
   const dispatch = useDispatch();
 
-  const cards = useCustomActionsState('customCards');
-  const editingCard = useCustomActionsState('editingCard');
-  const view = useCustomActionsState('view');
+  const cards = useSelector(selectCustomCards);
+  const editingCard = useSelector(selectEditingCard);
+  const view = useSelector(selectView);
 
   const handleEdit = (card: CustomCard) => {
     dispatch(reducerActions.setEditingCard(card));

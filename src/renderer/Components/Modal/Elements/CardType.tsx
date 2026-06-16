@@ -4,13 +4,14 @@ import {Play} from '@solar-icons/react-perf/Bold';
 import {Earth} from '@solar-icons/react-perf/BoldDuotone';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
+import {useSelector} from 'react-redux';
 
 import {CustomCardType} from '../../../../cross/CrossTypes';
-import {reducerActions, useCustomActionsState} from '../../../reducer';
+import {reducerActions, selectEditingCard} from '../../../reducer';
 
 export function CardType() {
   const dispatch = useDispatch();
-  const editingCard = useCustomActionsState('editingCard');
+  const editingCard = useSelector(selectEditingCard);
 
   const cardType = useMemo(() => editingCard?.cardType || 'terminal_browser', [editingCard]);
 

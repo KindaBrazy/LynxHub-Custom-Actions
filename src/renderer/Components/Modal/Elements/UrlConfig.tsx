@@ -2,13 +2,14 @@ import {Button, ButtonGroup, Description, Input, Label, NumberField, Separator, 
 import {AnimatePresence, motion} from 'framer-motion';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
+import {useSelector} from 'react-redux';
 
 import {CustomUrlConfigType} from '../../../../cross/CrossTypes';
-import {reducerActions, useCustomActionsState} from '../../../reducer';
+import {reducerActions, selectEditingCard} from '../../../reducer';
 
 export function UrlConfig() {
   const dispatch = useDispatch();
-  const editingCard = useCustomActionsState('editingCard');
+  const editingCard = useSelector(selectEditingCard);
 
   const urlConfigType = useMemo(() => editingCard?.urlConfig.type || 'nothing', [editingCard]);
   const customUrl = useMemo(() => editingCard?.urlConfig.customUrl, [editingCard]);
