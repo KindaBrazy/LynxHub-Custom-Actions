@@ -124,6 +124,9 @@ All custom action IPC communication is prefixed to prevent namespace collision:
    - Whenever code changes are made, run the parent repository's `validate:ext` command to ensure everything is correct and free of typescript type and linter issues.
 6. **UI Implementation**:
    - For any UI implementation, always read and follow the instructions in [AGENTS.md](file:///d:/Programming/LynxHub/.agents/AGENTS.md).
+   - Always use **HeroUI v3** (`@heroui/react`) for UI components.
+   - **CRITICAL**: The project uses HeroUI v3, which is completely rewritten and different from HeroUI v2. All internal/pre-existing knowledge the agent has about HeroUI is outdated/wrong.
+   - **CRITICAL**: When modifying or adding anything to `.tsx` files, the agent MUST unconditionally use the `heroui-react` skill to fetch the latest HeroUI v3 documentation. This is non-negotiable.
 7. **Icons Usage**:
    - For icons usage, always read and follow [icon-usage](file:///d:/Programming/LynxHub/.agents/skills/icon-usage).
 
