@@ -2,7 +2,7 @@ import {formatWebAddress} from '@lynx_common/utils';
 import {createSlice, PayloadAction} from '@reduxjs/toolkit';
 import {useSelector} from 'react-redux';
 
-import {CustomCard, CustomCardType, CustomCategory, CustomExecuteActions} from '../cross/CrossTypes';
+import {CustomCard, CustomCardType, CustomCategory, CustomEnvVar, CustomExecuteActions} from '../cross/CrossTypes';
 
 export type UrlCatchingSession = {
   ptyId: string;
@@ -53,6 +53,7 @@ const customActionsSlice = createSlice({
         urlConfig: {type: 'nothing', openImmediately: true, timeout: 5},
         categories: {pinned: true},
         actions: [],
+        env: [],
       };
       state.view = 'form';
     },
@@ -139,6 +140,27 @@ const customActionsSlice = createSlice({
     updateAction: (state, action: PayloadAction<{index: number; newAction: string}>) => {
       if (state.editingCard && state.editingCard.actions[action.payload.index]) {
         state.editingCard.actions[action.payload.index].action = action.payload.newAction;
+      }
+    },
+    setEnv: (state, action: PayloadAction<CustomEnvVar[]>) => {
+      if (state.editingCard) state.editingCard.env = action.payload;
+    },
+    addEnv: (state, action: PayloadAction<CustomEnvVar>) => {
+      if (state.editingCard) {
+        state.editingCard.env = [...(state.editingCard.env || []), action.payload];
+      }
+    },
+    removeEnv: (state, action: PayloadAction<number>) => {
+      if (state.editingCard && state.editingCard.env) {
+        state.editingCard.env = state.editingCard.env.filter((_, index) => index !== action.payload);
+      }
+    },
+    updateEnv: (state, action: PayloadAction<{index: number; key: string; value: string}>) => {
+      if (state.editingCard && state.editingCard.env && state.editingCard.env[action.payload.index]) {
+        state.editingCard.env[action.payload.index] = {
+          key: action.payload.key,
+          value: action.payload.value,
+        };
       }
     },
     clearSaveCards: state => {

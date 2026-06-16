@@ -23,6 +23,8 @@ export type CustomUrlConfig = {
 
 export type CustomExecuteActions = {action: string; type: 'script' | 'exe' | 'open' | 'command'};
 
+export type CustomEnvVar = {key: string; value: string};
+
 export type CustomCard = {
   id: string;
   cardType: CustomCardType;
@@ -32,4 +34,5 @@ export type CustomCard = {
   icon?: string;
   categories: CustomCategories;
   actions: CustomExecuteActions[];
+  env?: CustomEnvVar[];
 };

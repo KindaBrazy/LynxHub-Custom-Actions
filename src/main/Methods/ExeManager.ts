@@ -14,7 +14,13 @@ export default class ExeManager {
 
   public id: string;
 
-  constructor(id: string, exePath: string, appManager: MainWindowManager, onExitCallback?: (id: string) => void) {
+  constructor(
+    id: string,
+    exePath: string,
+    appManager: MainWindowManager,
+    onExitCallback?: (id: string) => void,
+    env?: Record<string, string>,
+  ) {
     this.id = id;
 
     let validatedExe: string | undefined = undefined;
@@ -53,7 +59,7 @@ export default class ExeManager {
 
     // Spawn the process using Node's 'child_process' module.
     this.process = spawn(commandToRun, spawnArgs, {
-      env: process.env,
+      env: {...process.env, ...env},
       shell: spawnArgs.length === 0, // Only use shell when not using 'open' command
       cwd: process.cwd(),
     });

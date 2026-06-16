@@ -98,7 +98,22 @@ export default function ActionCard({icon: Icon, card}: Props) {
       }
     };
 
+    const writeEnvVars = (ptyId: string) => {
+      if (card.env && card.env.length > 0) {
+        card.env.forEach(envVar => {
+          if (envVar.key && envVar.key.trim()) {
+            if (IS_WINDOWS) {
+              ptyIpc.write(ptyId, `$env:${envVar.key.trim()}="${envVar.value}"${LINE_ENDING}`);
+            } else {
+              ptyIpc.write(ptyId, `export ${envVar.key.trim()}="${envVar.value}"${LINE_ENDING}`);
+            }
+          }
+        });
+      }
+    };
+
     const runCustomCommands = (ptyId: string) => {
+      writeEnvVars(ptyId);
       actions.forEach(action => {
         if (action.type === 'command') {
           ptyIpc.write(ptyId, `${action.action}${LINE_ENDING}`);
@@ -114,7 +129,11 @@ export default function ActionCard({icon: Icon, card}: Props) {
         if (!pathToExe) return;
 
         const ptyID = `${activeTab}_both`;
-        window.electron.ipcRenderer.send(customActionsChannels.startExe, ptyID, pathToExe);
+        const envObj: Record<string, string> = {};
+        card.env?.forEach(item => {
+          if (item.key.trim()) envObj[item.key.trim()] = item.value;
+        });
+        window.electron.ipcRenderer.send(customActionsChannels.startExe, ptyID, pathToExe, envObj);
 
         dispatch(cardsActions.addRunningCard({tabId: activeTab, id: ptyID}));
         manageUrls(ptyID, () => {

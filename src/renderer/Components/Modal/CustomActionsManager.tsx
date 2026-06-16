@@ -9,6 +9,7 @@ import {CardIconById} from '../CardIcons';
 import {AddToCategories} from './Elements/AddToCategories';
 import {CardDetails} from './Elements/CardDetails';
 import {CardType} from './Elements/CardType';
+import {EnvConfig} from './Elements/EnvConfig';
 import {ExecuteActions} from './Elements/ExecuteActions';
 import FormSection from './Elements/FormSection';
 import {NewCard} from './Elements/NewCard';
@@ -75,6 +76,12 @@ export default function CustomActionsManager() {
                 <FormSection title="Execute Actions">
                   <ExecuteActions />
                 </FormSection>
+
+                {cardType !== 'browser' && (
+                  <FormSection title="Environment Variables">
+                    <EnvConfig />
+                  </FormSection>
+                )}
 
                 <FormSection title="Card Details">
                   <CardDetails />
