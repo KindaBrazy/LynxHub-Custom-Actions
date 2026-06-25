@@ -1,6 +1,14 @@
 {
-  "$schema": "https://raw.githubusercontent.com/KindaBrazy/LynxHub-Statics/refs/heads/schema/plugins/versioning.schema.json",
   "versions": [
+    {
+      "version": "0.4.0",
+      "commit": "583b6a3",
+      "engines": {
+        "extensionApi": "^2.0.0"
+      },
+      "stage": "early_access",
+      "platforms": ["win32", "linux", "darwin"]
+    },
     {
       "version": "0.3.1",
       "commit": "ad45f77",
@@ -49,6 +57,36 @@
   ],
   "changes": [
     {
+      "version": "0.4.0",
+      "date": "2026-06-25",
+      "items": [
+        {
+          "✨ New": [
+            "Added the ability to edit cards directly from the action card using the new pen button.",
+            "Introduced environment variable support for executable actions.",
+            "Added import/export functionality for custom cards via file and clipboard operations."
+          ]
+        },
+        {
+          "⚡ Improvements": [
+            "Migrated to LynxHub cards for better UI consistency across the app.",
+            "Optimized management window animations for smoother transitions and improved performance."
+          ]
+        },
+        {
+          "🐛 Bug Fixes": [
+            "Fixed an issue where app pty processes were not properly cleaned up upon closing."
+          ]
+        },
+        {
+          "📌 Minor Changes": [
+            "Replaced the tools page card icon with a cleaner, minimalist icon.",
+            "Removed the accent color from cards for a more streamlined look.",
+            "Refined overall styling and layout for a polished experience."
+          ]
+        }
+      ]
+    },{
       "version": "0.3.1",
       "date": "2026-05-09",
       "items": [
