@@ -1,4 +1,4 @@
-import {Checkbox, Label} from '@heroui/react';
+import {Checkbox} from '@heroui/react';
 import {useMemo} from 'react';
 import {useDispatch} from 'react-redux';
 import {useSelector} from 'react-redux';
@@ -22,13 +22,11 @@ export function AddToCategories() {
         id="pinned"
         isSelected={categories?.pinned || false}
         onChange={value => handleCategoryChange('pinned', value)}>
-        <Checkbox.Control>
-          <Checkbox.Indicator />
-        </Checkbox.Control>
         <Checkbox.Content>
-          <Label htmlFor="pinned" className="cursor-pointer">
-            Pinned
-          </Label>
+          <Checkbox.Control>
+            <Checkbox.Indicator />
+          </Checkbox.Control>
+          Pinned
         </Checkbox.Content>
       </Checkbox>
 
@@ -36,24 +34,20 @@ export function AddToCategories() {
         id="recentlyUsed"
         isSelected={categories?.recentlyUsed || false}
         onChange={value => handleCategoryChange('recentlyUsed', value)}>
-        <Checkbox.Control>
-          <Checkbox.Indicator />
-        </Checkbox.Control>
         <Checkbox.Content>
-          <Label htmlFor="recentlyUsed" className="cursor-pointer">
-            Recently Used
-          </Label>
+          <Checkbox.Control>
+            <Checkbox.Indicator />
+          </Checkbox.Control>
+          Recently Used
         </Checkbox.Content>
       </Checkbox>
 
       <Checkbox id="all" isSelected={categories?.all || false} onChange={value => handleCategoryChange('all', value)}>
-        <Checkbox.Control>
-          <Checkbox.Indicator />
-        </Checkbox.Control>
         <Checkbox.Content>
-          <Label htmlFor="all" className="cursor-pointer">
-            All
-          </Label>
+          <Checkbox.Control>
+            <Checkbox.Indicator />
+          </Checkbox.Control>
+          All
         </Checkbox.Content>
       </Checkbox>
 
@@ -61,13 +55,11 @@ export function AddToCategories() {
         id="image"
         isSelected={categories?.image || false}
         onChange={value => handleCategoryChange('image', value)}>
-        <Checkbox.Control>
-          <Checkbox.Indicator />
-        </Checkbox.Control>
         <Checkbox.Content>
-          <Label htmlFor="image" className="cursor-pointer">
-            Image Generation
-          </Label>
+          <Checkbox.Control>
+            <Checkbox.Indicator />
+          </Checkbox.Control>
+          Image Generation
         </Checkbox.Content>
       </Checkbox>
 
@@ -75,13 +67,11 @@ export function AddToCategories() {
         id="text"
         isSelected={categories?.text || false}
         onChange={value => handleCategoryChange('text', value)}>
-        <Checkbox.Control>
-          <Checkbox.Indicator />
-        </Checkbox.Control>
         <Checkbox.Content>
-          <Label htmlFor="text" className="cursor-pointer">
-            Text Generation
-          </Label>
+          <Checkbox.Control>
+            <Checkbox.Indicator />
+          </Checkbox.Control>
+          Text Generation
         </Checkbox.Content>
       </Checkbox>
 
@@ -89,13 +79,11 @@ export function AddToCategories() {
         id="audio"
         isSelected={categories?.audio || false}
         onChange={value => handleCategoryChange('audio', value)}>
-        <Checkbox.Control>
-          <Checkbox.Indicator />
-        </Checkbox.Control>
         <Checkbox.Content>
-          <Label htmlFor="audio" className="cursor-pointer">
-            Audio Generation
-          </Label>
+          <Checkbox.Control>
+            <Checkbox.Indicator />
+          </Checkbox.Control>
+          Audio Generation
         </Checkbox.Content>
       </Checkbox>
     </div>

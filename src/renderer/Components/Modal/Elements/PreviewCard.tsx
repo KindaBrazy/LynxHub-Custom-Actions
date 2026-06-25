@@ -25,9 +25,11 @@ export function PreviewCard({card, handleEdit, icon, isSelected, onSelect}: Prop
       {onSelect && (
         <div onClick={e => e.stopPropagation()} className="absolute top-2 right-2 z-10">
           <Checkbox onChange={onSelect} isSelected={isSelected} aria-label={`Select ${card.title}`}>
-            <Checkbox.Control>
-              <Checkbox.Indicator />
-            </Checkbox.Control>
+            <Checkbox.Content>
+              <Checkbox.Control>
+                <Checkbox.Indicator />
+              </Checkbox.Control>
+            </Checkbox.Content>
           </Checkbox>
         </div>
       )}
