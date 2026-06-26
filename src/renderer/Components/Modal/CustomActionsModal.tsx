@@ -1,5 +1,4 @@
-import {Button, Dropdown, Label, Modal, UseOverlayStateReturn} from '@heroui/react';
-import LynxScroll from '@lynx/components/LynxScroll';
+import {Button, Dropdown, Label, Modal, ScrollShadow, UseOverlayStateReturn} from '@heroui/react';
 import TabModal from '@lynx/components/TabModal';
 import {topToast} from '@lynx/layouts/ToastProviders';
 import {AppDispatch} from '@lynx/redux/store';
@@ -201,9 +200,9 @@ export default function CustomActionsModal({state}: Props) {
       </Modal.Header>
 
       <Modal.Body className="overflow-hidden">
-        <LynxScroll className="size-full px-4">
+        <ScrollShadow className="size-full px-4">
           <CustomActionsManager selectedCardIds={selectedCardIds} onToggleSelect={handleToggleSelectCard} />
-        </LynxScroll>
+        </ScrollShadow>
       </Modal.Body>
 
       <Modal.Footer className="justify-between px-4">
