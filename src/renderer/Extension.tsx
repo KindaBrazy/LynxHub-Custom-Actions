@@ -13,9 +13,11 @@ import {
 import {CustomHook} from './Components/CustomHooks';
 import ToolsPage from './Components/ToolsPage';
 import reducer from './reducer';
+import {setToast} from './toastHolder';
 
 export function InitialExtensions(lynxAPI: ExtensionRendererApi) {
   lynxAPI.addReducer([{name: 'customActions', reducer}]);
+  if (lynxAPI.toast) setToast(lynxAPI.toast);
 
   lynxAPI.customizePages.tools.add.cardsContainer(ToolsPage);
 

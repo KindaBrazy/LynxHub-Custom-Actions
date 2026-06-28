@@ -1,6 +1,5 @@
 import {Button, Dropdown, Label, Modal, ScrollShadow, UseOverlayStateReturn} from '@heroui/react';
 import TabModal from '@lynx/components/TabModal';
-import {topToast} from '@lynx/layouts/ToastProviders';
 import {AppDispatch} from '@lynx/redux/store';
 import {ArrowLeft, Clipboard, Copy, Diskette, Export, Import, TrashBin2} from '@solar-icons/react-perf/BoldDuotone';
 import {useEffect, useMemo, useRef, useState} from 'react';
@@ -9,6 +8,7 @@ import {useSelector} from 'react-redux';
 
 import {customActionsChannels} from '../../../cross/CrossUtils';
 import {reducerActions, selectCustomCards, selectEditingCard, selectView} from '../../reducer';
+import {toastHolder} from '../../toastHolder';
 import CustomActionsManager from './CustomActionsManager';
 
 type Props = {state: UseOverlayStateReturn};
@@ -27,13 +27,13 @@ export default function CustomActionsModal({state}: Props) {
   const handleExportClipboard = async () => {
     try {
       if (customCards.length === 0) {
-        topToast.danger('No custom cards to export.');
+        toastHolder?.top.danger('No custom cards to export.');
         return;
       }
       await navigator.clipboard.writeText(JSON.stringify(customCards, null, 2));
-      topToast.success('Copied all custom cards to clipboard!');
+      toastHolder?.top.success('Copied all custom cards to clipboard!');
     } catch (err) {
-      topToast.danger('Failed to copy to clipboard.');
+      toastHolder?.top.danger('Failed to copy to clipboard.');
       console.error(err);
     }
   };
@@ -42,13 +42,13 @@ export default function CustomActionsModal({state}: Props) {
     try {
       const selected = customCards.filter(card => selectedCardIds.includes(card.id));
       if (selected.length === 0) {
-        topToast.danger('No custom cards selected to export.');
+        toastHolder?.top.danger('No custom cards selected to export.');
         return;
       }
       await navigator.clipboard.writeText(JSON.stringify(selected, null, 2));
-      topToast.success(`Copied ${selected.length} selected card(s) to clipboard!`);
+      toastHolder?.top.success(`Copied ${selected.length} selected card(s) to clipboard!`);
     } catch (err) {
-      topToast.danger('Failed to copy to clipboard.');
+      toastHolder?.top.danger('Failed to copy to clipboard.');
       console.error(err);
     }
   };
@@ -57,18 +57,18 @@ export default function CustomActionsModal({state}: Props) {
     try {
       const text = await navigator.clipboard.readText();
       if (!text.trim()) {
-        topToast.danger('Clipboard is empty.');
+        toastHolder?.top.danger('Clipboard is empty.');
         return;
       }
       const parsed = JSON.parse(text);
       if (Array.isArray(parsed)) {
         dispatch(reducerActions.importCards(parsed));
-        topToast.success(`Successfully imported ${parsed.length} cards!`);
+        toastHolder?.top.success(`Successfully imported ${parsed.length} cards!`);
       } else {
-        topToast.danger('Clipboard content is not a valid list of cards.');
+        toastHolder?.top.danger('Clipboard content is not a valid list of cards.');
       }
     } catch (err) {
-      topToast.danger('Failed to import from clipboard. Ensure valid JSON format.');
+      toastHolder?.top.danger('Failed to import from clipboard. Ensure valid JSON format.');
       console.error(err);
     }
   };
@@ -76,15 +76,15 @@ export default function CustomActionsModal({state}: Props) {
   const handleExportFile = async () => {
     try {
       if (customCards.length === 0) {
-        topToast.danger('No custom cards to export.');
+        toastHolder?.top.danger('No custom cards to export.');
         return;
       }
       const success = await window.electron.ipcRenderer.invoke(customActionsChannels.exportToFile, customCards);
       if (success) {
-        topToast.success('Exported cards to file successfully!');
+        toastHolder?.top.success('Exported cards to file successfully!');
       }
     } catch (err) {
-      topToast.danger('Failed to export to file.');
+      toastHolder?.top.danger('Failed to export to file.');
       console.error(err);
     }
   };
@@ -93,15 +93,15 @@ export default function CustomActionsModal({state}: Props) {
     try {
       const selected = customCards.filter(card => selectedCardIds.includes(card.id));
       if (selected.length === 0) {
-        topToast.danger('No custom cards selected to export.');
+        toastHolder?.top.danger('No custom cards selected to export.');
         return;
       }
       const success = await window.electron.ipcRenderer.invoke(customActionsChannels.exportToFile, selected);
       if (success) {
-        topToast.success(`Exported ${selected.length} card(s) to file successfully!`);
+        toastHolder?.top.success(`Exported ${selected.length} card(s) to file successfully!`);
       }
     } catch (err) {
-      topToast.danger('Failed to export to file.');
+      toastHolder?.top.danger('Failed to export to file.');
       console.error(err);
     }
   };
@@ -111,10 +111,10 @@ export default function CustomActionsModal({state}: Props) {
       const parsed = await window.electron.ipcRenderer.invoke(customActionsChannels.importFromFile);
       if (parsed) {
         dispatch(reducerActions.importCards(parsed));
-        topToast.success(`Successfully imported ${parsed.length} cards from file!`);
+        toastHolder?.top.success(`Successfully imported ${parsed.length} cards from file!`);
       }
     } catch (err: any) {
-      topToast.danger(err.message || 'Failed to import from file.');
+      toastHolder?.top.danger(err.message || 'Failed to import from file.');
       console.error(err);
     }
   };
@@ -142,7 +142,7 @@ export default function CustomActionsModal({state}: Props) {
 
   const saveCard = () => {
     dispatch(reducerActions.saveCard());
-    topToast.success('Card saved successfully!');
+    toastHolder?.top.success('Card saved successfully!');
   };
   const deleteCard = () => dispatch(reducerActions.removeCard());
 
