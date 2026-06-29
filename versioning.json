@@ -1,6 +1,15 @@
 {
   "versions": [
     {
+      "version": "0.4.1",
+      "commit": "a11a6c6",
+      "engines": {
+        "extensionApi": "^2.0.0"
+      },
+      "stage": "early_access",
+      "platforms": ["win32", "linux", "darwin"]
+    },
+    {
       "version": "0.4.0",
       "commit": "583b6a3",
       "engines": {
@@ -57,6 +66,21 @@
   ],
   "changes": [
     {
+      "version": "0.4.1",
+      "date": "2026-06-30",
+      "items": [
+        {
+          "🐛 Bug Fixes": ["Resolved an issue where toast notifications failed to display."]
+        },
+        {
+          "📌 Improvements": [
+            "Refined scrollbar styling for a cleaner UI.",
+            "Added official support for LynxHub v3.5.5"
+          ]
+        }
+      ]
+    },
+    {
       "version": "0.4.0",
       "date": "2026-06-25",
       "items": [
@@ -74,9 +98,7 @@
           ]
         },
         {
-          "🐛 Bug Fixes": [
-            "Fixed an issue where app pty processes were not properly cleaned up upon closing."
-          ]
+          "🐛 Bug Fixes": ["Fixed an issue where app pty processes were not properly cleaned up upon closing."]
         },
         {
           "📌 Minor Changes": [
@@ -86,7 +108,8 @@
           ]
         }
       ]
-    },{
+    },
+    {
       "version": "0.3.1",
       "date": "2026-05-09",
       "items": [
