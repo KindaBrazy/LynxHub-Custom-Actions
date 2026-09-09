@@ -1,6 +1,15 @@
 {
   "versions": [
     {
+      "version": "0.5.0",
+      "commit": "a3c1fcc",
+      "engines": {
+        "extensionApi": "^2.2.0"
+      },
+      "stage": "early_access",
+      "platforms": ["win32", "linux", "darwin"]
+    },
+    {
       "version": "0.4.4",
       "commit": "61fac82",
       "engines": {
@@ -92,6 +101,38 @@
     }
   ],
   "changes": [
+    {
+      "version": "0.5.0",
+      "date": "2026-09-10",
+      "items": [
+        {
+          "✨ New": [
+            "Added local HTML file selection support.",
+            "Added dynamic template variables ({{VAR}} or {{VAR:default}}) with an interactive prompt.",
+            "Added execution status tracking with indicators and process termination/stop controls.",
+            "Added pre-execution safety confirmation for sensitive and critical actions.",
+            "Added working directory configuration with support for workspace and system path shortcuts (%WORKSPACE%, %HOME%, etc.).",
+            "Added batch operations bar supporting bulk deletion, category assignment, duplication, and export.",
+            "Added step toggling to enable/disable steps without removing them, along with one-click step duplication."
+          ]
+        },
+        {
+          "⚡ Improvements": [
+            "Redesigned previews and editing layouts.",
+            "Optimized drag-and-drop performance and ensured robust ID generation for action cards.",
+            "Introduced stagger entry and layout animations for action cards."
+          ]
+        },
+        {
+          "🐛 Bug Fixes": ["Added schema sanitization and fallback defaults for JSON and clipboard card imports."]
+        },
+        {
+          "📌 Minor Changes": [
+            "Adjusted compact icon strip spacing, modal dialog widths, and unified flex/grid layouts."
+          ]
+        }
+      ]
+    },
     {
       "version": "0.4.4",
       "date": "2026-08-30",
