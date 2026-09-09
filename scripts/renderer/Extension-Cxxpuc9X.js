@@ -1,15 +1,1517 @@
 (function() {
 	try {
 		var e = "undefined" != typeof window ? window : "undefined" != typeof global ? global : "undefined" != typeof globalThis ? globalThis : "undefined" != typeof self ? self : {};
-		e.SENTRY_RELEASE = { id: "f9f2e045fae8353a4c8417903eeca14e9c7534d6" };
+		e.SENTRY_RELEASE = { id: "7e66a4581cd13b10744cfc717fce9cd99218f74a" };
 		var n = new e.Error().stack;
-		n && (e._sentryDebugIds = e._sentryDebugIds || {}, e._sentryDebugIds[n] = "11d76b2f-b735-487f-b28a-e3cb43093fac", e._sentryDebugIdIdentifier = "sentry-dbid-11d76b2f-b735-487f-b28a-e3cb43093fac");
+		n && (e._sentryDebugIds = e._sentryDebugIds || {}, e._sentryDebugIds[n] = "62fc3782-57a3-4041-8cf4-f6ccab875eac", e._sentryDebugIdIdentifier = "sentry-dbid-62fc3782-57a3-4041-8cf4-f6ccab875eac");
 	} catch (e) {}
 })();
-import { r as importShared } from "./_virtual___federation_fn_import-DeyyGZp8.js";
-import { t as require_jsx_runtime } from "./jsx-runtime-CVdSZFlC.js";
-//#region extension/src/cross/constants.ts
+import { r as importShared } from "./_virtual___federation_fn_import-uS8gKr2L.js";
+import { t as require_jsx_runtime } from "./jsx-runtime-B3vcqLSC.js";
+//#region extension/src/common/consts/channels.ts
+var customActionsChannels = {
+	setCards: "customActions_setCards",
+	getCards: "customActions_getCards",
+	startExe: "customActions_startExe",
+	exportToFile: "customActions_exportToFile",
+	importFromFile: "customActions_importFromFile",
+	getSystemPaths: "customActions_getSystemPaths"
+};
+//#endregion
+//#region extension/src/common/consts/pathShortcuts.ts
+var PATH_SHORTCUTS = [
+	{
+		id: "%WORKSPACE%",
+		label: "Workspace",
+		description: "LynxHub workspace / project root",
+		key: "workspace"
+	},
+	{
+		id: "%HOME%",
+		label: "Home",
+		description: "User home directory",
+		key: "home"
+	},
+	{
+		id: "%DESKTOP%",
+		label: "Desktop",
+		description: "User desktop folder",
+		key: "desktop"
+	},
+	{
+		id: "%DOWNLOADS%",
+		label: "Downloads",
+		description: "User downloads folder",
+		key: "downloads"
+	},
+	{
+		id: "%DOCUMENTS%",
+		label: "Documents",
+		description: "User documents folder",
+		key: "documents"
+	}
+];
+//#endregion
+//#region extension/src/common/consts/sentry.ts
 var SENTRY_DSN = "https://60228860c0bb09090539b7157812575c@o4509344104316928.ingest.us.sentry.io/4511891820380160";
+//#endregion
+//#region src/common/consts/ipcChannels/browser.ts
+/**
+* IPC channels for browser-related functionality.
+* Handles tab management, navigation, zoom, volume, and other webview interactions.
+*/
+var browserChannels = {
+	createBrowser: "browser:create-browser",
+	removeBrowser: "browser:remove-browser",
+	loadURL: "browser:load-url",
+	setVisible: "browser:set-visible",
+	openFindInPage: "browser:openFindInPage",
+	openZoom: "browser:openZoom",
+	openVolume: "browser:openVolume",
+	onZoomChanged: "browser:on-zoom-changed",
+	onActiveWindowChange: "browser:on-active-window-change",
+	onLinkHover: "browser:on-link-hover",
+	resizeLinkPreview: "browser:resize-link-preview",
+	resizeBrowserView: "browser:resize-browser-view",
+	findInPage: "browser:findInPage",
+	stopFindInPage: "browser:stopFindInPage",
+	onFoundInPage: "browser:on-found-in-page",
+	setZoomFactor: "browser:setZoomFactor",
+	focusWebView: "browser:focus-webview",
+	clearCache: "browser:clear-cache",
+	clearCookies: "browser:clear-cookies",
+	reload: "browser:reload",
+	focus: "browser:focus",
+	stop: "browser:stop",
+	goBack: "browser:goBack",
+	goForward: "browser:goForward",
+	toggleDevTools: "browser:toggle-devtools",
+	onCanGo: "browser:on-can-go",
+	isLoading: "browser:is-loading",
+	onTitleChange: "browser:on-title-change",
+	onFavIconChange: "browser:on-favicon-change",
+	onUrlChange: "browser:on-url-change",
+	onDomReady: "browser:on-dom-ready",
+	getUserAgent: "browser:get-user-agent",
+	updateUserAgent: "browser:update-user-agent",
+	clearHistory: "browser:clear-history",
+	onFailedLoadUrl: "browser:on-failed-load-url",
+	onClearFailed: "browser:on-clear-failed",
+	setVolume: "volume:set",
+	setMuted: "volume:setMuted",
+	getState: "volume:getState",
+	updateTabVolume: "volume:updateTabVolume",
+	updateTabMuted: "volume:updateTabMuted",
+	onTabVolumeUpdate: "volume:onTabVolumeUpdate",
+	onTabMutedUpdate: "volume:onTabMutedUpdate",
+	onAudioStateChange: "volume:onAudioStateChange",
+	executeJavaScript: "browser:execute-javascript"
+};
+//#endregion
+//#region src/renderer/shared/ipc/ipcEvents.ts
+var listeners = {
+	before: /* @__PURE__ */ new Set(),
+	after: /* @__PURE__ */ new Set()
+};
+var channelListeners = {
+	before: /* @__PURE__ */ new Map(),
+	after: /* @__PURE__ */ new Map()
+};
+var getListenersForEvent = (event) => {
+	const base = [...listeners[event.phase]];
+	const perChannel = channelListeners[event.phase].get(event.channel);
+	if (perChannel) base.push(...perChannel);
+	return base;
+};
+var logHookError = (error) => {
+	console.error("Extension renderer IPC hook failed:", error);
+};
+var runListenerSync = (listener, event) => {
+	try {
+		const result = listener(event);
+		if (result && typeof result.then === "function") result.catch(logHookError);
+	} catch (error) {
+		logHookError(error);
+	}
+};
+var runListener = async (listener, event) => {
+	try {
+		await listener(event);
+	} catch (error) {
+		logHookError(error);
+	}
+};
+var emitRendererIpcEventSync = (event) => {
+	for (const listener of getListenersForEvent(event)) runListenerSync(listener, event);
+};
+var emitRendererIpcEvent = async (event) => {
+	for (const listener of getListenersForEvent(event)) await runListener(listener, event);
+};
+//#endregion
+//#region src/renderer/shared/ipc/lynxIpc.ts
+var ipc = window.electron.ipcRenderer;
+var send = (channel, ...args) => {
+	const eventStart = Date.now();
+	const beforeEvent = {
+		phase: "before",
+		method: "send",
+		channel,
+		args: [...args],
+		timestamp: eventStart
+	};
+	emitRendererIpcEventSync(beforeEvent);
+	try {
+		ipc.send(channel, ...args);
+		emitRendererIpcEventSync({
+			...beforeEvent,
+			phase: "after",
+			status: "success",
+			durationMs: Date.now() - eventStart
+		});
+	} catch (error) {
+		emitRendererIpcEventSync({
+			...beforeEvent,
+			phase: "after",
+			status: "error",
+			durationMs: Date.now() - eventStart,
+			error
+		});
+		throw error;
+	}
+};
+var sendSync = (channel, ...args) => {
+	const eventStart = Date.now();
+	const beforeEvent = {
+		phase: "before",
+		method: "sendSync",
+		channel,
+		args: [...args],
+		timestamp: eventStart
+	};
+	emitRendererIpcEventSync(beforeEvent);
+	try {
+		const result = ipc.sendSync(channel, ...args);
+		emitRendererIpcEventSync({
+			...beforeEvent,
+			phase: "after",
+			status: "success",
+			durationMs: Date.now() - eventStart,
+			result
+		});
+		return result;
+	} catch (error) {
+		emitRendererIpcEventSync({
+			...beforeEvent,
+			phase: "after",
+			status: "error",
+			durationMs: Date.now() - eventStart,
+			error
+		});
+		throw error;
+	}
+};
+var invoke = async (channel, ...args) => {
+	const eventStart = Date.now();
+	const beforeEvent = {
+		phase: "before",
+		method: "invoke",
+		channel,
+		args: [...args],
+		timestamp: eventStart
+	};
+	await emitRendererIpcEvent(beforeEvent);
+	try {
+		const result = await ipc.invoke(channel, ...args);
+		await emitRendererIpcEvent({
+			...beforeEvent,
+			phase: "after",
+			status: "success",
+			durationMs: Date.now() - eventStart,
+			result
+		});
+		return result;
+	} catch (error) {
+		await emitRendererIpcEvent({
+			...beforeEvent,
+			phase: "after",
+			status: "error",
+			durationMs: Date.now() - eventStart,
+			error
+		});
+		throw error;
+	}
+};
+var on = (channel, callback) => ipc.on(channel, (_, ...args) => {
+	const typedArgs = args;
+	const eventStart = Date.now();
+	const beforeEvent = {
+		phase: "before",
+		method: "on",
+		channel,
+		args: [...typedArgs],
+		timestamp: eventStart
+	};
+	emitRendererIpcEventSync(beforeEvent);
+	try {
+		const result = callback(...typedArgs);
+		emitRendererIpcEventSync({
+			...beforeEvent,
+			phase: "after",
+			status: "success",
+			durationMs: Date.now() - eventStart,
+			result
+		});
+	} catch (error) {
+		emitRendererIpcEventSync({
+			...beforeEvent,
+			phase: "after",
+			status: "error",
+			durationMs: Date.now() - eventStart,
+			error
+		});
+		throw error;
+	}
+});
+var once = (channel, callback) => ipc.once(channel, (_, ...args) => {
+	const typedArgs = args;
+	const eventStart = Date.now();
+	const beforeEvent = {
+		phase: "before",
+		method: "once",
+		channel,
+		args: [...typedArgs],
+		timestamp: eventStart
+	};
+	emitRendererIpcEventSync(beforeEvent);
+	try {
+		const result = callback(...typedArgs);
+		emitRendererIpcEventSync({
+			...beforeEvent,
+			phase: "after",
+			status: "success",
+			durationMs: Date.now() - eventStart,
+			result
+		});
+	} catch (error) {
+		emitRendererIpcEventSync({
+			...beforeEvent,
+			phase: "after",
+			status: "error",
+			durationMs: Date.now() - eventStart,
+			error
+		});
+		throw error;
+	}
+});
+var lynxIpc = {
+	send,
+	sendSync,
+	on,
+	once,
+	invoke
+};
+//#endregion
+//#region src/renderer/shared/ipc/browser.ts
+var invokeWithSoftTimeout = async (channel, timeoutMessage, ...args) => {
+	try {
+		await Promise.race([lynxIpc.invoke(channel, ...args), new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutMessage)), 8e3))]);
+	} catch {}
+};
+var browserIpc = {
+	send: {
+		resizeLinkPreview: (width) => lynxIpc.send(browserChannels.resizeLinkPreview, width),
+		resizeBrowserView: (data) => lynxIpc.send(browserChannels.resizeBrowserView, data),
+		createBrowser: (id, options) => lynxIpc.send(browserChannels.createBrowser, id, options),
+		removeBrowser: (id) => lynxIpc.send(browserChannels.removeBrowser, id),
+		loadURL: (id, url) => lynxIpc.send(browserChannels.loadURL, id, url),
+		setVisible: (id, visible, hideMode) => lynxIpc.send(browserChannels.setVisible, id, visible, hideMode),
+		openFindInPage: (id, customPosition) => lynxIpc.send(browserChannels.openFindInPage, id, customPosition),
+		openZoom: (id, customPosition) => lynxIpc.send(browserChannels.openZoom, id, customPosition),
+		openVolume: (data, customPosition) => lynxIpc.send(browserChannels.openVolume, data, customPosition),
+		findInPage: (id, value, options) => lynxIpc.send(browserChannels.findInPage, id, value, options),
+		stopFindInPage: (id, action) => lynxIpc.send(browserChannels.stopFindInPage, id, action),
+		focusWebView: (id) => lynxIpc.send(browserChannels.focusWebView, id),
+		setZoomFactor: (id, factor) => lynxIpc.send(browserChannels.setZoomFactor, id, factor),
+		reload: (id) => lynxIpc.send(browserChannels.reload, id),
+		focus: (id) => lynxIpc.send(browserChannels.focus, id),
+		stop: (id) => lynxIpc.send(browserChannels.stop, id),
+		goBack: (id) => lynxIpc.send(browserChannels.goBack, id),
+		goForward: (id) => lynxIpc.send(browserChannels.goForward, id),
+		toggleDevTools: (id) => lynxIpc.send(browserChannels.toggleDevTools, id),
+		updateUserAgent: () => lynxIpc.send(browserChannels.updateUserAgent),
+		clearHistory: (selected) => lynxIpc.send(browserChannels.clearHistory, selected),
+		updateTabVolume: (tabId, volume) => lynxIpc.send(browserChannels.updateTabVolume, tabId, volume),
+		updateTabMuted: (tabId, muted) => lynxIpc.send(browserChannels.updateTabMuted, tabId, muted)
+	},
+	on: {
+		linkHover: (callback) => lynxIpc.on(browserChannels.onLinkHover, callback),
+		canGoBackForward: (result) => lynxIpc.on(browserChannels.onCanGo, result),
+		loading: (result) => lynxIpc.on(browserChannels.isLoading, result),
+		titleChanged: (result) => lynxIpc.on(browserChannels.onTitleChange, result),
+		favIconChanged: (result) => lynxIpc.on(browserChannels.onFavIconChange, result),
+		urlChanged: (result) => lynxIpc.on(browserChannels.onUrlChange, result),
+		domReady: (result) => lynxIpc.on(browserChannels.onDomReady, result),
+		failedLoadUrl: (result) => lynxIpc.on(browserChannels.onFailedLoadUrl, result),
+		clearFailed: (result) => lynxIpc.on(browserChannels.onClearFailed, result),
+		onAudioStateChange: (callback) => lynxIpc.on(browserChannels.onAudioStateChange, callback),
+		onTabVolumeUpdate: (callback) => lynxIpc.on(browserChannels.onTabVolumeUpdate, callback),
+		onTabMutedUpdate: (callback) => lynxIpc.on(browserChannels.onTabMutedUpdate, callback),
+		foundInPage: (callback) => lynxIpc.on(browserChannels.onFoundInPage, callback),
+		onZoomChanged: (callback) => lynxIpc.on(browserChannels.onZoomChanged, callback),
+		activeWindowChanged: (callback) => lynxIpc.on(browserChannels.onActiveWindowChange, callback)
+	},
+	invoke: {
+		clearCache: () => lynxIpc.invoke(browserChannels.clearCache),
+		clearCookies: () => lynxIpc.invoke(browserChannels.clearCookies),
+		getUserAgent: (type) => lynxIpc.invoke(browserChannels.getUserAgent, type),
+		setVolume: (id, volume) => invokeWithSoftTimeout(browserChannels.setVolume, "Volume set operation timed out", id, volume),
+		setMuted: (id, muted) => invokeWithSoftTimeout(browserChannels.setMuted, "Mute set operation timed out", id, muted),
+		executeJavaScript: (id, script) => lynxIpc.invoke(browserChannels.executeJavaScript, id, script)
+	}
+};
+//#endregion
+//#region src/common/consts/ipcChannels/pty.ts
+/**
+* IPC channels for PTY (Pseudo-Terminal) operations.
+* Handles terminal process management, input/output, resizing, and custom commands.
+*/
+var ptyChannels = {
+	process: "pty-process",
+	customProcess: "pty-custom-process",
+	emptyProcess: "pty-custom-process",
+	stopProcess: "pty-stop-process",
+	customCommands: "pty-custom-commands",
+	write: "pty-write",
+	clear: "pty-clear",
+	resize: "pty-resize",
+	onData: "pty-on-data",
+	onTitle: "pty-on-title",
+	onExit: "pty-on-exit-code",
+	onProgress: "pty-on-progress"
+};
+//#endregion
+//#region src/renderer/shared/ipc/pty.ts
+var ptyIpc = {
+	process: (id, cardId) => lynxIpc.send(ptyChannels.process, id, cardId),
+	customProcess: (id, dir, file) => lynxIpc.send(ptyChannels.customProcess, id, dir, file),
+	emptyProcess: (id, dir) => lynxIpc.send(ptyChannels.emptyProcess, id, dir),
+	customCommands: (id, commands, dir) => lynxIpc.send(ptyChannels.customCommands, id, commands, dir),
+	stop: (id) => lynxIpc.send(ptyChannels.stopProcess, id),
+	write: (id, data) => lynxIpc.send(ptyChannels.write, id, data),
+	clear: (id) => lynxIpc.send(ptyChannels.clear, id),
+	resize: (id, cols, rows) => lynxIpc.send(ptyChannels.resize, id, cols, rows),
+	onData: (result) => lynxIpc.on(ptyChannels.onData, result),
+	onTitle: (result) => lynxIpc.on(ptyChannels.onTitle, result),
+	onExit: (result) => lynxIpc.on(ptyChannels.onExit, result)
+};
+//#endregion
+//#region node_modules/redux/dist/redux.mjs
+var randomString = () => Math.random().toString(36).substring(7).split("").join(".");
+`${/* @__PURE__ */ randomString()}`, `${/* @__PURE__ */ randomString()}`;
+function isPlainObject$1(obj) {
+	if (typeof obj !== "object" || obj === null) return false;
+	let proto = obj;
+	while (Object.getPrototypeOf(proto) !== null) proto = Object.getPrototypeOf(proto);
+	return Object.getPrototypeOf(obj) === proto || Object.getPrototypeOf(obj) === null;
+}
+function isAction(action) {
+	return isPlainObject$1(action) && "type" in action && typeof action.type === "string";
+}
+//#endregion
+//#region node_modules/immer/dist/immer.mjs
+var NOTHING = Symbol.for("immer-nothing");
+var DRAFTABLE = Symbol.for("immer-draftable");
+var DRAFT_STATE = Symbol.for("immer-state");
+function die(error, ...args) {
+	throw new Error(`[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`);
+}
+var O = Object;
+var getPrototypeOf = O.getPrototypeOf;
+var CONSTRUCTOR = "constructor";
+var PROTOTYPE = "prototype";
+var CONFIGURABLE = "configurable";
+var ENUMERABLE = "enumerable";
+var WRITABLE = "writable";
+var VALUE = "value";
+var isDraft = (value) => !!value && !!value[DRAFT_STATE];
+function isDraftable(value) {
+	if (!value) return false;
+	return isPlainObject(value) || isArray$1(value) || !!value[DRAFTABLE] || !!value[CONSTRUCTOR]?.[DRAFTABLE] || isMap(value) || isSet(value);
+}
+var objectCtorString = O[PROTOTYPE][CONSTRUCTOR].toString();
+var cachedCtorStrings = /* @__PURE__ */ new WeakMap();
+function isPlainObject(value) {
+	if (!value || !isObjectish(value)) return false;
+	const proto = getPrototypeOf(value);
+	if (proto === null || proto === O[PROTOTYPE]) return true;
+	const Ctor = O.hasOwnProperty.call(proto, CONSTRUCTOR) && proto[CONSTRUCTOR];
+	if (Ctor === Object) return true;
+	if (!isFunction$1(Ctor)) return false;
+	let ctorString = cachedCtorStrings.get(Ctor);
+	if (ctorString === void 0) {
+		ctorString = Function.toString.call(Ctor);
+		cachedCtorStrings.set(Ctor, ctorString);
+	}
+	return ctorString === objectCtorString;
+}
+function each(obj, iter, strict = true) {
+	if (getArchtype(obj) === 0) (strict ? Reflect.ownKeys(obj) : O.keys(obj)).forEach((key) => {
+		iter(key, obj[key], obj);
+	});
+	else obj.forEach((entry, index) => iter(index, entry, obj));
+}
+function getArchtype(thing) {
+	const state = thing[DRAFT_STATE];
+	return state ? state.type_ : isArray$1(thing) ? 1 : isMap(thing) ? 2 : isSet(thing) ? 3 : 0;
+}
+var has = (thing, prop, type = getArchtype(thing)) => type === 2 ? thing.has(prop) : O[PROTOTYPE].hasOwnProperty.call(thing, prop);
+var get = (thing, prop, type = getArchtype(thing)) => type === 2 ? thing.get(prop) : thing[prop];
+var set = (thing, propOrOldValue, value, type = getArchtype(thing)) => {
+	if (type === 2) thing.set(propOrOldValue, value);
+	else if (type === 3) thing.add(value);
+	else thing[propOrOldValue] = value;
+};
+function is(x, y) {
+	if (x === y) return x !== 0 || 1 / x === 1 / y;
+	else return x !== x && y !== y;
+}
+var isArray$1 = Array.isArray;
+var isMap = (target) => target instanceof Map;
+var isSet = (target) => target instanceof Set;
+var isObjectish = (target) => typeof target === "object";
+var isFunction$1 = (target) => typeof target === "function";
+var isBoolean = (target) => typeof target === "boolean";
+function isArrayIndex(value) {
+	const n = +value;
+	return Number.isInteger(n) && String(n) === value;
+}
+var latest = (state) => state.copy_ || state.base_;
+var getFinalValue = (state) => state.modified_ ? state.copy_ : state.base_;
+function shallowCopy(base, strict) {
+	if (isMap(base)) return new Map(base);
+	if (isSet(base)) return new Set(base);
+	if (isArray$1(base)) return Array[PROTOTYPE].slice.call(base);
+	const isPlain = isPlainObject(base);
+	if (strict === true || strict === "class_only" && !isPlain) {
+		const descriptors = O.getOwnPropertyDescriptors(base);
+		delete descriptors[DRAFT_STATE];
+		let keys = Reflect.ownKeys(descriptors);
+		for (let i = 0; i < keys.length; i++) {
+			const key = keys[i];
+			const desc = descriptors[key];
+			if (desc[WRITABLE] === false) {
+				desc[WRITABLE] = true;
+				desc[CONFIGURABLE] = true;
+			}
+			if (desc.get || desc.set) descriptors[key] = {
+				[CONFIGURABLE]: true,
+				[WRITABLE]: true,
+				[ENUMERABLE]: desc[ENUMERABLE],
+				[VALUE]: base[key]
+			};
+		}
+		return O.create(getPrototypeOf(base), descriptors);
+	} else {
+		const proto = getPrototypeOf(base);
+		if (proto !== null && isPlain) return { ...base };
+		const obj = O.create(proto);
+		return O.assign(obj, base);
+	}
+}
+function freeze(obj, deep = false) {
+	if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj)) return obj;
+	if (getArchtype(obj) > 1) O.defineProperties(obj, {
+		set: dontMutateMethodOverride,
+		add: dontMutateMethodOverride,
+		clear: dontMutateMethodOverride,
+		delete: dontMutateMethodOverride
+	});
+	O.freeze(obj);
+	if (deep) each(obj, (_key, value) => {
+		freeze(value, true);
+	}, false);
+	return obj;
+}
+function dontMutateFrozenCollections() {
+	die(2);
+}
+var dontMutateMethodOverride = { [VALUE]: dontMutateFrozenCollections };
+function isFrozen(obj) {
+	if (obj === null || !isObjectish(obj)) return true;
+	return O.isFrozen(obj);
+}
+var PluginMapSet = "MapSet";
+var PluginPatches = "Patches";
+var PluginArrayMethods = "ArrayMethods";
+var plugins = {};
+function getPlugin(pluginKey) {
+	const plugin = plugins[pluginKey];
+	if (!plugin) die(0, pluginKey);
+	return plugin;
+}
+var isPluginLoaded = (pluginKey) => !!plugins[pluginKey];
+var currentScope;
+var getCurrentScope = () => currentScope;
+var createScope = (parent_, immer_) => ({
+	drafts_: [],
+	parent_,
+	immer_,
+	canAutoFreeze_: true,
+	unfinalizedDrafts_: 0,
+	handledSet_: /* @__PURE__ */ new Set(),
+	processedForPatches_: /* @__PURE__ */ new Set(),
+	mapSetPlugin_: isPluginLoaded(PluginMapSet) ? getPlugin(PluginMapSet) : void 0,
+	arrayMethodsPlugin_: isPluginLoaded(PluginArrayMethods) ? getPlugin(PluginArrayMethods) : void 0
+});
+function usePatchesInScope(scope, patchListener) {
+	if (patchListener) {
+		scope.patchPlugin_ = getPlugin(PluginPatches);
+		scope.patches_ = [];
+		scope.inversePatches_ = [];
+		scope.patchListener_ = patchListener;
+	}
+}
+function revokeScope(scope) {
+	leaveScope(scope);
+	scope.drafts_.forEach(revokeDraft);
+	scope.drafts_ = null;
+}
+function leaveScope(scope) {
+	if (scope === currentScope) currentScope = scope.parent_;
+}
+var enterScope = (immer2) => currentScope = createScope(currentScope, immer2);
+function revokeDraft(draft) {
+	const state = draft[DRAFT_STATE];
+	if (state.type_ === 0 || state.type_ === 1) state.revoke_();
+	else state.revoked_ = true;
+}
+function processResult(result, scope) {
+	scope.unfinalizedDrafts_ = scope.drafts_.length;
+	const baseDraft = scope.drafts_[0];
+	if (result !== void 0 && result !== baseDraft) {
+		if (baseDraft[DRAFT_STATE].modified_) {
+			revokeScope(scope);
+			die(4);
+		}
+		if (isDraftable(result)) result = finalize(scope, result);
+		const { patchPlugin_ } = scope;
+		if (patchPlugin_) patchPlugin_.generateReplacementPatches_(baseDraft[DRAFT_STATE].base_, result, scope);
+	} else result = finalize(scope, baseDraft);
+	maybeFreeze(scope, result, true);
+	revokeScope(scope);
+	if (scope.patches_) scope.patchListener_(scope.patches_, scope.inversePatches_);
+	return result !== NOTHING ? result : void 0;
+}
+function finalize(rootScope, value) {
+	if (isFrozen(value)) return value;
+	const state = value[DRAFT_STATE];
+	if (!state) return handleValue(value, rootScope.handledSet_, rootScope);
+	if (!isSameScope(state, rootScope)) return value;
+	if (!state.modified_) return state.base_;
+	if (!state.finalized_) {
+		const { callbacks_ } = state;
+		if (callbacks_) while (callbacks_.length > 0) callbacks_.pop()(rootScope);
+		generatePatchesAndFinalize(state, rootScope);
+	}
+	return state.copy_;
+}
+function maybeFreeze(scope, value, deep = false) {
+	if (!scope.parent_ && scope.immer_.autoFreeze_ && scope.canAutoFreeze_) freeze(value, deep);
+}
+function markStateFinalized(state) {
+	state.finalized_ = true;
+	state.scope_.unfinalizedDrafts_--;
+}
+var isSameScope = (state, rootScope) => state.scope_ === rootScope;
+var EMPTY_LOCATIONS_RESULT = [];
+function updateDraftInParent(parent, draftValue, finalizedValue, originalKey) {
+	const parentCopy = latest(parent);
+	const parentType = parent.type_;
+	if (originalKey !== void 0) {
+		if (get(parentCopy, originalKey, parentType) === draftValue) {
+			set(parentCopy, originalKey, finalizedValue, parentType);
+			return;
+		}
+	}
+	if (!parent.draftLocations_) {
+		const draftLocations = parent.draftLocations_ = /* @__PURE__ */ new Map();
+		each(parentCopy, (key, value) => {
+			if (isDraft(value)) {
+				const keys = draftLocations.get(value) || [];
+				keys.push(key);
+				draftLocations.set(value, keys);
+			}
+		});
+	}
+	const locations = parent.draftLocations_.get(draftValue) ?? EMPTY_LOCATIONS_RESULT;
+	for (const location of locations) set(parentCopy, location, finalizedValue, parentType);
+}
+function registerChildFinalizationCallback(parent, child, key) {
+	parent.callbacks_.push(function childCleanup(rootScope) {
+		const state = child;
+		if (!state || !isSameScope(state, rootScope)) return;
+		rootScope.mapSetPlugin_?.fixSetContents(state);
+		const finalizedValue = getFinalValue(state);
+		updateDraftInParent(parent, state.draft_ ?? state, finalizedValue, key);
+		generatePatchesAndFinalize(state, rootScope);
+	});
+}
+function generatePatchesAndFinalize(state, rootScope) {
+	if (state.modified_ && !state.finalized_ && (state.type_ === 3 || state.type_ === 1 && state.allIndicesReassigned_ || (state.assigned_?.size ?? 0) > 0)) {
+		const { patchPlugin_ } = rootScope;
+		if (patchPlugin_) {
+			const basePath = patchPlugin_.getPath(state);
+			if (basePath) patchPlugin_.generatePatches_(state, basePath, rootScope);
+		}
+		markStateFinalized(state);
+	}
+}
+function handleCrossReference(target, key, value) {
+	const { scope_ } = target;
+	if (isDraft(value)) {
+		const state = value[DRAFT_STATE];
+		if (isSameScope(state, scope_)) state.callbacks_.push(function crossReferenceCleanup() {
+			prepareCopy(target);
+			updateDraftInParent(target, value, getFinalValue(state), key);
+		});
+	} else if (isDraftable(value)) target.callbacks_.push(function nestedDraftCleanup() {
+		const targetCopy = latest(target);
+		if (target.type_ === 3) {
+			if (targetCopy.has(value)) handleValue(value, scope_.handledSet_, scope_);
+		} else if (get(targetCopy, key, target.type_) === value) {
+			if (scope_.drafts_.length > 1 && (target.assigned_.get(key) ?? false) === true && target.copy_) handleValue(get(target.copy_, key, target.type_), scope_.handledSet_, scope_);
+		}
+	});
+}
+function handleValue(target, handledSet, rootScope) {
+	if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) return target;
+	if (isDraft(target) || handledSet.has(target) || !isDraftable(target) || isFrozen(target)) return target;
+	handledSet.add(target);
+	each(target, (key, value) => {
+		if (isDraft(value)) {
+			const state = value[DRAFT_STATE];
+			if (isSameScope(state, rootScope)) {
+				set(target, key, getFinalValue(state), target.type_);
+				markStateFinalized(state);
+			}
+		} else if (isDraftable(value)) handleValue(value, handledSet, rootScope);
+	});
+	return target;
+}
+function createProxyProxy(base, parent) {
+	const baseIsArray = isArray$1(base);
+	const state = {
+		type_: baseIsArray ? 1 : 0,
+		scope_: parent ? parent.scope_ : getCurrentScope(),
+		modified_: false,
+		finalized_: false,
+		assigned_: void 0,
+		parent_: parent,
+		base_: base,
+		draft_: null,
+		copy_: null,
+		revoke_: null,
+		isManual_: false,
+		callbacks_: void 0
+	};
+	let target = state;
+	let traps = objectTraps;
+	if (baseIsArray) {
+		target = [state];
+		traps = arrayTraps;
+	}
+	const { revoke, proxy } = Proxy.revocable(target, traps);
+	state.draft_ = proxy;
+	state.revoke_ = revoke;
+	return [proxy, state];
+}
+var objectTraps = {
+	get(state, prop) {
+		if (prop === DRAFT_STATE) return state;
+		let arrayPlugin = state.scope_.arrayMethodsPlugin_;
+		const isArrayWithStringProp = state.type_ === 1 && typeof prop === "string";
+		if (isArrayWithStringProp) {
+			if (arrayPlugin?.isArrayOperationMethod(prop)) return arrayPlugin.createMethodInterceptor(state, prop);
+		}
+		const source = latest(state);
+		if (!has(source, prop, state.type_)) return readPropFromProto(state, source, prop);
+		const value = source[prop];
+		if (state.finalized_ || !isDraftable(value)) return value;
+		if (isArrayWithStringProp && state.operationMethod && arrayPlugin?.isMutatingArrayMethod(state.operationMethod) && isArrayIndex(prop)) return value;
+		if (value === peek(state.base_, prop) || isRelocatedBaseRef(state, prop, value)) {
+			prepareCopy(state);
+			const childKey = state.type_ === 1 ? +prop : prop;
+			const childDraft = createProxy(state.scope_, value, state, childKey);
+			return state.copy_[childKey] = childDraft;
+		}
+		return value;
+	},
+	has(state, prop) {
+		return prop in latest(state);
+	},
+	ownKeys(state) {
+		return Reflect.ownKeys(latest(state));
+	},
+	set(state, prop, value) {
+		const desc = getDescriptorFromProto(latest(state), prop);
+		if (desc?.set) {
+			desc.set.call(state.draft_, value);
+			return true;
+		}
+		if (!state.modified_) {
+			const current2 = peek(latest(state), prop);
+			const currentState = current2?.[DRAFT_STATE];
+			if (currentState && currentState.base_ === value) {
+				state.copy_[prop] = value;
+				state.assigned_.set(prop, false);
+				return true;
+			}
+			if (is(value, current2) && (value !== void 0 || has(state.base_, prop, state.type_))) return true;
+			prepareCopy(state);
+			markChanged(state);
+		}
+		if (state.copy_[prop] === value && (value !== void 0 || has(state.copy_, prop, state.type_)) || Number.isNaN(value) && Number.isNaN(state.copy_[prop])) return true;
+		state.copy_[prop] = value;
+		state.assigned_.set(prop, true);
+		handleCrossReference(state, prop, value);
+		return true;
+	},
+	deleteProperty(state, prop) {
+		prepareCopy(state);
+		if (peek(state.base_, prop) !== void 0 || prop in state.base_) {
+			state.assigned_.set(prop, false);
+			markChanged(state);
+		} else state.assigned_.delete(prop);
+		if (state.copy_) delete state.copy_[prop];
+		return true;
+	},
+	getOwnPropertyDescriptor(state, prop) {
+		const owner = latest(state);
+		const desc = Reflect.getOwnPropertyDescriptor(owner, prop);
+		if (!desc) return desc;
+		return {
+			[WRITABLE]: true,
+			[CONFIGURABLE]: state.type_ !== 1 || prop !== "length",
+			[ENUMERABLE]: desc[ENUMERABLE],
+			[VALUE]: owner[prop]
+		};
+	},
+	defineProperty() {
+		die(11);
+	},
+	getPrototypeOf(state) {
+		return getPrototypeOf(state.base_);
+	},
+	setPrototypeOf() {
+		die(12);
+	}
+};
+var arrayTraps = {};
+for (let key in objectTraps) {
+	let fn = objectTraps[key];
+	arrayTraps[key] = function() {
+		const args = arguments;
+		args[0] = args[0][0];
+		return fn.apply(this, args);
+	};
+}
+arrayTraps.deleteProperty = function(state, prop) {
+	return arrayTraps.set.call(this, state, prop, void 0);
+};
+arrayTraps.set = function(state, prop, value) {
+	return objectTraps.set.call(this, state[0], prop, value, state[0]);
+};
+function peek(draft, prop) {
+	const state = draft[DRAFT_STATE];
+	return (state ? latest(state) : draft)[prop];
+}
+function isRelocatedBaseRef(state, prop, value) {
+	if (state.type_ !== 1 || !state.allIndicesReassigned_ || state.assigned_?.get(prop) || !isDraftable(value) || value[DRAFT_STATE]) return false;
+	return state.baseRefs_.has(value);
+}
+function readPropFromProto(state, source, prop) {
+	const desc = getDescriptorFromProto(source, prop);
+	return desc ? VALUE in desc ? desc[VALUE] : desc.get?.call(state.draft_) : void 0;
+}
+function getDescriptorFromProto(source, prop) {
+	if (!(prop in source)) return void 0;
+	let proto = getPrototypeOf(source);
+	while (proto) {
+		const desc = Object.getOwnPropertyDescriptor(proto, prop);
+		if (desc) return desc;
+		proto = getPrototypeOf(proto);
+	}
+}
+function markChanged(state) {
+	if (!state.modified_) {
+		state.modified_ = true;
+		if (state.parent_) markChanged(state.parent_);
+	}
+}
+function prepareCopy(state) {
+	if (!state.copy_) {
+		state.assigned_ = /* @__PURE__ */ new Map();
+		state.copy_ = shallowCopy(state.base_, state.scope_.immer_.useStrictShallowCopy_);
+	}
+}
+var Immer2 = class {
+	constructor(config) {
+		this.autoFreeze_ = true;
+		this.useStrictShallowCopy_ = false;
+		this.useStrictIteration_ = false;
+		/**
+		* The `produce` function takes a value and a "recipe function" (whose
+		* return value often depends on the base state). The recipe function is
+		* free to mutate its first argument however it wants. All mutations are
+		* only ever applied to a __copy__ of the base state.
+		*
+		* Pass only a function to create a "curried producer" which relieves you
+		* from passing the recipe function every time.
+		*
+		* Only plain objects and arrays are made mutable. All other objects are
+		* considered uncopyable.
+		*
+		* Note: This function is __bound__ to its `Immer` instance.
+		*
+		* @param {any} base - the initial state
+		* @param {Function} recipe - function that receives a proxy of the base state as first argument and which can be freely modified
+		* @param {Function} patchListener - optional function that will be called with all the patches produced here
+		* @returns {any} a new state, or the initial state if nothing was modified
+		*/
+		this.produce = (base, recipe, patchListener) => {
+			if (isFunction$1(base) && !isFunction$1(recipe)) {
+				const defaultBase = recipe;
+				recipe = base;
+				const self = this;
+				return function curriedProduce(base2 = defaultBase, ...args) {
+					return self.produce(base2, (draft) => recipe.call(this, draft, ...args));
+				};
+			}
+			if (!isFunction$1(recipe)) die(6);
+			if (patchListener !== void 0 && !isFunction$1(patchListener)) die(7);
+			let result;
+			if (isDraftable(base)) {
+				const scope = enterScope(this);
+				const proxy = createProxy(scope, base, void 0);
+				let hasError = true;
+				try {
+					result = recipe(proxy);
+					hasError = false;
+				} finally {
+					if (hasError) revokeScope(scope);
+					else leaveScope(scope);
+				}
+				usePatchesInScope(scope, patchListener);
+				return processResult(result, scope);
+			} else if (!base || !isObjectish(base)) {
+				result = recipe(base);
+				if (result === void 0) result = base;
+				if (result === NOTHING) result = void 0;
+				if (this.autoFreeze_) freeze(result, true);
+				if (patchListener) {
+					const p = [];
+					const ip = [];
+					getPlugin(PluginPatches).generateReplacementPatches_(base, result, {
+						patches_: p,
+						inversePatches_: ip
+					});
+					patchListener(p, ip);
+				}
+				return result;
+			} else die(1, base);
+		};
+		this.produceWithPatches = (base, recipe) => {
+			if (isFunction$1(base)) return (state, ...args) => this.produceWithPatches(state, (draft) => base(draft, ...args));
+			let patches, inversePatches;
+			return [
+				this.produce(base, recipe, (p, ip) => {
+					patches = p;
+					inversePatches = ip;
+				}),
+				patches,
+				inversePatches
+			];
+		};
+		if (isBoolean(config?.autoFreeze)) this.setAutoFreeze(config.autoFreeze);
+		if (isBoolean(config?.useStrictShallowCopy)) this.setUseStrictShallowCopy(config.useStrictShallowCopy);
+		if (isBoolean(config?.useStrictIteration)) this.setUseStrictIteration(config.useStrictIteration);
+	}
+	createDraft(base) {
+		if (!isDraftable(base)) die(8);
+		if (isDraft(base)) base = current(base);
+		const scope = enterScope(this);
+		const proxy = createProxy(scope, base, void 0);
+		proxy[DRAFT_STATE].isManual_ = true;
+		leaveScope(scope);
+		return proxy;
+	}
+	finishDraft(draft, patchListener) {
+		const state = draft && draft[DRAFT_STATE];
+		if (!state || !state.isManual_) die(9);
+		const { scope_: scope } = state;
+		usePatchesInScope(scope, patchListener);
+		return processResult(void 0, scope);
+	}
+	/**
+	* Pass true to automatically freeze all copies created by Immer.
+	*
+	* By default, auto-freezing is enabled.
+	*/
+	setAutoFreeze(value) {
+		this.autoFreeze_ = value;
+	}
+	/**
+	* Pass true to enable strict shallow copy.
+	*
+	* By default, immer does not copy the object descriptors such as getter, setter and non-enumrable properties.
+	*/
+	setUseStrictShallowCopy(value) {
+		this.useStrictShallowCopy_ = value;
+	}
+	/**
+	* Pass false to use faster iteration that skips non-enumerable properties
+	* but still handles symbols for compatibility.
+	*
+	* By default, strict iteration is enabled (includes all own properties).
+	*/
+	setUseStrictIteration(value) {
+		this.useStrictIteration_ = value;
+	}
+	shouldUseStrictIteration() {
+		return this.useStrictIteration_;
+	}
+	applyPatches(base, patches) {
+		let i;
+		for (i = patches.length - 1; i >= 0; i--) {
+			const patch = patches[i];
+			if (patch.path.length === 0 && patch.op === "replace") {
+				base = patch.value;
+				break;
+			}
+		}
+		if (i > -1) patches = patches.slice(i + 1);
+		const applyPatchesImpl = getPlugin(PluginPatches).applyPatches_;
+		if (isDraft(base)) return applyPatchesImpl(base, patches);
+		return this.produce(base, (draft) => applyPatchesImpl(draft, patches));
+	}
+};
+function createProxy(rootScope, value, parent, key) {
+	const [draft, state] = isMap(value) ? getPlugin(PluginMapSet).proxyMap_(value, parent) : isSet(value) ? getPlugin(PluginMapSet).proxySet_(value, parent) : createProxyProxy(value, parent);
+	(parent?.scope_ ?? getCurrentScope()).drafts_.push(draft);
+	state.callbacks_ = parent?.callbacks_ ?? [];
+	state.key_ = key;
+	if (parent && key !== void 0) registerChildFinalizationCallback(parent, state, key);
+	else state.callbacks_.push(function rootDraftCleanup(rootScope2) {
+		rootScope2.mapSetPlugin_?.fixSetContents(state);
+		const { patchPlugin_ } = rootScope2;
+		if (state.modified_ && patchPlugin_) patchPlugin_.generatePatches_(state, [], rootScope2);
+	});
+	return draft;
+}
+function current(value) {
+	if (!isDraft(value)) die(10, value);
+	return currentImpl(value);
+}
+function currentImpl(value) {
+	if (!isDraftable(value) || isFrozen(value)) return value;
+	const state = value[DRAFT_STATE];
+	let copy;
+	let strict = true;
+	if (state) {
+		if (!state.modified_) return state.base_;
+		state.finalized_ = true;
+		copy = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
+		strict = state.scope_.immer_.shouldUseStrictIteration();
+	} else copy = shallowCopy(value, true);
+	each(copy, (key, childValue) => {
+		set(copy, key, currentImpl(childValue));
+	}, strict);
+	if (state) state.finalized_ = false;
+	return copy;
+}
+var produce = new Immer2().produce;
+typeof window !== "undefined" && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__;
+typeof window !== "undefined" && window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__;
+function createAction(type, prepareAction) {
+	function actionCreator(...args) {
+		if (prepareAction) {
+			let prepared = prepareAction(...args);
+			if (!prepared) throw new Error(formatProdErrorMessage(0));
+			return {
+				type,
+				payload: prepared.payload,
+				..."meta" in prepared && { meta: prepared.meta },
+				..."error" in prepared && { error: prepared.error }
+			};
+		}
+		return {
+			type,
+			payload: args[0]
+		};
+	}
+	actionCreator.toString = () => `${type}`;
+	actionCreator.type = type;
+	actionCreator.match = (action) => isAction(action) && action.type === type;
+	return actionCreator;
+}
+function freezeDraftable(val) {
+	return isDraftable(val) ? produce(val, () => {}) : val;
+}
+function getOrInsertComputed(map, key, compute) {
+	if (map.has(key)) return map.get(key);
+	return map.set(key, compute(key)).get(key);
+}
+function executeReducerBuilderCallback(builderCallback) {
+	const actionsMap = {};
+	const actionMatchers = [];
+	let defaultCaseReducer;
+	const builder = {
+		addCase(typeOrActionCreator, reducer) {
+			const type = typeof typeOrActionCreator === "string" ? typeOrActionCreator : typeOrActionCreator.type;
+			if (!type) throw new Error(formatProdErrorMessage(28));
+			if (type in actionsMap) throw new Error(formatProdErrorMessage(29));
+			actionsMap[type] = reducer;
+			return builder;
+		},
+		addAsyncThunk(asyncThunk, reducers) {
+			if (reducers.pending) actionsMap[asyncThunk.pending.type] = reducers.pending;
+			if (reducers.rejected) actionsMap[asyncThunk.rejected.type] = reducers.rejected;
+			if (reducers.fulfilled) actionsMap[asyncThunk.fulfilled.type] = reducers.fulfilled;
+			if (reducers.settled) actionMatchers.push({
+				matcher: asyncThunk.settled,
+				reducer: reducers.settled
+			});
+			return builder;
+		},
+		addMatcher(matcher, reducer) {
+			actionMatchers.push({
+				matcher,
+				reducer
+			});
+			return builder;
+		},
+		addDefaultCase(reducer) {
+			defaultCaseReducer = reducer;
+			return builder;
+		}
+	};
+	builderCallback(builder);
+	return [
+		actionsMap,
+		actionMatchers,
+		defaultCaseReducer
+	];
+}
+function isStateFunction(x) {
+	return typeof x === "function";
+}
+function createReducer(initialState, mapOrBuilderCallback) {
+	let [actionsMap, finalActionMatchers, finalDefaultCaseReducer] = executeReducerBuilderCallback(mapOrBuilderCallback);
+	let getInitialState;
+	if (isStateFunction(initialState)) getInitialState = () => freezeDraftable(initialState());
+	else {
+		const frozenInitialState = freezeDraftable(initialState);
+		getInitialState = () => frozenInitialState;
+	}
+	function reducer(state = getInitialState(), action) {
+		let caseReducers = [actionsMap[action.type], ...finalActionMatchers.filter(({ matcher }) => matcher(action)).map(({ reducer: reducer2 }) => reducer2)];
+		if (caseReducers.filter((cr) => !!cr).length === 0) caseReducers = [finalDefaultCaseReducer];
+		return caseReducers.reduce((previousState, caseReducer) => {
+			if (caseReducer) {
+				if (isDraft(previousState)) {
+					const result = caseReducer(previousState, action);
+					if (result === void 0) return previousState;
+					return result;
+				} else if (!isDraftable(previousState)) {
+					const result = caseReducer(previousState, action);
+					if (result === void 0) {
+						if (previousState === null) return previousState;
+						throw Error("A case reducer on a non-draftable value must not return undefined");
+					}
+					return result;
+				} else return produce(previousState, (draft) => {
+					return caseReducer(draft, action);
+				});
+			}
+			return previousState;
+		}, state);
+	}
+	reducer.getInitialState = getInitialState;
+	return reducer;
+}
+var asyncThunkSymbol = /* @__PURE__ */ Symbol.for("rtk-slice-createasyncthunk");
+function getType(slice, actionKey) {
+	return `${slice}/${actionKey}`;
+}
+function buildCreateSlice({ creators } = {}) {
+	const cAT = creators?.asyncThunk?.[asyncThunkSymbol];
+	return function createSlice2(options) {
+		const { name, reducerPath = name } = options;
+		if (!name) throw new Error(formatProdErrorMessage(11));
+		const reducers = (typeof options.reducers === "function" ? options.reducers(buildReducerCreators()) : options.reducers) || {};
+		const reducerNames = Object.keys(reducers);
+		const context = {
+			sliceCaseReducersByName: {},
+			sliceCaseReducersByType: {},
+			actionCreators: {},
+			sliceMatchers: []
+		};
+		const contextMethods = {
+			addCase(typeOrActionCreator, reducer2) {
+				const type = typeof typeOrActionCreator === "string" ? typeOrActionCreator : typeOrActionCreator.type;
+				if (!type) throw new Error(formatProdErrorMessage(12));
+				if (type in context.sliceCaseReducersByType) throw new Error(formatProdErrorMessage(13));
+				context.sliceCaseReducersByType[type] = reducer2;
+				return contextMethods;
+			},
+			addMatcher(matcher, reducer2) {
+				context.sliceMatchers.push({
+					matcher,
+					reducer: reducer2
+				});
+				return contextMethods;
+			},
+			exposeAction(name2, actionCreator) {
+				context.actionCreators[name2] = actionCreator;
+				return contextMethods;
+			},
+			exposeCaseReducer(name2, reducer2) {
+				context.sliceCaseReducersByName[name2] = reducer2;
+				return contextMethods;
+			}
+		};
+		reducerNames.forEach((reducerName) => {
+			const reducerDefinition = reducers[reducerName];
+			const reducerDetails = {
+				reducerName,
+				type: getType(name, reducerName),
+				createNotation: typeof options.reducers === "function"
+			};
+			if (isAsyncThunkSliceReducerDefinition(reducerDefinition)) handleThunkCaseReducerDefinition(reducerDetails, reducerDefinition, contextMethods, cAT);
+			else handleNormalReducerDefinition(reducerDetails, reducerDefinition, contextMethods);
+		});
+		function buildReducer() {
+			const [extraReducers = {}, actionMatchers = [], defaultCaseReducer = void 0] = typeof options.extraReducers === "function" ? executeReducerBuilderCallback(options.extraReducers) : [options.extraReducers];
+			const finalCaseReducers = {
+				...extraReducers,
+				...context.sliceCaseReducersByType
+			};
+			return createReducer(options.initialState, (builder) => {
+				for (let key in finalCaseReducers) builder.addCase(key, finalCaseReducers[key]);
+				for (let sM of context.sliceMatchers) builder.addMatcher(sM.matcher, sM.reducer);
+				for (let m of actionMatchers) builder.addMatcher(m.matcher, m.reducer);
+				if (defaultCaseReducer) builder.addDefaultCase(defaultCaseReducer);
+			});
+		}
+		const selectSelf = (state) => state;
+		const injectedSelectorCache = /* @__PURE__ */ new Map();
+		const injectedStateCache = /* @__PURE__ */ new WeakMap();
+		let _reducer;
+		function reducer(state, action) {
+			if (!_reducer) _reducer = buildReducer();
+			return _reducer(state, action);
+		}
+		function getInitialState() {
+			if (!_reducer) _reducer = buildReducer();
+			return _reducer.getInitialState();
+		}
+		function makeSelectorProps(reducerPath2, injected = false) {
+			function selectSlice(state) {
+				let sliceState = state[reducerPath2];
+				if (typeof sliceState === "undefined") {
+					if (injected) sliceState = getOrInsertComputed(injectedStateCache, selectSlice, getInitialState);
+				}
+				return sliceState;
+			}
+			function getSelectors(selectState = selectSelf) {
+				return getOrInsertComputed(getOrInsertComputed(injectedSelectorCache, injected, () => /* @__PURE__ */ new WeakMap()), selectState, () => {
+					const map = {};
+					for (const [name2, selector] of Object.entries(options.selectors ?? {})) map[name2] = wrapSelector(selector, selectState, () => getOrInsertComputed(injectedStateCache, selectState, getInitialState), injected);
+					return map;
+				});
+			}
+			return {
+				reducerPath: reducerPath2,
+				getSelectors,
+				get selectors() {
+					return getSelectors(selectSlice);
+				},
+				selectSlice
+			};
+		}
+		const slice = {
+			name,
+			reducer,
+			actions: context.actionCreators,
+			caseReducers: context.sliceCaseReducersByName,
+			getInitialState,
+			...makeSelectorProps(reducerPath),
+			injectInto(injectable, { reducerPath: pathOpt, ...config } = {}) {
+				const newReducerPath = pathOpt ?? reducerPath;
+				injectable.inject({
+					reducerPath: newReducerPath,
+					reducer
+				}, config);
+				return {
+					...slice,
+					...makeSelectorProps(newReducerPath, true)
+				};
+			}
+		};
+		return slice;
+	};
+}
+function wrapSelector(selector, selectState, getInitialState, injected) {
+	function wrapper(rootState, ...args) {
+		let sliceState = selectState(rootState);
+		if (typeof sliceState === "undefined") {
+			if (injected) sliceState = getInitialState();
+		}
+		return selector(sliceState, ...args);
+	}
+	wrapper.unwrapped = selector;
+	return wrapper;
+}
+var createSlice = /* @__PURE__ */ buildCreateSlice();
+function buildReducerCreators() {
+	function asyncThunk(payloadCreator, config) {
+		return {
+			_reducerDefinitionType: "asyncThunk",
+			payloadCreator,
+			...config
+		};
+	}
+	asyncThunk.withTypes = () => asyncThunk;
+	return {
+		reducer(caseReducer) {
+			return Object.assign({ [caseReducer.name](...args) {
+				return caseReducer(...args);
+			} }[caseReducer.name], { _reducerDefinitionType: "reducer" });
+		},
+		preparedReducer(prepare, reducer) {
+			return {
+				_reducerDefinitionType: "reducerWithPrepare",
+				prepare,
+				reducer
+			};
+		},
+		asyncThunk
+	};
+}
+function handleNormalReducerDefinition({ type, reducerName, createNotation }, maybeReducerWithPrepare, context) {
+	let caseReducer;
+	let prepareCallback;
+	if ("reducer" in maybeReducerWithPrepare) {
+		if (createNotation && !isCaseReducerWithPrepareDefinition(maybeReducerWithPrepare)) throw new Error(formatProdErrorMessage(17));
+		caseReducer = maybeReducerWithPrepare.reducer;
+		prepareCallback = maybeReducerWithPrepare.prepare;
+	} else caseReducer = maybeReducerWithPrepare;
+	context.addCase(type, caseReducer).exposeCaseReducer(reducerName, caseReducer).exposeAction(reducerName, prepareCallback ? createAction(type, prepareCallback) : createAction(type));
+}
+function isAsyncThunkSliceReducerDefinition(reducerDefinition) {
+	return reducerDefinition._reducerDefinitionType === "asyncThunk";
+}
+function isCaseReducerWithPrepareDefinition(reducerDefinition) {
+	return reducerDefinition._reducerDefinitionType === "reducerWithPrepare";
+}
+function handleThunkCaseReducerDefinition({ type, reducerName }, reducerDefinition, context, cAT) {
+	if (!cAT) throw new Error(formatProdErrorMessage(18));
+	const { payloadCreator, fulfilled, pending, rejected, settled, options } = reducerDefinition;
+	const thunk = cAT(type, payloadCreator, options);
+	context.exposeAction(reducerName, thunk);
+	if (fulfilled) context.addCase(thunk.fulfilled, fulfilled);
+	if (pending) context.addCase(thunk.pending, pending);
+	if (rejected) context.addCase(thunk.rejected, rejected);
+	if (settled) context.addMatcher(thunk.settled, settled);
+	context.exposeCaseReducer(reducerName, {
+		fulfilled: fulfilled || noop$1,
+		pending: pending || noop$1,
+		rejected: rejected || noop$1,
+		settled: settled || noop$1
+	});
+}
+function noop$1() {}
+var listener = "listener";
+var completed = "completed";
+var cancelled = "cancelled";
+`${cancelled}`;
+`${completed}`;
+`${listener}${cancelled}`;
+`${listener}${completed}`;
+var { assign } = Object;
+var alm = "listenerMiddleware";
+var addListener = /* @__PURE__ */ assign(/* @__PURE__ */ createAction(`${alm}/add`), { withTypes: () => addListener });
+`${alm}`;
+var removeListener = /* @__PURE__ */ assign(/* @__PURE__ */ createAction(`${alm}/remove`), { withTypes: () => removeListener });
+function formatProdErrorMessage(code) {
+	return `Minified Redux Toolkit error #${code}; visit https://redux-toolkit.js.org/Errors?code=${code} for the full message or use the non-minified dev environment for full errors. `;
+}
+//#endregion
+//#region src/renderer/mainWindow/redux/reducers/cards.ts
+var { useSelector: useSelector$16 } = await importShared("react-redux");
+var buildRunningCardBase = (tabId, id) => ({
+	tabId,
+	id,
+	webUIAddress: "",
+	customAddress: "",
+	currentAddress: "",
+	browserTitle: "Browser",
+	startTime: (/* @__PURE__ */ new Date()).toString()
+});
+var cardsSlice = createSlice({
+	initialState: {
+		autoUpdate: [],
+		installedCards: [],
+		pinnedCards: [],
+		updateAvailable: [],
+		updatingCards: [],
+		runningCard: [],
+		recentlyUsedCards: [],
+		homeCategory: [],
+		autoUpdateExtensions: [],
+		updatingExtensions: void 0,
+		duplicates: [],
+		checkUpdateInterval: 0,
+		activeTab: "",
+		browserDomReadyIds: [],
+		updateChecking: ""
+	},
+	name: "cards",
+	reducers: {
+		addUpdateAvailable: (state, action) => {
+			if (!state.updateAvailable.includes(action.payload)) state.updateAvailable.push(action.payload);
+		},
+		setUpdateAvailable: (state, action) => {
+			state.updateAvailable = action.payload;
+		},
+		setUpdateChecking: (state, action) => {
+			state.updateChecking = action.payload;
+		},
+		removeUpdateAvailable: (state, action) => {
+			state.updateAvailable = state.updateAvailable.filter((card) => card !== action.payload);
+		},
+		setUpdatingExtensions: (state, action) => {
+			state.updatingExtensions = action.payload;
+		},
+		setUpdateInterval: (state, action) => {
+			state.checkUpdateInterval = action.payload;
+		},
+		addUpdatingCard: (state, action) => {
+			if (!state.updatingCards.some((card) => card.id === action.payload.id)) state.updatingCards.push(action.payload);
+		},
+		removeUpdatingCard: (state, action) => {
+			const cardId = action.payload;
+			state.updatingCards = state.updatingCards.filter((card) => card.id !== cardId);
+		},
+		setAutoUpdate: (state, action) => {
+			state.autoUpdate = action.payload;
+		},
+		setAutoUpdateExtensions: (state, action) => {
+			state.autoUpdateExtensions = action.payload;
+		},
+		setInstalledCards: (state, action) => {
+			state.installedCards = action.payload;
+		},
+		setPinnedCards: (state, action) => {
+			state.pinnedCards = action.payload;
+		},
+		setHomeCategory: (state, action) => {
+			state.homeCategory = action.payload;
+		},
+		setRecentlyUsedCards: (state, action) => {
+			state.recentlyUsedCards = action.payload;
+		},
+		setDuplicates: (state, action) => {
+			state.duplicates = action.payload;
+		},
+		addDomReady: (state, action) => {
+			if (!state.browserDomReadyIds.includes(action.payload)) state.browserDomReadyIds.push(action.payload);
+		},
+		addRunningEmpty: (state, action) => {
+			const { tabId, type, dir } = action.payload;
+			const id = `${tabId}_${type}`;
+			const currentView = type === "browser" ? "browser" : "terminal";
+			state.runningCard.push({
+				...buildRunningCardBase(tabId, id),
+				type,
+				currentView,
+				isEmptyRunning: true
+			});
+			if (type !== "terminal") browserIpc.send.createBrowser(id);
+			if (type !== "browser") ptyIpc.emptyProcess(id, dir);
+		},
+		addRunningCard: (state, action) => {
+			const { tabId, id } = action.payload;
+			state.runningCard.push({
+				...buildRunningCardBase(tabId, id),
+				type: "both",
+				currentView: "terminal",
+				isEmptyRunning: false
+			});
+			browserIpc.send.createBrowser(id);
+		},
+		setRunningCardAddress: (state, action) => {
+			const { tabId, address } = action.payload;
+			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
+				...card,
+				webUIAddress: address
+			} : card);
+		},
+		setRunningCardCustomAddress: (state, action) => {
+			const { tabId, address } = action.payload;
+			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
+				...card,
+				customAddress: address
+			} : card);
+		},
+		setRunningCardCurrentAddress: (state, action) => {
+			const { tabId, address } = action.payload;
+			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
+				...card,
+				currentAddress: address
+			} : card);
+		},
+		setRunningCardView: (state, action) => {
+			const { tabId, view } = action.payload;
+			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
+				...card,
+				currentView: view
+			} : card);
+		},
+		setRunningCardBrowserTitle: (state, action) => {
+			const { tabId, title } = action.payload;
+			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
+				...card,
+				browserTitle: title
+			} : card);
+		},
+		toggleRunningCardView: (state, action) => {
+			if (!state.runningCard) return;
+			const { tabId } = action.payload;
+			state.runningCard = state.runningCard.map((card) => {
+				const currentView = card.currentView === "browser" ? "terminal" : "browser";
+				return card.tabId === tabId ? {
+					...card,
+					currentView
+				} : card;
+			});
+		},
+		stopRunningCard: (state, action) => {
+			const id = state.runningCard.find((card) => card.tabId === action.payload.tabId)?.id;
+			if (id) {
+				browserIpc.send.removeBrowser(id);
+				state.browserDomReadyIds = state.browserDomReadyIds.filter((item) => item !== id);
+			}
+			state.runningCard = state.runningCard.filter((card) => card.tabId !== action.payload.tabId);
+		}
+	}
+});
+/**
+* Hook to access a single cards state field with key-safe typing.
+*/
+var useCardsState = (name) => useSelector$16((state) => state.cards[name]);
+var cardsActions = cardsSlice.actions;
+cardsSlice.reducer;
 //#endregion
 //#region node_modules/lodash-es/_freeGlobal.js
 /** Detect free variable `global` from Node.js. */
@@ -188,7 +1690,7 @@ function arrayMap(array, iteratee) {
 * _.isArray(_.noop);
 * // => false
 */
-var isArray$1 = Array.isArray;
+var isArray = Array.isArray;
 //#endregion
 //#region node_modules/lodash-es/_baseToString.js
 /** Used as references for various `Number` constants. */
@@ -206,7 +1708,7 @@ var symbolToString = symbolProto ? symbolProto.toString : void 0;
 */
 function baseToString(value) {
 	if (typeof value == "string") return value;
-	if (isArray$1(value)) return arrayMap(value, baseToString) + "";
+	if (isArray(value)) return arrayMap(value, baseToString) + "";
 	if (isSymbol(value)) return symbolToString ? symbolToString.call(value) : "";
 	var result = value + "";
 	return result == "0" && 1 / value == -INFINITY ? "-0" : result;
@@ -266,7 +1768,7 @@ var proxyTag = "[object Proxy]";
 * _.isFunction(/abc/);
 * // => false
 */
-function isFunction$1(value) {
+function isFunction(value) {
 	if (!isObject$1(value)) return false;
 	var tag = baseGetTag(value);
 	return tag == funcTag$1 || tag == genTag || tag == asyncTag || tag == proxyTag;
@@ -342,7 +1844,7 @@ var reIsNative = RegExp("^" + funcToString.call(hasOwnProperty$3).replace(reRegE
 */
 function baseIsNative(value) {
 	if (!isObject$1(value) || isMasked(value)) return false;
-	return (isFunction$1(value) ? reIsNative : reIsHostCtor).test(toSource(value));
+	return (isFunction(value) ? reIsNative : reIsHostCtor).test(toSource(value));
 }
 //#endregion
 //#region node_modules/lodash-es/_getValue.js
@@ -435,7 +1937,7 @@ function isLength(value) {
 * // => false
 */
 function isArrayLike(value) {
-	return value != null && isLength(value.length) && !isFunction$1(value);
+	return value != null && isLength(value.length) && !isFunction(value);
 }
 //#endregion
 //#region node_modules/lodash-es/_isPrototype.js
@@ -985,7 +2487,7 @@ var hasOwnProperty = Object.prototype.hasOwnProperty;
 */
 function isEmpty(value) {
 	if (value == null) return true;
-	if (isArrayLike(value) && (isArray$1(value) || typeof value == "string" || typeof value.splice == "function" || isBuffer(value) || isTypedArray(value) || isArguments(value))) return !value.length;
+	if (isArrayLike(value) && (isArray(value) || typeof value == "string" || typeof value.splice == "function" || isBuffer(value) || isTypedArray(value) || isArguments(value))) return !value.length;
 	var tag = _getTag_default(value);
 	if (tag == mapTag || tag == setTag) return !value.size;
 	if (isPrototype(value)) return !baseKeys(value).length;
@@ -993,7 +2495,36 @@ function isEmpty(value) {
 	return true;
 }
 //#endregion
+//#region src/renderer/mainWindow/utils/hooks.tsx
+var { Fragment: Fragment$3, useEffect: useEffect$12, useState: useState$17 } = await importShared("react");
+/**
+* Hook to check if a card is pinned.
+* @param cardId - The ID of the card to check
+* @returns Boolean indicating if the card is pinned
+*/
+function useIsPinnedCard(cardId) {
+	return useCardsState("pinnedCards").includes(cardId);
+}
+window.isPortable;
+//#endregion
 //#region src/common/utils/urlUtils.ts
+/**
+* Formats a local file path or file URL into a valid file:// URL.
+* Handles Windows paths (C:\...), Unix paths (/...), and corrupted prefixes (https://C:/...).
+* @param {string} input - The file path or URL to format.
+* @returns {string} The formatted file:// URL.
+*/
+function formatLocalPathToUrl(input) {
+	if (!input) return "";
+	let cleaned = input.trim();
+	cleaned = cleaned.replace(/^file:\/\/(?:https?:\/\/)?/i, "");
+	cleaned = cleaned.replace(/^https?:\/\//i, "");
+	cleaned = cleaned.replace(/\\/g, "/");
+	cleaned = cleaned.replace(/^file:\/+/i, "");
+	if (/^[a-zA-Z]:\//i.test(cleaned)) return `file:///${cleaned}`;
+	if (cleaned.startsWith("/")) return `file://${cleaned}`;
+	return `file:///${cleaned}`;
+}
 /**
 * Determines if the given string is a search query rather than a URL.
 * @param {string} input - The input string to check
@@ -1002,8 +2533,9 @@ function isEmpty(value) {
 function isSearchQuery(input) {
 	if (!input) return false;
 	const trimmedInput = input.trim();
+	if (trimmedInput.toLowerCase().startsWith("file://") || /^[a-zA-Z]:[\\/]/i.test(trimmedInput)) return false;
 	if (trimmedInput.includes(" ")) return true;
-	if (/^https?:\/\//i.test(trimmedInput)) return false;
+	if (/^(?:https?|file|ftp):\/\//i.test(trimmedInput)) return false;
 	if (/^(?:localhost|127(?:\.\d{1,3}){3}|\[::1\])(?::\d+)?$/i.test(trimmedInput)) return false;
 	if (/^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/.*)?$/.test(trimmedInput)) return false;
 	if (/^www\./i.test(trimmedInput)) return false;
@@ -1019,8 +2551,9 @@ function isSearchQuery(input) {
 */
 function formatWebAddress(address, detectSearchQuery) {
 	if (!address) return "";
+	if (address.match(/^file:\/\//i) || address.match(/^https?:\/\/[a-zA-Z]:[\\/]/i) || address.match(/^[a-zA-Z]:[\\/]/i) || address.startsWith("/") && !address.startsWith("//")) return formatLocalPathToUrl(address);
 	if (detectSearchQuery && isSearchQuery(address)) return `https://google.com/search?q=${encodeURIComponent(address)}`;
-	const protocolRegex = /^(?:https?:\/\/|ftp:\/\/|www\.)/i;
+	const protocolRegex = /^(?:https?:\/\/|file:\/\/|ftp:\/\/|www\.)/i;
 	if (/^(?:localhost|127(?:\.\d{1,3}){3}|\[::1\])(?::\d+)?$/i.test(address)) {
 		if (!address.match(/^https?:\/\//i)) return "http://" + address;
 		return address;
@@ -1038,1644 +2571,6 @@ function formatWebAddress(address, detectSearchQuery) {
 function getFallbackString(value) {
 	return value.replace(/[^a-zA-Z0-9\s]/g, "").split(" ").map((item) => item.slice(0, 1).toUpperCase()).join("");
 }
-//#endregion
-//#region node_modules/redux/dist/redux.mjs
-var randomString = () => Math.random().toString(36).substring(7).split("").join(".");
-`${/* @__PURE__ */ randomString()}`, `${/* @__PURE__ */ randomString()}`;
-function isPlainObject$1(obj) {
-	if (typeof obj !== "object" || obj === null) return false;
-	let proto = obj;
-	while (Object.getPrototypeOf(proto) !== null) proto = Object.getPrototypeOf(proto);
-	return Object.getPrototypeOf(obj) === proto || Object.getPrototypeOf(obj) === null;
-}
-function isAction(action) {
-	return isPlainObject$1(action) && "type" in action && typeof action.type === "string";
-}
-//#endregion
-//#region node_modules/immer/dist/immer.mjs
-var NOTHING = Symbol.for("immer-nothing");
-var DRAFTABLE = Symbol.for("immer-draftable");
-var DRAFT_STATE = Symbol.for("immer-state");
-function die(error, ...args) {
-	throw new Error(`[Immer] minified error nr: ${error}. Full error at: https://bit.ly/3cXEKWf`);
-}
-var O = Object;
-var getPrototypeOf = O.getPrototypeOf;
-var CONSTRUCTOR = "constructor";
-var PROTOTYPE = "prototype";
-var CONFIGURABLE = "configurable";
-var ENUMERABLE = "enumerable";
-var WRITABLE = "writable";
-var VALUE = "value";
-var isDraft = (value) => !!value && !!value[DRAFT_STATE];
-function isDraftable(value) {
-	if (!value) return false;
-	return isPlainObject(value) || isArray(value) || !!value[DRAFTABLE] || !!value[CONSTRUCTOR]?.[DRAFTABLE] || isMap(value) || isSet(value);
-}
-var objectCtorString = O[PROTOTYPE][CONSTRUCTOR].toString();
-var cachedCtorStrings = /* @__PURE__ */ new WeakMap();
-function isPlainObject(value) {
-	if (!value || !isObjectish(value)) return false;
-	const proto = getPrototypeOf(value);
-	if (proto === null || proto === O[PROTOTYPE]) return true;
-	const Ctor = O.hasOwnProperty.call(proto, CONSTRUCTOR) && proto[CONSTRUCTOR];
-	if (Ctor === Object) return true;
-	if (!isFunction(Ctor)) return false;
-	let ctorString = cachedCtorStrings.get(Ctor);
-	if (ctorString === void 0) {
-		ctorString = Function.toString.call(Ctor);
-		cachedCtorStrings.set(Ctor, ctorString);
-	}
-	return ctorString === objectCtorString;
-}
-function each(obj, iter, strict = true) {
-	if (getArchtype(obj) === 0) (strict ? Reflect.ownKeys(obj) : O.keys(obj)).forEach((key) => {
-		iter(key, obj[key], obj);
-	});
-	else obj.forEach((entry, index) => iter(index, entry, obj));
-}
-function getArchtype(thing) {
-	const state = thing[DRAFT_STATE];
-	return state ? state.type_ : isArray(thing) ? 1 : isMap(thing) ? 2 : isSet(thing) ? 3 : 0;
-}
-var has = (thing, prop, type = getArchtype(thing)) => type === 2 ? thing.has(prop) : O[PROTOTYPE].hasOwnProperty.call(thing, prop);
-var get = (thing, prop, type = getArchtype(thing)) => type === 2 ? thing.get(prop) : thing[prop];
-var set = (thing, propOrOldValue, value, type = getArchtype(thing)) => {
-	if (type === 2) thing.set(propOrOldValue, value);
-	else if (type === 3) thing.add(value);
-	else thing[propOrOldValue] = value;
-};
-function is(x, y) {
-	if (x === y) return x !== 0 || 1 / x === 1 / y;
-	else return x !== x && y !== y;
-}
-var isArray = Array.isArray;
-var isMap = (target) => target instanceof Map;
-var isSet = (target) => target instanceof Set;
-var isObjectish = (target) => typeof target === "object";
-var isFunction = (target) => typeof target === "function";
-var isBoolean = (target) => typeof target === "boolean";
-function isArrayIndex(value) {
-	const n = +value;
-	return Number.isInteger(n) && String(n) === value;
-}
-var latest = (state) => state.copy_ || state.base_;
-var getFinalValue = (state) => state.modified_ ? state.copy_ : state.base_;
-function shallowCopy(base, strict) {
-	if (isMap(base)) return new Map(base);
-	if (isSet(base)) return new Set(base);
-	if (isArray(base)) return Array[PROTOTYPE].slice.call(base);
-	const isPlain = isPlainObject(base);
-	if (strict === true || strict === "class_only" && !isPlain) {
-		const descriptors = O.getOwnPropertyDescriptors(base);
-		delete descriptors[DRAFT_STATE];
-		let keys = Reflect.ownKeys(descriptors);
-		for (let i = 0; i < keys.length; i++) {
-			const key = keys[i];
-			const desc = descriptors[key];
-			if (desc[WRITABLE] === false) {
-				desc[WRITABLE] = true;
-				desc[CONFIGURABLE] = true;
-			}
-			if (desc.get || desc.set) descriptors[key] = {
-				[CONFIGURABLE]: true,
-				[WRITABLE]: true,
-				[ENUMERABLE]: desc[ENUMERABLE],
-				[VALUE]: base[key]
-			};
-		}
-		return O.create(getPrototypeOf(base), descriptors);
-	} else {
-		const proto = getPrototypeOf(base);
-		if (proto !== null && isPlain) return { ...base };
-		const obj = O.create(proto);
-		return O.assign(obj, base);
-	}
-}
-function freeze(obj, deep = false) {
-	if (isFrozen(obj) || isDraft(obj) || !isDraftable(obj)) return obj;
-	if (getArchtype(obj) > 1) O.defineProperties(obj, {
-		set: dontMutateMethodOverride,
-		add: dontMutateMethodOverride,
-		clear: dontMutateMethodOverride,
-		delete: dontMutateMethodOverride
-	});
-	O.freeze(obj);
-	if (deep) each(obj, (_key, value) => {
-		freeze(value, true);
-	}, false);
-	return obj;
-}
-function dontMutateFrozenCollections() {
-	die(2);
-}
-var dontMutateMethodOverride = { [VALUE]: dontMutateFrozenCollections };
-function isFrozen(obj) {
-	if (obj === null || !isObjectish(obj)) return true;
-	return O.isFrozen(obj);
-}
-var PluginMapSet = "MapSet";
-var PluginPatches = "Patches";
-var PluginArrayMethods = "ArrayMethods";
-var plugins = {};
-function getPlugin(pluginKey) {
-	const plugin = plugins[pluginKey];
-	if (!plugin) die(0, pluginKey);
-	return plugin;
-}
-var isPluginLoaded = (pluginKey) => !!plugins[pluginKey];
-var currentScope;
-var getCurrentScope = () => currentScope;
-var createScope = (parent_, immer_) => ({
-	drafts_: [],
-	parent_,
-	immer_,
-	canAutoFreeze_: true,
-	unfinalizedDrafts_: 0,
-	handledSet_: /* @__PURE__ */ new Set(),
-	processedForPatches_: /* @__PURE__ */ new Set(),
-	mapSetPlugin_: isPluginLoaded(PluginMapSet) ? getPlugin(PluginMapSet) : void 0,
-	arrayMethodsPlugin_: isPluginLoaded(PluginArrayMethods) ? getPlugin(PluginArrayMethods) : void 0
-});
-function usePatchesInScope(scope, patchListener) {
-	if (patchListener) {
-		scope.patchPlugin_ = getPlugin(PluginPatches);
-		scope.patches_ = [];
-		scope.inversePatches_ = [];
-		scope.patchListener_ = patchListener;
-	}
-}
-function revokeScope(scope) {
-	leaveScope(scope);
-	scope.drafts_.forEach(revokeDraft);
-	scope.drafts_ = null;
-}
-function leaveScope(scope) {
-	if (scope === currentScope) currentScope = scope.parent_;
-}
-var enterScope = (immer2) => currentScope = createScope(currentScope, immer2);
-function revokeDraft(draft) {
-	const state = draft[DRAFT_STATE];
-	if (state.type_ === 0 || state.type_ === 1) state.revoke_();
-	else state.revoked_ = true;
-}
-function processResult(result, scope) {
-	scope.unfinalizedDrafts_ = scope.drafts_.length;
-	const baseDraft = scope.drafts_[0];
-	if (result !== void 0 && result !== baseDraft) {
-		if (baseDraft[DRAFT_STATE].modified_) {
-			revokeScope(scope);
-			die(4);
-		}
-		if (isDraftable(result)) result = finalize(scope, result);
-		const { patchPlugin_ } = scope;
-		if (patchPlugin_) patchPlugin_.generateReplacementPatches_(baseDraft[DRAFT_STATE].base_, result, scope);
-	} else result = finalize(scope, baseDraft);
-	maybeFreeze(scope, result, true);
-	revokeScope(scope);
-	if (scope.patches_) scope.patchListener_(scope.patches_, scope.inversePatches_);
-	return result !== NOTHING ? result : void 0;
-}
-function finalize(rootScope, value) {
-	if (isFrozen(value)) return value;
-	const state = value[DRAFT_STATE];
-	if (!state) return handleValue(value, rootScope.handledSet_, rootScope);
-	if (!isSameScope(state, rootScope)) return value;
-	if (!state.modified_) return state.base_;
-	if (!state.finalized_) {
-		const { callbacks_ } = state;
-		if (callbacks_) while (callbacks_.length > 0) callbacks_.pop()(rootScope);
-		generatePatchesAndFinalize(state, rootScope);
-	}
-	return state.copy_;
-}
-function maybeFreeze(scope, value, deep = false) {
-	if (!scope.parent_ && scope.immer_.autoFreeze_ && scope.canAutoFreeze_) freeze(value, deep);
-}
-function markStateFinalized(state) {
-	state.finalized_ = true;
-	state.scope_.unfinalizedDrafts_--;
-}
-var isSameScope = (state, rootScope) => state.scope_ === rootScope;
-var EMPTY_LOCATIONS_RESULT = [];
-function updateDraftInParent(parent, draftValue, finalizedValue, originalKey) {
-	const parentCopy = latest(parent);
-	const parentType = parent.type_;
-	if (originalKey !== void 0) {
-		if (get(parentCopy, originalKey, parentType) === draftValue) {
-			set(parentCopy, originalKey, finalizedValue, parentType);
-			return;
-		}
-	}
-	if (!parent.draftLocations_) {
-		const draftLocations = parent.draftLocations_ = /* @__PURE__ */ new Map();
-		each(parentCopy, (key, value) => {
-			if (isDraft(value)) {
-				const keys = draftLocations.get(value) || [];
-				keys.push(key);
-				draftLocations.set(value, keys);
-			}
-		});
-	}
-	const locations = parent.draftLocations_.get(draftValue) ?? EMPTY_LOCATIONS_RESULT;
-	for (const location of locations) set(parentCopy, location, finalizedValue, parentType);
-}
-function registerChildFinalizationCallback(parent, child, key) {
-	parent.callbacks_.push(function childCleanup(rootScope) {
-		const state = child;
-		if (!state || !isSameScope(state, rootScope)) return;
-		rootScope.mapSetPlugin_?.fixSetContents(state);
-		const finalizedValue = getFinalValue(state);
-		updateDraftInParent(parent, state.draft_ ?? state, finalizedValue, key);
-		generatePatchesAndFinalize(state, rootScope);
-	});
-}
-function generatePatchesAndFinalize(state, rootScope) {
-	if (state.modified_ && !state.finalized_ && (state.type_ === 3 || state.type_ === 1 && state.allIndicesReassigned_ || (state.assigned_?.size ?? 0) > 0)) {
-		const { patchPlugin_ } = rootScope;
-		if (patchPlugin_) {
-			const basePath = patchPlugin_.getPath(state);
-			if (basePath) patchPlugin_.generatePatches_(state, basePath, rootScope);
-		}
-		markStateFinalized(state);
-	}
-}
-function handleCrossReference(target, key, value) {
-	const { scope_ } = target;
-	if (isDraft(value)) {
-		const state = value[DRAFT_STATE];
-		if (isSameScope(state, scope_)) state.callbacks_.push(function crossReferenceCleanup() {
-			prepareCopy(target);
-			updateDraftInParent(target, value, getFinalValue(state), key);
-		});
-	} else if (isDraftable(value)) target.callbacks_.push(function nestedDraftCleanup() {
-		const targetCopy = latest(target);
-		if (target.type_ === 3) {
-			if (targetCopy.has(value)) handleValue(value, scope_.handledSet_, scope_);
-		} else if (get(targetCopy, key, target.type_) === value) {
-			if (scope_.drafts_.length > 1 && (target.assigned_.get(key) ?? false) === true && target.copy_) handleValue(get(target.copy_, key, target.type_), scope_.handledSet_, scope_);
-		}
-	});
-}
-function handleValue(target, handledSet, rootScope) {
-	if (!rootScope.immer_.autoFreeze_ && rootScope.unfinalizedDrafts_ < 1) return target;
-	if (isDraft(target) || handledSet.has(target) || !isDraftable(target) || isFrozen(target)) return target;
-	handledSet.add(target);
-	each(target, (key, value) => {
-		if (isDraft(value)) {
-			const state = value[DRAFT_STATE];
-			if (isSameScope(state, rootScope)) {
-				set(target, key, getFinalValue(state), target.type_);
-				markStateFinalized(state);
-			}
-		} else if (isDraftable(value)) handleValue(value, handledSet, rootScope);
-	});
-	return target;
-}
-function createProxyProxy(base, parent) {
-	const baseIsArray = isArray(base);
-	const state = {
-		type_: baseIsArray ? 1 : 0,
-		scope_: parent ? parent.scope_ : getCurrentScope(),
-		modified_: false,
-		finalized_: false,
-		assigned_: void 0,
-		parent_: parent,
-		base_: base,
-		draft_: null,
-		copy_: null,
-		revoke_: null,
-		isManual_: false,
-		callbacks_: void 0
-	};
-	let target = state;
-	let traps = objectTraps;
-	if (baseIsArray) {
-		target = [state];
-		traps = arrayTraps;
-	}
-	const { revoke, proxy } = Proxy.revocable(target, traps);
-	state.draft_ = proxy;
-	state.revoke_ = revoke;
-	return [proxy, state];
-}
-var objectTraps = {
-	get(state, prop) {
-		if (prop === DRAFT_STATE) return state;
-		let arrayPlugin = state.scope_.arrayMethodsPlugin_;
-		const isArrayWithStringProp = state.type_ === 1 && typeof prop === "string";
-		if (isArrayWithStringProp) {
-			if (arrayPlugin?.isArrayOperationMethod(prop)) return arrayPlugin.createMethodInterceptor(state, prop);
-		}
-		const source = latest(state);
-		if (!has(source, prop, state.type_)) return readPropFromProto(state, source, prop);
-		const value = source[prop];
-		if (state.finalized_ || !isDraftable(value)) return value;
-		if (isArrayWithStringProp && state.operationMethod && arrayPlugin?.isMutatingArrayMethod(state.operationMethod) && isArrayIndex(prop)) return value;
-		if (value === peek(state.base_, prop) || isRelocatedBaseRef(state, prop, value)) {
-			prepareCopy(state);
-			const childKey = state.type_ === 1 ? +prop : prop;
-			const childDraft = createProxy(state.scope_, value, state, childKey);
-			return state.copy_[childKey] = childDraft;
-		}
-		return value;
-	},
-	has(state, prop) {
-		return prop in latest(state);
-	},
-	ownKeys(state) {
-		return Reflect.ownKeys(latest(state));
-	},
-	set(state, prop, value) {
-		const desc = getDescriptorFromProto(latest(state), prop);
-		if (desc?.set) {
-			desc.set.call(state.draft_, value);
-			return true;
-		}
-		if (!state.modified_) {
-			const current2 = peek(latest(state), prop);
-			const currentState = current2?.[DRAFT_STATE];
-			if (currentState && currentState.base_ === value) {
-				state.copy_[prop] = value;
-				state.assigned_.set(prop, false);
-				return true;
-			}
-			if (is(value, current2) && (value !== void 0 || has(state.base_, prop, state.type_))) return true;
-			prepareCopy(state);
-			markChanged(state);
-		}
-		if (state.copy_[prop] === value && (value !== void 0 || has(state.copy_, prop, state.type_)) || Number.isNaN(value) && Number.isNaN(state.copy_[prop])) return true;
-		state.copy_[prop] = value;
-		state.assigned_.set(prop, true);
-		handleCrossReference(state, prop, value);
-		return true;
-	},
-	deleteProperty(state, prop) {
-		prepareCopy(state);
-		if (peek(state.base_, prop) !== void 0 || prop in state.base_) {
-			state.assigned_.set(prop, false);
-			markChanged(state);
-		} else state.assigned_.delete(prop);
-		if (state.copy_) delete state.copy_[prop];
-		return true;
-	},
-	getOwnPropertyDescriptor(state, prop) {
-		const owner = latest(state);
-		const desc = Reflect.getOwnPropertyDescriptor(owner, prop);
-		if (!desc) return desc;
-		return {
-			[WRITABLE]: true,
-			[CONFIGURABLE]: state.type_ !== 1 || prop !== "length",
-			[ENUMERABLE]: desc[ENUMERABLE],
-			[VALUE]: owner[prop]
-		};
-	},
-	defineProperty() {
-		die(11);
-	},
-	getPrototypeOf(state) {
-		return getPrototypeOf(state.base_);
-	},
-	setPrototypeOf() {
-		die(12);
-	}
-};
-var arrayTraps = {};
-for (let key in objectTraps) {
-	let fn = objectTraps[key];
-	arrayTraps[key] = function() {
-		const args = arguments;
-		args[0] = args[0][0];
-		return fn.apply(this, args);
-	};
-}
-arrayTraps.deleteProperty = function(state, prop) {
-	return arrayTraps.set.call(this, state, prop, void 0);
-};
-arrayTraps.set = function(state, prop, value) {
-	return objectTraps.set.call(this, state[0], prop, value, state[0]);
-};
-function peek(draft, prop) {
-	const state = draft[DRAFT_STATE];
-	return (state ? latest(state) : draft)[prop];
-}
-function isRelocatedBaseRef(state, prop, value) {
-	if (state.type_ !== 1 || !state.allIndicesReassigned_ || state.assigned_?.get(prop) || !isDraftable(value) || value[DRAFT_STATE]) return false;
-	return state.baseRefs_.has(value);
-}
-function readPropFromProto(state, source, prop) {
-	const desc = getDescriptorFromProto(source, prop);
-	return desc ? VALUE in desc ? desc[VALUE] : desc.get?.call(state.draft_) : void 0;
-}
-function getDescriptorFromProto(source, prop) {
-	if (!(prop in source)) return void 0;
-	let proto = getPrototypeOf(source);
-	while (proto) {
-		const desc = Object.getOwnPropertyDescriptor(proto, prop);
-		if (desc) return desc;
-		proto = getPrototypeOf(proto);
-	}
-}
-function markChanged(state) {
-	if (!state.modified_) {
-		state.modified_ = true;
-		if (state.parent_) markChanged(state.parent_);
-	}
-}
-function prepareCopy(state) {
-	if (!state.copy_) {
-		state.assigned_ = /* @__PURE__ */ new Map();
-		state.copy_ = shallowCopy(state.base_, state.scope_.immer_.useStrictShallowCopy_);
-	}
-}
-var Immer2 = class {
-	constructor(config) {
-		this.autoFreeze_ = true;
-		this.useStrictShallowCopy_ = false;
-		this.useStrictIteration_ = false;
-		/**
-		* The `produce` function takes a value and a "recipe function" (whose
-		* return value often depends on the base state). The recipe function is
-		* free to mutate its first argument however it wants. All mutations are
-		* only ever applied to a __copy__ of the base state.
-		*
-		* Pass only a function to create a "curried producer" which relieves you
-		* from passing the recipe function every time.
-		*
-		* Only plain objects and arrays are made mutable. All other objects are
-		* considered uncopyable.
-		*
-		* Note: This function is __bound__ to its `Immer` instance.
-		*
-		* @param {any} base - the initial state
-		* @param {Function} recipe - function that receives a proxy of the base state as first argument and which can be freely modified
-		* @param {Function} patchListener - optional function that will be called with all the patches produced here
-		* @returns {any} a new state, or the initial state if nothing was modified
-		*/
-		this.produce = (base, recipe, patchListener) => {
-			if (isFunction(base) && !isFunction(recipe)) {
-				const defaultBase = recipe;
-				recipe = base;
-				const self = this;
-				return function curriedProduce(base2 = defaultBase, ...args) {
-					return self.produce(base2, (draft) => recipe.call(this, draft, ...args));
-				};
-			}
-			if (!isFunction(recipe)) die(6);
-			if (patchListener !== void 0 && !isFunction(patchListener)) die(7);
-			let result;
-			if (isDraftable(base)) {
-				const scope = enterScope(this);
-				const proxy = createProxy(scope, base, void 0);
-				let hasError = true;
-				try {
-					result = recipe(proxy);
-					hasError = false;
-				} finally {
-					if (hasError) revokeScope(scope);
-					else leaveScope(scope);
-				}
-				usePatchesInScope(scope, patchListener);
-				return processResult(result, scope);
-			} else if (!base || !isObjectish(base)) {
-				result = recipe(base);
-				if (result === void 0) result = base;
-				if (result === NOTHING) result = void 0;
-				if (this.autoFreeze_) freeze(result, true);
-				if (patchListener) {
-					const p = [];
-					const ip = [];
-					getPlugin(PluginPatches).generateReplacementPatches_(base, result, {
-						patches_: p,
-						inversePatches_: ip
-					});
-					patchListener(p, ip);
-				}
-				return result;
-			} else die(1, base);
-		};
-		this.produceWithPatches = (base, recipe) => {
-			if (isFunction(base)) return (state, ...args) => this.produceWithPatches(state, (draft) => base(draft, ...args));
-			let patches, inversePatches;
-			return [
-				this.produce(base, recipe, (p, ip) => {
-					patches = p;
-					inversePatches = ip;
-				}),
-				patches,
-				inversePatches
-			];
-		};
-		if (isBoolean(config?.autoFreeze)) this.setAutoFreeze(config.autoFreeze);
-		if (isBoolean(config?.useStrictShallowCopy)) this.setUseStrictShallowCopy(config.useStrictShallowCopy);
-		if (isBoolean(config?.useStrictIteration)) this.setUseStrictIteration(config.useStrictIteration);
-	}
-	createDraft(base) {
-		if (!isDraftable(base)) die(8);
-		if (isDraft(base)) base = current(base);
-		const scope = enterScope(this);
-		const proxy = createProxy(scope, base, void 0);
-		proxy[DRAFT_STATE].isManual_ = true;
-		leaveScope(scope);
-		return proxy;
-	}
-	finishDraft(draft, patchListener) {
-		const state = draft && draft[DRAFT_STATE];
-		if (!state || !state.isManual_) die(9);
-		const { scope_: scope } = state;
-		usePatchesInScope(scope, patchListener);
-		return processResult(void 0, scope);
-	}
-	/**
-	* Pass true to automatically freeze all copies created by Immer.
-	*
-	* By default, auto-freezing is enabled.
-	*/
-	setAutoFreeze(value) {
-		this.autoFreeze_ = value;
-	}
-	/**
-	* Pass true to enable strict shallow copy.
-	*
-	* By default, immer does not copy the object descriptors such as getter, setter and non-enumrable properties.
-	*/
-	setUseStrictShallowCopy(value) {
-		this.useStrictShallowCopy_ = value;
-	}
-	/**
-	* Pass false to use faster iteration that skips non-enumerable properties
-	* but still handles symbols for compatibility.
-	*
-	* By default, strict iteration is enabled (includes all own properties).
-	*/
-	setUseStrictIteration(value) {
-		this.useStrictIteration_ = value;
-	}
-	shouldUseStrictIteration() {
-		return this.useStrictIteration_;
-	}
-	applyPatches(base, patches) {
-		let i;
-		for (i = patches.length - 1; i >= 0; i--) {
-			const patch = patches[i];
-			if (patch.path.length === 0 && patch.op === "replace") {
-				base = patch.value;
-				break;
-			}
-		}
-		if (i > -1) patches = patches.slice(i + 1);
-		const applyPatchesImpl = getPlugin(PluginPatches).applyPatches_;
-		if (isDraft(base)) return applyPatchesImpl(base, patches);
-		return this.produce(base, (draft) => applyPatchesImpl(draft, patches));
-	}
-};
-function createProxy(rootScope, value, parent, key) {
-	const [draft, state] = isMap(value) ? getPlugin(PluginMapSet).proxyMap_(value, parent) : isSet(value) ? getPlugin(PluginMapSet).proxySet_(value, parent) : createProxyProxy(value, parent);
-	(parent?.scope_ ?? getCurrentScope()).drafts_.push(draft);
-	state.callbacks_ = parent?.callbacks_ ?? [];
-	state.key_ = key;
-	if (parent && key !== void 0) registerChildFinalizationCallback(parent, state, key);
-	else state.callbacks_.push(function rootDraftCleanup(rootScope2) {
-		rootScope2.mapSetPlugin_?.fixSetContents(state);
-		const { patchPlugin_ } = rootScope2;
-		if (state.modified_ && patchPlugin_) patchPlugin_.generatePatches_(state, [], rootScope2);
-	});
-	return draft;
-}
-function current(value) {
-	if (!isDraft(value)) die(10, value);
-	return currentImpl(value);
-}
-function currentImpl(value) {
-	if (!isDraftable(value) || isFrozen(value)) return value;
-	const state = value[DRAFT_STATE];
-	let copy;
-	let strict = true;
-	if (state) {
-		if (!state.modified_) return state.base_;
-		state.finalized_ = true;
-		copy = shallowCopy(value, state.scope_.immer_.useStrictShallowCopy_);
-		strict = state.scope_.immer_.shouldUseStrictIteration();
-	} else copy = shallowCopy(value, true);
-	each(copy, (key, childValue) => {
-		set(copy, key, currentImpl(childValue));
-	}, strict);
-	if (state) state.finalized_ = false;
-	return copy;
-}
-var produce = new Immer2().produce;
-typeof window !== "undefined" && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ && window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__;
-typeof window !== "undefined" && window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__;
-function createAction(type, prepareAction) {
-	function actionCreator(...args) {
-		if (prepareAction) {
-			let prepared = prepareAction(...args);
-			if (!prepared) throw new Error(formatProdErrorMessage(0));
-			return {
-				type,
-				payload: prepared.payload,
-				..."meta" in prepared && { meta: prepared.meta },
-				..."error" in prepared && { error: prepared.error }
-			};
-		}
-		return {
-			type,
-			payload: args[0]
-		};
-	}
-	actionCreator.toString = () => `${type}`;
-	actionCreator.type = type;
-	actionCreator.match = (action) => isAction(action) && action.type === type;
-	return actionCreator;
-}
-function freezeDraftable(val) {
-	return isDraftable(val) ? produce(val, () => {}) : val;
-}
-function getOrInsertComputed(map, key, compute) {
-	if (map.has(key)) return map.get(key);
-	return map.set(key, compute(key)).get(key);
-}
-function executeReducerBuilderCallback(builderCallback) {
-	const actionsMap = {};
-	const actionMatchers = [];
-	let defaultCaseReducer;
-	const builder = {
-		addCase(typeOrActionCreator, reducer) {
-			const type = typeof typeOrActionCreator === "string" ? typeOrActionCreator : typeOrActionCreator.type;
-			if (!type) throw new Error(formatProdErrorMessage(28));
-			if (type in actionsMap) throw new Error(formatProdErrorMessage(29));
-			actionsMap[type] = reducer;
-			return builder;
-		},
-		addAsyncThunk(asyncThunk, reducers) {
-			if (reducers.pending) actionsMap[asyncThunk.pending.type] = reducers.pending;
-			if (reducers.rejected) actionsMap[asyncThunk.rejected.type] = reducers.rejected;
-			if (reducers.fulfilled) actionsMap[asyncThunk.fulfilled.type] = reducers.fulfilled;
-			if (reducers.settled) actionMatchers.push({
-				matcher: asyncThunk.settled,
-				reducer: reducers.settled
-			});
-			return builder;
-		},
-		addMatcher(matcher, reducer) {
-			actionMatchers.push({
-				matcher,
-				reducer
-			});
-			return builder;
-		},
-		addDefaultCase(reducer) {
-			defaultCaseReducer = reducer;
-			return builder;
-		}
-	};
-	builderCallback(builder);
-	return [
-		actionsMap,
-		actionMatchers,
-		defaultCaseReducer
-	];
-}
-function isStateFunction(x) {
-	return typeof x === "function";
-}
-function createReducer(initialState, mapOrBuilderCallback) {
-	let [actionsMap, finalActionMatchers, finalDefaultCaseReducer] = executeReducerBuilderCallback(mapOrBuilderCallback);
-	let getInitialState;
-	if (isStateFunction(initialState)) getInitialState = () => freezeDraftable(initialState());
-	else {
-		const frozenInitialState = freezeDraftable(initialState);
-		getInitialState = () => frozenInitialState;
-	}
-	function reducer(state = getInitialState(), action) {
-		let caseReducers = [actionsMap[action.type], ...finalActionMatchers.filter(({ matcher }) => matcher(action)).map(({ reducer: reducer2 }) => reducer2)];
-		if (caseReducers.filter((cr) => !!cr).length === 0) caseReducers = [finalDefaultCaseReducer];
-		return caseReducers.reduce((previousState, caseReducer) => {
-			if (caseReducer) {
-				if (isDraft(previousState)) {
-					const result = caseReducer(previousState, action);
-					if (result === void 0) return previousState;
-					return result;
-				} else if (!isDraftable(previousState)) {
-					const result = caseReducer(previousState, action);
-					if (result === void 0) {
-						if (previousState === null) return previousState;
-						throw Error("A case reducer on a non-draftable value must not return undefined");
-					}
-					return result;
-				} else return produce(previousState, (draft) => {
-					return caseReducer(draft, action);
-				});
-			}
-			return previousState;
-		}, state);
-	}
-	reducer.getInitialState = getInitialState;
-	return reducer;
-}
-var asyncThunkSymbol = /* @__PURE__ */ Symbol.for("rtk-slice-createasyncthunk");
-function getType(slice, actionKey) {
-	return `${slice}/${actionKey}`;
-}
-function buildCreateSlice({ creators } = {}) {
-	const cAT = creators?.asyncThunk?.[asyncThunkSymbol];
-	return function createSlice2(options) {
-		const { name, reducerPath = name } = options;
-		if (!name) throw new Error(formatProdErrorMessage(11));
-		const reducers = (typeof options.reducers === "function" ? options.reducers(buildReducerCreators()) : options.reducers) || {};
-		const reducerNames = Object.keys(reducers);
-		const context = {
-			sliceCaseReducersByName: {},
-			sliceCaseReducersByType: {},
-			actionCreators: {},
-			sliceMatchers: []
-		};
-		const contextMethods = {
-			addCase(typeOrActionCreator, reducer2) {
-				const type = typeof typeOrActionCreator === "string" ? typeOrActionCreator : typeOrActionCreator.type;
-				if (!type) throw new Error(formatProdErrorMessage(12));
-				if (type in context.sliceCaseReducersByType) throw new Error(formatProdErrorMessage(13));
-				context.sliceCaseReducersByType[type] = reducer2;
-				return contextMethods;
-			},
-			addMatcher(matcher, reducer2) {
-				context.sliceMatchers.push({
-					matcher,
-					reducer: reducer2
-				});
-				return contextMethods;
-			},
-			exposeAction(name2, actionCreator) {
-				context.actionCreators[name2] = actionCreator;
-				return contextMethods;
-			},
-			exposeCaseReducer(name2, reducer2) {
-				context.sliceCaseReducersByName[name2] = reducer2;
-				return contextMethods;
-			}
-		};
-		reducerNames.forEach((reducerName) => {
-			const reducerDefinition = reducers[reducerName];
-			const reducerDetails = {
-				reducerName,
-				type: getType(name, reducerName),
-				createNotation: typeof options.reducers === "function"
-			};
-			if (isAsyncThunkSliceReducerDefinition(reducerDefinition)) handleThunkCaseReducerDefinition(reducerDetails, reducerDefinition, contextMethods, cAT);
-			else handleNormalReducerDefinition(reducerDetails, reducerDefinition, contextMethods);
-		});
-		function buildReducer() {
-			const [extraReducers = {}, actionMatchers = [], defaultCaseReducer = void 0] = typeof options.extraReducers === "function" ? executeReducerBuilderCallback(options.extraReducers) : [options.extraReducers];
-			const finalCaseReducers = {
-				...extraReducers,
-				...context.sliceCaseReducersByType
-			};
-			return createReducer(options.initialState, (builder) => {
-				for (let key in finalCaseReducers) builder.addCase(key, finalCaseReducers[key]);
-				for (let sM of context.sliceMatchers) builder.addMatcher(sM.matcher, sM.reducer);
-				for (let m of actionMatchers) builder.addMatcher(m.matcher, m.reducer);
-				if (defaultCaseReducer) builder.addDefaultCase(defaultCaseReducer);
-			});
-		}
-		const selectSelf = (state) => state;
-		const injectedSelectorCache = /* @__PURE__ */ new Map();
-		const injectedStateCache = /* @__PURE__ */ new WeakMap();
-		let _reducer;
-		function reducer(state, action) {
-			if (!_reducer) _reducer = buildReducer();
-			return _reducer(state, action);
-		}
-		function getInitialState() {
-			if (!_reducer) _reducer = buildReducer();
-			return _reducer.getInitialState();
-		}
-		function makeSelectorProps(reducerPath2, injected = false) {
-			function selectSlice(state) {
-				let sliceState = state[reducerPath2];
-				if (typeof sliceState === "undefined") {
-					if (injected) sliceState = getOrInsertComputed(injectedStateCache, selectSlice, getInitialState);
-				}
-				return sliceState;
-			}
-			function getSelectors(selectState = selectSelf) {
-				return getOrInsertComputed(getOrInsertComputed(injectedSelectorCache, injected, () => /* @__PURE__ */ new WeakMap()), selectState, () => {
-					const map = {};
-					for (const [name2, selector] of Object.entries(options.selectors ?? {})) map[name2] = wrapSelector(selector, selectState, () => getOrInsertComputed(injectedStateCache, selectState, getInitialState), injected);
-					return map;
-				});
-			}
-			return {
-				reducerPath: reducerPath2,
-				getSelectors,
-				get selectors() {
-					return getSelectors(selectSlice);
-				},
-				selectSlice
-			};
-		}
-		const slice = {
-			name,
-			reducer,
-			actions: context.actionCreators,
-			caseReducers: context.sliceCaseReducersByName,
-			getInitialState,
-			...makeSelectorProps(reducerPath),
-			injectInto(injectable, { reducerPath: pathOpt, ...config } = {}) {
-				const newReducerPath = pathOpt ?? reducerPath;
-				injectable.inject({
-					reducerPath: newReducerPath,
-					reducer
-				}, config);
-				return {
-					...slice,
-					...makeSelectorProps(newReducerPath, true)
-				};
-			}
-		};
-		return slice;
-	};
-}
-function wrapSelector(selector, selectState, getInitialState, injected) {
-	function wrapper(rootState, ...args) {
-		let sliceState = selectState(rootState);
-		if (typeof sliceState === "undefined") {
-			if (injected) sliceState = getInitialState();
-		}
-		return selector(sliceState, ...args);
-	}
-	wrapper.unwrapped = selector;
-	return wrapper;
-}
-var createSlice = /* @__PURE__ */ buildCreateSlice();
-function buildReducerCreators() {
-	function asyncThunk(payloadCreator, config) {
-		return {
-			_reducerDefinitionType: "asyncThunk",
-			payloadCreator,
-			...config
-		};
-	}
-	asyncThunk.withTypes = () => asyncThunk;
-	return {
-		reducer(caseReducer) {
-			return Object.assign({ [caseReducer.name](...args) {
-				return caseReducer(...args);
-			} }[caseReducer.name], { _reducerDefinitionType: "reducer" });
-		},
-		preparedReducer(prepare, reducer) {
-			return {
-				_reducerDefinitionType: "reducerWithPrepare",
-				prepare,
-				reducer
-			};
-		},
-		asyncThunk
-	};
-}
-function handleNormalReducerDefinition({ type, reducerName, createNotation }, maybeReducerWithPrepare, context) {
-	let caseReducer;
-	let prepareCallback;
-	if ("reducer" in maybeReducerWithPrepare) {
-		if (createNotation && !isCaseReducerWithPrepareDefinition(maybeReducerWithPrepare)) throw new Error(formatProdErrorMessage(17));
-		caseReducer = maybeReducerWithPrepare.reducer;
-		prepareCallback = maybeReducerWithPrepare.prepare;
-	} else caseReducer = maybeReducerWithPrepare;
-	context.addCase(type, caseReducer).exposeCaseReducer(reducerName, caseReducer).exposeAction(reducerName, prepareCallback ? createAction(type, prepareCallback) : createAction(type));
-}
-function isAsyncThunkSliceReducerDefinition(reducerDefinition) {
-	return reducerDefinition._reducerDefinitionType === "asyncThunk";
-}
-function isCaseReducerWithPrepareDefinition(reducerDefinition) {
-	return reducerDefinition._reducerDefinitionType === "reducerWithPrepare";
-}
-function handleThunkCaseReducerDefinition({ type, reducerName }, reducerDefinition, context, cAT) {
-	if (!cAT) throw new Error(formatProdErrorMessage(18));
-	const { payloadCreator, fulfilled, pending, rejected, settled, options } = reducerDefinition;
-	const thunk = cAT(type, payloadCreator, options);
-	context.exposeAction(reducerName, thunk);
-	if (fulfilled) context.addCase(thunk.fulfilled, fulfilled);
-	if (pending) context.addCase(thunk.pending, pending);
-	if (rejected) context.addCase(thunk.rejected, rejected);
-	if (settled) context.addMatcher(thunk.settled, settled);
-	context.exposeCaseReducer(reducerName, {
-		fulfilled: fulfilled || noop$1,
-		pending: pending || noop$1,
-		rejected: rejected || noop$1,
-		settled: settled || noop$1
-	});
-}
-function noop$1() {}
-var listener = "listener";
-var completed = "completed";
-var cancelled = "cancelled";
-`${cancelled}`;
-`${completed}`;
-`${listener}${cancelled}`;
-`${listener}${completed}`;
-var { assign } = Object;
-var alm = "listenerMiddleware";
-var addListener = /* @__PURE__ */ assign(/* @__PURE__ */ createAction(`${alm}/add`), { withTypes: () => addListener });
-`${alm}`;
-var removeListener = /* @__PURE__ */ assign(/* @__PURE__ */ createAction(`${alm}/remove`), { withTypes: () => removeListener });
-function formatProdErrorMessage(code) {
-	return `Minified Redux Toolkit error #${code}; visit https://redux-toolkit.js.org/Errors?code=${code} for the full message or use the non-minified dev environment for full errors. `;
-}
-//#endregion
-//#region extension/src/renderer/reducer.ts
-var customActionsSlice = createSlice({
-	initialState: {
-		customCards: [],
-		view: "list",
-		editingCard: void 0,
-		saveCards: false,
-		urlCatchingSession: void 0
-	},
-	name: "customActions",
-	reducers: {
-		updateState: (state, action) => {
-			state[action.payload.key] = action.payload.value;
-		},
-		addCard: (state) => {
-			state.editingCard = {
-				id: "temp",
-				title: "",
-				cardType: "terminal_browser",
-				urlConfig: {
-					type: "nothing",
-					openImmediately: true,
-					timeout: 5
-				},
-				categories: { pinned: true },
-				actions: [],
-				env: []
-			};
-			state.view = "form";
-		},
-		removeCard: (state) => {
-			state.customCards = state.customCards.filter((item) => item.id !== state.editingCard?.id);
-			state.editingCard = void 0;
-			state.view = "list";
-			state.saveCards = true;
-		},
-		saveCard: (state) => {
-			const targetCard = state.editingCard;
-			let targetUrl = targetCard.urlConfig.customUrl;
-			if (targetUrl) {
-				targetUrl = formatWebAddress(targetUrl);
-				targetCard.urlConfig.customUrl = targetUrl;
-			}
-			if (state.customCards.some((card) => card.id === targetCard.id)) state.customCards = state.customCards.map((card) => card.id === targetCard.id ? targetCard : card);
-			else state.customCards = [...state.customCards, targetCard];
-			state.view = "list";
-			state.editingCard = void 0;
-			state.saveCards = true;
-		},
-		setTitle: (state, action) => {
-			if (state.editingCard) {
-				const targetId = `${action.payload}_custom_action`;
-				state.customCards = state.customCards.map((item) => item.id === state.editingCard.id ? {
-					...item,
-					id: targetId
-				} : item);
-				state.editingCard.title = action.payload;
-				state.editingCard.id = targetId;
-			}
-		},
-		setCardType: (state, action) => {
-			if (state.editingCard) state.editingCard.cardType = action.payload;
-		},
-		setDescription: (state, action) => {
-			if (state.editingCard) state.editingCard.description = action.payload;
-		},
-		setIcon: (state, action) => {
-			if (state.editingCard) state.editingCard.icon = action.payload;
-		},
-		setView: (state, action) => {
-			state.view = action.payload;
-		},
-		setEditingCard: (state, action) => {
-			state.editingCard = action.payload;
-		},
-		setUrlConfigType: (state, action) => {
-			if (state.editingCard) state.editingCard.urlConfig.type = action.payload;
-		},
-		setCustomUrl: (state, action) => {
-			if (state.editingCard) state.editingCard.urlConfig.customUrl = action.payload;
-		},
-		setOpenImmediately: (state, action) => {
-			if (state.editingCard) state.editingCard.urlConfig.openImmediately = action.payload;
-		},
-		setTimeoutValue: (state, action) => {
-			if (state.editingCard) state.editingCard.urlConfig.timeout = action.payload;
-		},
-		setFindLine: (state, action) => {
-			if (state.editingCard) state.editingCard.urlConfig.findLine = action.payload;
-		},
-		setCategories: (state, action) => {
-			if (state.editingCard) state.editingCard.categories[action.payload.id] = action.payload.value;
-		},
-		setActions: (state, action) => {
-			if (state.editingCard) state.editingCard.actions = action.payload;
-		},
-		removeAction: (state, action) => {
-			if (state.editingCard) state.editingCard.actions = state.editingCard.actions.filter((_, index) => index !== action.payload);
-		},
-		addAction: (state, action) => {
-			if (state.editingCard) state.editingCard.actions = [...state.editingCard.actions, action.payload];
-		},
-		updateAction: (state, action) => {
-			if (state.editingCard && state.editingCard.actions[action.payload.index]) state.editingCard.actions[action.payload.index].action = action.payload.newAction;
-		},
-		setEnv: (state, action) => {
-			if (state.editingCard) state.editingCard.env = action.payload;
-		},
-		addEnv: (state, action) => {
-			if (state.editingCard) state.editingCard.env = [...state.editingCard.env || [], action.payload];
-		},
-		removeEnv: (state, action) => {
-			if (state.editingCard && state.editingCard.env) state.editingCard.env = state.editingCard.env.filter((_, index) => index !== action.payload);
-		},
-		updateEnv: (state, action) => {
-			if (state.editingCard && state.editingCard.env && state.editingCard.env[action.payload.index]) state.editingCard.env[action.payload.index] = {
-				key: action.payload.key,
-				value: action.payload.value
-			};
-		},
-		clearSaveCards: (state) => {
-			state.saveCards = false;
-		},
-		startUrlCatching: (state, action) => {
-			state.urlCatchingSession = {
-				ptyId: action.payload.ptyId,
-				tabId: action.payload.tabId,
-				findLine: action.payload.findLine,
-				urlFound: false
-			};
-		},
-		stopUrlCatching: (state) => {
-			state.urlCatchingSession = void 0;
-		},
-		setUrlFound: (state) => {
-			if (state.urlCatchingSession) state.urlCatchingSession.urlFound = true;
-		},
-		importCards: (state, action) => {
-			const existingIds = new Set(state.customCards.map((c) => c.id));
-			const newCards = action.payload.map((card) => {
-				let newId = card.id;
-				let newTitle = card.title;
-				let counter = 1;
-				while (existingIds.has(newId)) {
-					newId = `${card.id}_import_${counter}`;
-					newTitle = `${card.title} (Imported ${counter})`;
-					counter++;
-				}
-				existingIds.add(newId);
-				return {
-					...card,
-					id: newId,
-					title: newTitle
-				};
-			});
-			state.customCards = [...state.customCards, ...newCards];
-			state.saveCards = true;
-		}
-	}
-});
-var selectCustomCards = (state) => state.customActions.customCards;
-var selectView = (state) => state.customActions.view;
-var selectEditingCard = (state) => state.customActions.editingCard;
-var selectSaveCards = (state) => state.customActions.saveCards;
-var selectUrlCatchingSession = (state) => state.customActions.urlCatchingSession;
-var reducerActions = customActionsSlice.actions;
-var reducer_default = customActionsSlice.reducer;
-//#endregion
-//#region src/common/consts/ipcChannels/browser.ts
-/**
-* IPC channels for browser-related functionality.
-* Handles tab management, navigation, zoom, volume, and other webview interactions.
-*/
-var browserChannels = {
-	createBrowser: "browser:create-browser",
-	removeBrowser: "browser:remove-browser",
-	loadURL: "browser:load-url",
-	setVisible: "browser:set-visible",
-	openFindInPage: "browser:openFindInPage",
-	openZoom: "browser:openZoom",
-	openVolume: "browser:openVolume",
-	onZoomChanged: "browser:on-zoom-changed",
-	onActiveWindowChange: "browser:on-active-window-change",
-	onLinkHover: "browser:on-link-hover",
-	resizeLinkPreview: "browser:resize-link-preview",
-	resizeBrowserView: "browser:resize-browser-view",
-	findInPage: "browser:findInPage",
-	stopFindInPage: "browser:stopFindInPage",
-	onFoundInPage: "browser:on-found-in-page",
-	setZoomFactor: "browser:setZoomFactor",
-	focusWebView: "browser:focus-webview",
-	clearCache: "browser:clear-cache",
-	clearCookies: "browser:clear-cookies",
-	reload: "browser:reload",
-	focus: "browser:focus",
-	stop: "browser:stop",
-	goBack: "browser:goBack",
-	goForward: "browser:goForward",
-	toggleDevTools: "browser:toggle-devtools",
-	onCanGo: "browser:on-can-go",
-	isLoading: "browser:is-loading",
-	onTitleChange: "browser:on-title-change",
-	onFavIconChange: "browser:on-favicon-change",
-	onUrlChange: "browser:on-url-change",
-	onDomReady: "browser:on-dom-ready",
-	getUserAgent: "browser:get-user-agent",
-	updateUserAgent: "browser:update-user-agent",
-	clearHistory: "browser:clear-history",
-	onFailedLoadUrl: "browser:on-failed-load-url",
-	onClearFailed: "browser:on-clear-failed",
-	setVolume: "volume:set",
-	setMuted: "volume:setMuted",
-	getState: "volume:getState",
-	updateTabVolume: "volume:updateTabVolume",
-	updateTabMuted: "volume:updateTabMuted",
-	onTabVolumeUpdate: "volume:onTabVolumeUpdate",
-	onTabMutedUpdate: "volume:onTabMutedUpdate",
-	onAudioStateChange: "volume:onAudioStateChange",
-	executeJavaScript: "browser:execute-javascript"
-};
-//#endregion
-//#region src/renderer/shared/ipc/ipcEvents.ts
-var listeners = {
-	before: /* @__PURE__ */ new Set(),
-	after: /* @__PURE__ */ new Set()
-};
-var channelListeners = {
-	before: /* @__PURE__ */ new Map(),
-	after: /* @__PURE__ */ new Map()
-};
-var getListenersForEvent = (event) => {
-	const base = [...listeners[event.phase]];
-	const perChannel = channelListeners[event.phase].get(event.channel);
-	if (perChannel) base.push(...perChannel);
-	return base;
-};
-var logHookError = (error) => {
-	console.error("Extension renderer IPC hook failed:", error);
-};
-var runListenerSync = (listener, event) => {
-	try {
-		const result = listener(event);
-		if (result && typeof result.then === "function") result.catch(logHookError);
-	} catch (error) {
-		logHookError(error);
-	}
-};
-var runListener = async (listener, event) => {
-	try {
-		await listener(event);
-	} catch (error) {
-		logHookError(error);
-	}
-};
-var emitRendererIpcEventSync = (event) => {
-	for (const listener of getListenersForEvent(event)) runListenerSync(listener, event);
-};
-var emitRendererIpcEvent = async (event) => {
-	for (const listener of getListenersForEvent(event)) await runListener(listener, event);
-};
-//#endregion
-//#region src/renderer/shared/ipc/lynxIpc.ts
-var ipc = window.electron.ipcRenderer;
-var send = (channel, ...args) => {
-	const eventStart = Date.now();
-	const beforeEvent = {
-		phase: "before",
-		method: "send",
-		channel,
-		args: [...args],
-		timestamp: eventStart
-	};
-	emitRendererIpcEventSync(beforeEvent);
-	try {
-		ipc.send(channel, ...args);
-		emitRendererIpcEventSync({
-			...beforeEvent,
-			phase: "after",
-			status: "success",
-			durationMs: Date.now() - eventStart
-		});
-	} catch (error) {
-		emitRendererIpcEventSync({
-			...beforeEvent,
-			phase: "after",
-			status: "error",
-			durationMs: Date.now() - eventStart,
-			error
-		});
-		throw error;
-	}
-};
-var sendSync = (channel, ...args) => {
-	const eventStart = Date.now();
-	const beforeEvent = {
-		phase: "before",
-		method: "sendSync",
-		channel,
-		args: [...args],
-		timestamp: eventStart
-	};
-	emitRendererIpcEventSync(beforeEvent);
-	try {
-		const result = ipc.sendSync(channel, ...args);
-		emitRendererIpcEventSync({
-			...beforeEvent,
-			phase: "after",
-			status: "success",
-			durationMs: Date.now() - eventStart,
-			result
-		});
-		return result;
-	} catch (error) {
-		emitRendererIpcEventSync({
-			...beforeEvent,
-			phase: "after",
-			status: "error",
-			durationMs: Date.now() - eventStart,
-			error
-		});
-		throw error;
-	}
-};
-var invoke = async (channel, ...args) => {
-	const eventStart = Date.now();
-	const beforeEvent = {
-		phase: "before",
-		method: "invoke",
-		channel,
-		args: [...args],
-		timestamp: eventStart
-	};
-	await emitRendererIpcEvent(beforeEvent);
-	try {
-		const result = await ipc.invoke(channel, ...args);
-		await emitRendererIpcEvent({
-			...beforeEvent,
-			phase: "after",
-			status: "success",
-			durationMs: Date.now() - eventStart,
-			result
-		});
-		return result;
-	} catch (error) {
-		await emitRendererIpcEvent({
-			...beforeEvent,
-			phase: "after",
-			status: "error",
-			durationMs: Date.now() - eventStart,
-			error
-		});
-		throw error;
-	}
-};
-var on = (channel, callback) => ipc.on(channel, (_, ...args) => {
-	const typedArgs = args;
-	const eventStart = Date.now();
-	const beforeEvent = {
-		phase: "before",
-		method: "on",
-		channel,
-		args: [...typedArgs],
-		timestamp: eventStart
-	};
-	emitRendererIpcEventSync(beforeEvent);
-	try {
-		const result = callback(...typedArgs);
-		emitRendererIpcEventSync({
-			...beforeEvent,
-			phase: "after",
-			status: "success",
-			durationMs: Date.now() - eventStart,
-			result
-		});
-	} catch (error) {
-		emitRendererIpcEventSync({
-			...beforeEvent,
-			phase: "after",
-			status: "error",
-			durationMs: Date.now() - eventStart,
-			error
-		});
-		throw error;
-	}
-});
-var once = (channel, callback) => ipc.once(channel, (_, ...args) => {
-	const typedArgs = args;
-	const eventStart = Date.now();
-	const beforeEvent = {
-		phase: "before",
-		method: "once",
-		channel,
-		args: [...typedArgs],
-		timestamp: eventStart
-	};
-	emitRendererIpcEventSync(beforeEvent);
-	try {
-		const result = callback(...typedArgs);
-		emitRendererIpcEventSync({
-			...beforeEvent,
-			phase: "after",
-			status: "success",
-			durationMs: Date.now() - eventStart,
-			result
-		});
-	} catch (error) {
-		emitRendererIpcEventSync({
-			...beforeEvent,
-			phase: "after",
-			status: "error",
-			durationMs: Date.now() - eventStart,
-			error
-		});
-		throw error;
-	}
-});
-var lynxIpc = {
-	send,
-	sendSync,
-	on,
-	once,
-	invoke
-};
-//#endregion
-//#region src/renderer/shared/ipc/browser.ts
-var invokeWithSoftTimeout = async (channel, timeoutMessage, ...args) => {
-	try {
-		await Promise.race([lynxIpc.invoke(channel, ...args), new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutMessage)), 8e3))]);
-	} catch {}
-};
-var browserIpc = {
-	send: {
-		resizeLinkPreview: (width) => lynxIpc.send(browserChannels.resizeLinkPreview, width),
-		resizeBrowserView: (data) => lynxIpc.send(browserChannels.resizeBrowserView, data),
-		createBrowser: (id, options) => lynxIpc.send(browserChannels.createBrowser, id, options),
-		removeBrowser: (id) => lynxIpc.send(browserChannels.removeBrowser, id),
-		loadURL: (id, url) => lynxIpc.send(browserChannels.loadURL, id, url),
-		setVisible: (id, visible, hideMode) => lynxIpc.send(browserChannels.setVisible, id, visible, hideMode),
-		openFindInPage: (id, customPosition) => lynxIpc.send(browserChannels.openFindInPage, id, customPosition),
-		openZoom: (id, customPosition) => lynxIpc.send(browserChannels.openZoom, id, customPosition),
-		openVolume: (data, customPosition) => lynxIpc.send(browserChannels.openVolume, data, customPosition),
-		findInPage: (id, value, options) => lynxIpc.send(browserChannels.findInPage, id, value, options),
-		stopFindInPage: (id, action) => lynxIpc.send(browserChannels.stopFindInPage, id, action),
-		focusWebView: (id) => lynxIpc.send(browserChannels.focusWebView, id),
-		setZoomFactor: (id, factor) => lynxIpc.send(browserChannels.setZoomFactor, id, factor),
-		reload: (id) => lynxIpc.send(browserChannels.reload, id),
-		focus: (id) => lynxIpc.send(browserChannels.focus, id),
-		stop: (id) => lynxIpc.send(browserChannels.stop, id),
-		goBack: (id) => lynxIpc.send(browserChannels.goBack, id),
-		goForward: (id) => lynxIpc.send(browserChannels.goForward, id),
-		toggleDevTools: (id) => lynxIpc.send(browserChannels.toggleDevTools, id),
-		updateUserAgent: () => lynxIpc.send(browserChannels.updateUserAgent),
-		clearHistory: (selected) => lynxIpc.send(browserChannels.clearHistory, selected),
-		updateTabVolume: (tabId, volume) => lynxIpc.send(browserChannels.updateTabVolume, tabId, volume),
-		updateTabMuted: (tabId, muted) => lynxIpc.send(browserChannels.updateTabMuted, tabId, muted)
-	},
-	on: {
-		linkHover: (callback) => lynxIpc.on(browserChannels.onLinkHover, callback),
-		canGoBackForward: (result) => lynxIpc.on(browserChannels.onCanGo, result),
-		loading: (result) => lynxIpc.on(browserChannels.isLoading, result),
-		titleChanged: (result) => lynxIpc.on(browserChannels.onTitleChange, result),
-		favIconChanged: (result) => lynxIpc.on(browserChannels.onFavIconChange, result),
-		urlChanged: (result) => lynxIpc.on(browserChannels.onUrlChange, result),
-		domReady: (result) => lynxIpc.on(browserChannels.onDomReady, result),
-		failedLoadUrl: (result) => lynxIpc.on(browserChannels.onFailedLoadUrl, result),
-		clearFailed: (result) => lynxIpc.on(browserChannels.onClearFailed, result),
-		onAudioStateChange: (callback) => lynxIpc.on(browserChannels.onAudioStateChange, callback),
-		onTabVolumeUpdate: (callback) => lynxIpc.on(browserChannels.onTabVolumeUpdate, callback),
-		onTabMutedUpdate: (callback) => lynxIpc.on(browserChannels.onTabMutedUpdate, callback),
-		foundInPage: (callback) => lynxIpc.on(browserChannels.onFoundInPage, callback),
-		onZoomChanged: (callback) => lynxIpc.on(browserChannels.onZoomChanged, callback),
-		activeWindowChanged: (callback) => lynxIpc.on(browserChannels.onActiveWindowChange, callback)
-	},
-	invoke: {
-		clearCache: () => lynxIpc.invoke(browserChannels.clearCache),
-		clearCookies: () => lynxIpc.invoke(browserChannels.clearCookies),
-		getUserAgent: (type) => lynxIpc.invoke(browserChannels.getUserAgent, type),
-		setVolume: (id, volume) => invokeWithSoftTimeout(browserChannels.setVolume, "Volume set operation timed out", id, volume),
-		setMuted: (id, muted) => invokeWithSoftTimeout(browserChannels.setMuted, "Mute set operation timed out", id, muted),
-		executeJavaScript: (id, script) => lynxIpc.invoke(browserChannels.executeJavaScript, id, script)
-	}
-};
-//#endregion
-//#region src/common/consts/ipcChannels/pty.ts
-/**
-* IPC channels for PTY (Pseudo-Terminal) operations.
-* Handles terminal process management, input/output, resizing, and custom commands.
-*/
-var ptyChannels = {
-	process: "pty-process",
-	customProcess: "pty-custom-process",
-	emptyProcess: "pty-custom-process",
-	stopProcess: "pty-stop-process",
-	customCommands: "pty-custom-commands",
-	write: "pty-write",
-	clear: "pty-clear",
-	resize: "pty-resize",
-	onData: "pty-on-data",
-	onTitle: "pty-on-title",
-	onExit: "pty-on-exit-code",
-	onProgress: "pty-on-progress"
-};
-//#endregion
-//#region src/renderer/shared/ipc/pty.ts
-var ptyIpc = {
-	process: (id, cardId) => lynxIpc.send(ptyChannels.process, id, cardId),
-	customProcess: (id, dir, file) => lynxIpc.send(ptyChannels.customProcess, id, dir, file),
-	emptyProcess: (id, dir) => lynxIpc.send(ptyChannels.emptyProcess, id, dir),
-	customCommands: (id, commands, dir) => lynxIpc.send(ptyChannels.customCommands, id, commands, dir),
-	stop: (id) => lynxIpc.send(ptyChannels.stopProcess, id),
-	write: (id, data) => lynxIpc.send(ptyChannels.write, id, data),
-	clear: (id) => lynxIpc.send(ptyChannels.clear, id),
-	resize: (id, cols, rows) => lynxIpc.send(ptyChannels.resize, id, cols, rows),
-	onData: (result) => lynxIpc.on(ptyChannels.onData, result),
-	onTitle: (result) => lynxIpc.on(ptyChannels.onTitle, result),
-	onExit: (result) => lynxIpc.on(ptyChannels.onExit, result)
-};
-//#endregion
-//#region src/renderer/mainWindow/redux/reducers/cards.ts
-var { useSelector: useSelector$11 } = await importShared("react-redux");
-var buildRunningCardBase = (tabId, id) => ({
-	tabId,
-	id,
-	webUIAddress: "",
-	customAddress: "",
-	currentAddress: "",
-	browserTitle: "Browser",
-	startTime: (/* @__PURE__ */ new Date()).toString()
-});
-var cardsSlice = createSlice({
-	initialState: {
-		autoUpdate: [],
-		installedCards: [],
-		pinnedCards: [],
-		updateAvailable: [],
-		updatingCards: [],
-		runningCard: [],
-		recentlyUsedCards: [],
-		homeCategory: [],
-		autoUpdateExtensions: [],
-		updatingExtensions: void 0,
-		duplicates: [],
-		checkUpdateInterval: 0,
-		activeTab: "",
-		browserDomReadyIds: [],
-		updateChecking: ""
-	},
-	name: "cards",
-	reducers: {
-		addUpdateAvailable: (state, action) => {
-			if (!state.updateAvailable.includes(action.payload)) state.updateAvailable.push(action.payload);
-		},
-		setUpdateAvailable: (state, action) => {
-			state.updateAvailable = action.payload;
-		},
-		setUpdateChecking: (state, action) => {
-			state.updateChecking = action.payload;
-		},
-		removeUpdateAvailable: (state, action) => {
-			state.updateAvailable = state.updateAvailable.filter((card) => card !== action.payload);
-		},
-		setUpdatingExtensions: (state, action) => {
-			state.updatingExtensions = action.payload;
-		},
-		setUpdateInterval: (state, action) => {
-			state.checkUpdateInterval = action.payload;
-		},
-		addUpdatingCard: (state, action) => {
-			if (!state.updatingCards.some((card) => card.id === action.payload.id)) state.updatingCards.push(action.payload);
-		},
-		removeUpdatingCard: (state, action) => {
-			const cardId = action.payload;
-			state.updatingCards = state.updatingCards.filter((card) => card.id !== cardId);
-		},
-		setAutoUpdate: (state, action) => {
-			state.autoUpdate = action.payload;
-		},
-		setAutoUpdateExtensions: (state, action) => {
-			state.autoUpdateExtensions = action.payload;
-		},
-		setInstalledCards: (state, action) => {
-			state.installedCards = action.payload;
-		},
-		setPinnedCards: (state, action) => {
-			state.pinnedCards = action.payload;
-		},
-		setHomeCategory: (state, action) => {
-			state.homeCategory = action.payload;
-		},
-		setRecentlyUsedCards: (state, action) => {
-			state.recentlyUsedCards = action.payload;
-		},
-		setDuplicates: (state, action) => {
-			state.duplicates = action.payload;
-		},
-		addDomReady: (state, action) => {
-			if (!state.browserDomReadyIds.includes(action.payload)) state.browserDomReadyIds.push(action.payload);
-		},
-		addRunningEmpty: (state, action) => {
-			const { tabId, type, dir } = action.payload;
-			const id = `${tabId}_${type}`;
-			const currentView = type === "browser" ? "browser" : "terminal";
-			state.runningCard.push({
-				...buildRunningCardBase(tabId, id),
-				type,
-				currentView,
-				isEmptyRunning: true
-			});
-			if (type !== "terminal") browserIpc.send.createBrowser(id);
-			if (type !== "browser") ptyIpc.emptyProcess(id, dir);
-		},
-		addRunningCard: (state, action) => {
-			const { tabId, id } = action.payload;
-			state.runningCard.push({
-				...buildRunningCardBase(tabId, id),
-				type: "both",
-				currentView: "terminal",
-				isEmptyRunning: false
-			});
-			browserIpc.send.createBrowser(id);
-		},
-		setRunningCardAddress: (state, action) => {
-			const { tabId, address } = action.payload;
-			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
-				...card,
-				webUIAddress: address
-			} : card);
-		},
-		setRunningCardCustomAddress: (state, action) => {
-			const { tabId, address } = action.payload;
-			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
-				...card,
-				customAddress: address
-			} : card);
-		},
-		setRunningCardCurrentAddress: (state, action) => {
-			const { tabId, address } = action.payload;
-			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
-				...card,
-				currentAddress: address
-			} : card);
-		},
-		setRunningCardView: (state, action) => {
-			const { tabId, view } = action.payload;
-			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
-				...card,
-				currentView: view
-			} : card);
-		},
-		setRunningCardBrowserTitle: (state, action) => {
-			const { tabId, title } = action.payload;
-			state.runningCard = state.runningCard.map((card) => card.tabId === tabId ? {
-				...card,
-				browserTitle: title
-			} : card);
-		},
-		toggleRunningCardView: (state, action) => {
-			if (!state.runningCard) return;
-			const { tabId } = action.payload;
-			state.runningCard = state.runningCard.map((card) => {
-				const currentView = card.currentView === "browser" ? "terminal" : "browser";
-				return card.tabId === tabId ? {
-					...card,
-					currentView
-				} : card;
-			});
-		},
-		stopRunningCard: (state, action) => {
-			const id = state.runningCard.find((card) => card.tabId === action.payload.tabId)?.id;
-			if (id) {
-				browserIpc.send.removeBrowser(id);
-				state.browserDomReadyIds = state.browserDomReadyIds.filter((item) => item !== id);
-			}
-			state.runningCard = state.runningCard.filter((card) => card.tabId !== action.payload.tabId);
-		}
-	}
-});
-/**
-* Hook to access a single cards state field with key-safe typing.
-*/
-var useCardsState = (name) => useSelector$11((state) => state.cards[name]);
-var cardsActions = cardsSlice.actions;
-cardsSlice.reducer;
-//#endregion
-//#region src/renderer/mainWindow/utils/hooks.tsx
-var { Fragment: Fragment$4, useEffect: useEffect$10, useState: useState$11 } = await importShared("react");
-/**
-* Hook to check if a card is pinned.
-* @param cardId - The ID of the card to check
-* @returns Boolean indicating if the card is pinned
-*/
-function useIsPinnedCard(cardId) {
-	return useCardsState("pinnedCards").includes(cardId);
-}
-window.isPortable;
 //#endregion
 //#region src/common/consts/ipcChannels/storage.ts
 /**
@@ -2779,7 +2674,7 @@ var actionChannels = { logAction: "actions:logAction" };
 var actionsIpc = { logAction: (payload) => lynxIpc.send(actionChannels.logAction, payload) };
 //#endregion
 //#region src/renderer/shared/sentry/Breadcrumbs.tsx
-var { useEffect: useEffect$9, useRef: useRef$12 } = await importShared("react");
+var { useEffect: useEffect$11, useRef: useRef$13 } = await importShared("react");
 var isEnabled = true;
 /**
 * Adds an informational renderer breadcrumb when breadcrumb collection is enabled.
@@ -2795,12 +2690,12 @@ function AddBreadcrumb_Renderer(message) {
 //#region node_modules/@solar-icons/react/dist/lib/IconBase.mjs
 var import_jsx_runtime = require_jsx_runtime();
 var { forwardRef: e } = await importShared("react");
-var r$18 = `solar`;
-function i$16(e) {
+var r$40 = `solar`;
+function i$31(e) {
 	return e[`aria-label`] !== void 0 || e.title !== void 0;
 }
 var a = e(({ alt: e, color: a, size: o, strokeWidth: s, secondaryColor: c, secondaryOpacity: l, iconName: u, isolated: d, children: f, ...p }, m) => {
-	let h = u ? `${r$18} solar-${u}` : r$18, g = p.className, _ = g ? `${h} ${g}` : h, v = !!e || i$16(p), y = { ...p.style ?? {} };
+	let h = u ? `${r$40} solar-${u}` : r$40, g = p.className, _ = g ? `${h} ${g}` : h, v = !!e || i$31(p), y = { ...p.style ?? {} };
 	if (d && (y[`--solar-secondary-color`] = `initial`, y[`--solar-secondary-opacity`] = `initial`), a !== void 0 && (y.color = a), o !== void 0) {
 		let e = typeof o == `number` ? `${o}px` : o;
 		y.width = e, y.height = e;
@@ -2826,9 +2721,51 @@ var a = e(({ alt: e, color: a, size: o, strokeWidth: s, secondaryColor: c, secon
 	});
 });
 //#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold/check-circle.mjs
+var { forwardRef: t$39 } = await importShared("react");
+var r$39 = t$39((t, r) => (0, import_jsx_runtime.jsx)(a, {
+	ref: r,
+	...t,
+	iconName: `check-circle-bold`,
+	children: (0, import_jsx_runtime.jsx)(`path`, {
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12ZM16.0303 8.96967C16.3232 9.26256 16.3232 9.73744 16.0303 10.0303L11.0303 15.0303C10.7374 15.3232 10.2626 15.3232 9.96967 15.0303L7.96967 13.0303C7.67678 12.7374 7.67678 12.2626 7.96967 11.9697C8.26256 11.6768 8.73744 11.6768 9.03033 11.9697L10.5 13.4393L12.7348 11.2045L14.9697 8.96967C15.2626 8.67678 15.7374 8.67678 16.0303 8.96967Z`,
+		fill: `currentColor`
+	})
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold/clock-circle.mjs
+var { forwardRef: t$38 } = await importShared("react");
+var r$38 = t$38((t, r) => (0, import_jsx_runtime.jsx)(a, {
+	ref: r,
+	...t,
+	iconName: `clock-circle-bold`,
+	children: (0, import_jsx_runtime.jsx)(`path`, {
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2ZM12 7.25C11.5858 7.25 11.25 7.58579 11.25 8V12C11.25 12.1989 11.3291 12.3896 11.4697 12.5303L13.9697 15.0303C14.2626 15.3232 14.7374 15.3232 15.0303 15.0303C15.3232 14.7374 15.3232 14.2626 15.0303 13.9697L12.75 11.6895V8C12.75 7.58579 12.4142 7.25 12 7.25Z`,
+		fill: `currentColor`
+	})
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold/close-circle.mjs
+var { forwardRef: t$37 } = await importShared("react");
+var r$37 = t$37((t, r) => (0, import_jsx_runtime.jsx)(a, {
+	ref: r,
+	...t,
+	iconName: `close-circle-bold`,
+	children: (0, import_jsx_runtime.jsx)(`path`, {
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12ZM8.96963 8.96965C9.26252 8.67676 9.73739 8.67676 10.0303 8.96965L12 10.9393L13.9696 8.96967C14.2625 8.67678 14.7374 8.67678 15.0303 8.96967C15.3232 9.26256 15.3232 9.73744 15.0303 10.0303L13.0606 12L15.0303 13.9696C15.3232 14.2625 15.3232 14.7374 15.0303 15.0303C14.7374 15.3232 14.2625 15.3232 13.9696 15.0303L12 13.0607L10.0303 15.0303C9.73742 15.3232 9.26254 15.3232 8.96965 15.0303C8.67676 14.7374 8.67676 14.2625 8.96965 13.9697L10.9393 12L8.96963 10.0303C8.67673 9.73742 8.67673 9.26254 8.96963 8.96965Z`,
+		fill: `currentColor`
+	})
+}));
+//#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold/pin.mjs
-var { forwardRef: t$17 } = await importShared("react");
-var r$17 = t$17((t, r) => (0, import_jsx_runtime.jsx)(a, {
+var { forwardRef: t$36 } = await importShared("react");
+var r$36 = t$36((t, r) => (0, import_jsx_runtime.jsx)(a, {
 	ref: r,
 	...t,
 	iconName: `pin-bold`,
@@ -2838,9 +2775,23 @@ var r$17 = t$17((t, r) => (0, import_jsx_runtime.jsx)(a, {
 	})
 }));
 //#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold/play-circle.mjs
+var { forwardRef: t$35 } = await importShared("react");
+var r$35 = t$35((t, r) => (0, import_jsx_runtime.jsx)(a, {
+	ref: r,
+	...t,
+	iconName: `play-circle-bold`,
+	children: (0, import_jsx_runtime.jsx)(`path`, {
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22ZM10.6935 15.8458L15.4137 13.059C16.1954 12.5974 16.1954 11.4026 15.4137 10.941L10.6935 8.15419C9.93371 7.70561 9 8.28947 9 9.21316V14.7868C9 15.7105 9.93371 16.2944 10.6935 15.8458Z`,
+		fill: `currentColor`
+	})
+}));
+//#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold/play.mjs
-var { forwardRef: t$16 } = await importShared("react");
-var r$16 = t$16((t, r) => (0, import_jsx_runtime.jsx)(a, {
+var { forwardRef: t$34 } = await importShared("react");
+var r$34 = t$34((t, r) => (0, import_jsx_runtime.jsx)(a, {
 	ref: r,
 	...t,
 	iconName: `play-bold`,
@@ -2850,9 +2801,56 @@ var r$16 = t$16((t, r) => (0, import_jsx_runtime.jsx)(a, {
 	})
 }));
 //#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold/star.mjs
+var { forwardRef: t$33 } = await importShared("react");
+var r$33 = t$33((t, r) => (0, import_jsx_runtime.jsx)(a, {
+	ref: r,
+	...t,
+	iconName: `star-bold`,
+	children: (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M9.15316 5.40838C10.4198 3.13613 11.0531 2 12 2C12.9469 2 13.5802 3.13612 14.8468 5.40837L15.1745 5.99623C15.5345 6.64193 15.7144 6.96479 15.9951 7.17781C16.2757 7.39083 16.6251 7.4699 17.3241 7.62805L17.9605 7.77203C20.4201 8.32856 21.65 8.60682 21.9426 9.54773C22.2352 10.4886 21.3968 11.4691 19.7199 13.4299L19.2861 13.9372C18.8096 14.4944 18.5713 14.773 18.4641 15.1177C18.357 15.4624 18.393 15.8341 18.465 16.5776L18.5306 17.2544C18.7841 19.8706 18.9109 21.1787 18.1449 21.7602C17.3788 22.3417 16.2273 21.8115 13.9243 20.7512L13.3285 20.4768C12.6741 20.1755 12.3469 20.0248 12 20.0248C11.6531 20.0248 11.3259 20.1755 10.6715 20.4768L10.0757 20.7512C7.77268 21.8115 6.62118 22.3417 5.85515 21.7602C5.08912 21.1787 5.21588 19.8706 5.4694 17.2544L5.53498 16.5776C5.60703 15.8341 5.64305 15.4624 5.53586 15.1177C5.42868 14.773 5.19043 14.4944 4.71392 13.9372L4.2801 13.4299C2.60325 11.4691 1.76482 10.4886 2.05742 9.54773C2.35002 8.60682 3.57986 8.32856 6.03954 7.77203L6.67589 7.62805C7.37485 7.4699 7.72433 7.39083 8.00494 7.17781C8.28555 6.96479 8.46553 6.64194 8.82547 5.99623L9.15316 5.40838Z`,
+		fill: `currentColor`
+	})
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold/stop.mjs
+var { forwardRef: t$32 } = await importShared("react");
+var r$32 = t$32((t, r) => (0, import_jsx_runtime.jsx)(a, {
+	ref: r,
+	...t,
+	iconName: `stop-bold`,
+	children: (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z`,
+		fill: `currentColor`
+	})
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/line-duotone/arrow-left.mjs
+var { forwardRef: t$31 } = await importShared("react");
+var i$30 = t$31((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `arrow-left-line-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		d: `M20 12H4`,
+		stroke: `currentColor`,
+		strokeLinecap: `round`,
+		strokeLinejoin: `round`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M10 6L4 12L10 18`,
+		stroke: `currentColor`,
+		strokeLinecap: `round`,
+		strokeLinejoin: `round`
+	})]
+}));
+//#endregion
 //#region node_modules/@solar-icons/react/dist/icons/line-duotone/pin.mjs
-var { forwardRef: t$15 } = await importShared("react");
-var i$15 = t$15((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$30 } = await importShared("react");
+var i$29 = t$30((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `pin-line-duotone`,
@@ -2872,13 +2870,14 @@ var i$15 = t$15((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 }));
 //#endregion
 //#region src/renderer/mainWindow/components/ToolsCard.tsx
-var { Avatar, Button: Button$8, Card: Card$2, Description: Description$2, Label: Label$3 } = await importShared("@heroui/react");
+var { Avatar, Button: Button$13, Card, Description, Label: Label$5 } = await importShared("@heroui/react");
 /**
 * A card component for the Tools page, featuring a spotlight effect and hover animations.
 */
-function ToolsCard({ id, title, description, icon, onPress, footer, avatarClassName }) {
-	const isPinned = useIsPinnedCard(id || "");
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card$2, {
+function ToolsCard({ id, title, description, icon, onPress, footer, avatarClassName, isPinned: isPinnedProp, onPinPress, hidePin = false }) {
+	const isPinnedFromHook = useIsPinnedCard(id || "");
+	const isPinned = isPinnedProp !== void 0 ? isPinnedProp : isPinnedFromHook;
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
 		className: "w-75 h-46 relative group transform border border-surface  hover:shadow-lg hover:scale-[1.02] transition-all duration-200 cursor-pointer",
 		onClick: () => {
 			AddBreadcrumb_Renderer(`Card Interaction: Clicked ToolsCard "${title}"`);
@@ -2886,7 +2885,7 @@ function ToolsCard({ id, title, description, icon, onPress, footer, avatarClassN
 			onPress?.();
 		},
 		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card$2.Header, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card.Header, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "inline-flex items-center gap-2",
 				children: [typeof icon === "string" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Avatar, {
 					className: `size-12 shrink-0 ring-LynxPurple ring-2 ${avatarClassName}`,
@@ -2899,28 +2898,33 @@ function ToolsCard({ id, title, description, icon, onPress, footer, avatarClassN
 					children: icon
 				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "flex flex-col pointer-events-none",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$3, { children: title })
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$5, { children: title })
 				})]
 			}) }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card$2.Content, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Description$2, {
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Card.Content, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Description, {
 				className: "line-clamp-3 text-xs",
 				children: description
 			}) }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card$2.Footer, {
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card.Footer, {
 				className: "justify-between flex items-center",
-				children: [id ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				children: [!hidePin && (id || onPinPress || isPinnedProp !== void 0) ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					onClick: (e) => e.stopPropagation(),
 					className: "flex items-center gap-x-2",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$8, {
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$13, {
 						className: "shrink-0 -translate-x-2 opacity-0 transition duration-200 group-hover:translate-x-0 group-hover:opacity-100",
 						onPress: () => {
-							AddBreadcrumb_Renderer(`Pin ToolsCard: id:${id} , ${isPinned ? "remove" : "add"}`);
-							storageUtilsIpc.invoke.pinnedCards(isPinned ? "remove" : "add", id);
+							if (onPinPress) {
+								AddBreadcrumb_Renderer(`Pin ToolsCard: id:${id || title} , ${isPinned ? "remove" : "add"}`);
+								onPinPress();
+							} else if (id) {
+								AddBreadcrumb_Renderer(`Pin ToolsCard: id:${id} , ${isPinned ? "remove" : "add"}`);
+								storageUtilsIpc.invoke.pinnedCards(isPinned ? "remove" : "add", id);
+							}
 						},
 						size: "sm",
 						variant: "ghost",
 						isIconOnly: true,
-						children: isPinned ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$17, { className: "size-3" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-3" })
+						children: isPinned ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$36, { className: "size-3" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$29, { className: "size-3" })
 					})
 				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {}), footer]
 			})
@@ -2931,7 +2935,7 @@ var package_default = {
 	name: "lynxhub",
 	productName: "LynxHub",
 	desktopName: "ai.kindabrazy.lynxhub.desktop",
-	version: "3.6.0",
+	version: "3.6.1",
 	type: "module",
 	description: "Cross-platform, extensible terminal/browser for AI management",
 	main: "./out/main/index.cjs",
@@ -2947,7 +2951,7 @@ var package_default = {
 	homepage: "https://github.com/TheLynxHub/LynxHub",
 	appDetails: {
 		"title": "LynxHub",
-		"buildNumber": 66,
+		"buildNumber": 67,
 		"detailedDescription": "Open-source, cross-platform terminal and browser, designed for managing AI. Highly modular and extensible, it's the all-in-one environment for AI power users.",
 		"moduleApiVersion": "2.1.0",
 		"extensionApiVersion": "2.2.0"
@@ -3153,7 +3157,22 @@ var PageID = {
 	plugins: "plugins_page",
 	settings: "settings_page"
 };
-PageID.home, PageID.imageGen, PageID.textGen, PageID.audioGen, PageID.tools, PageID.games, PageID.others, PageID.agents, PageID.dashboard, PageID.plugins, PageID.settings;
+/**
+* Mapping of PageID to PageTitle.
+*/
+var PageTitleByPageId = {
+	[PageID.home]: "Home",
+	[PageID.imageGen]: "Image Generation",
+	[PageID.textGen]: "Text Generation",
+	[PageID.audioGen]: "Audio Generation",
+	[PageID.tools]: "Tools",
+	[PageID.games]: "Games",
+	[PageID.others]: "Others",
+	[PageID.agents]: "Agents",
+	[PageID.dashboard]: "Dashboard",
+	[PageID.plugins]: "Plugins",
+	[PageID.settings]: "Settings"
+};
 //#endregion
 //#region src/renderer/mainWindow/utils/constants.tsx
 /**
@@ -3172,7 +3191,7 @@ var defaultTabItem = {
 };
 //#endregion
 //#region src/renderer/mainWindow/redux/reducers/tabs.ts
-var { useSelector: useSelector$10 } = await importShared("react-redux");
+var { useSelector: useSelector$15 } = await importShared("react-redux");
 var findUniqueTabId = (baseId, tabs) => {
 	let idNumber = 1;
 	let candidateId = baseId;
@@ -3335,96 +3354,380 @@ var tabsSlice = createSlice({
 /**
 * Hook to access tabs reducer state by key with inferred return type.
 */
-var useTabsState = (key) => useSelector$10((state) => state.tabs[key]);
-tabsSlice.actions;
+var useTabsState = (key) => useSelector$15((state) => state.tabs[key]);
+var tabsActions = tabsSlice.actions;
 tabsSlice.reducer;
 //#endregion
-//#region src/common/consts/ipcChannels/files.ts
+//#region extension/src/common/utils/cardSanitizer.ts
+var VALID_CARD_TYPES = [
+	"executable",
+	"browser",
+	"terminal",
+	"terminal_browser"
+];
+var VALID_URL_CONFIG_TYPES = [
+	"custom",
+	"findLine",
+	"nothing",
+	"htmlFile"
+];
+var VALID_ACTION_TYPES = [
+	"script",
+	"exe",
+	"open",
+	"command"
+];
+var VALID_CATEGORIES = [
+	"pinned",
+	"recentlyUsed",
+	"all",
+	"image",
+	"text",
+	"audio"
+];
+function generateUUID() {
+	if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+		const r = Math.random() * 16 | 0;
+		return (c === "x" ? r : r & 3 | 8).toString(16);
+	});
+}
+function sanitizeUrlConfig(raw) {
+	const defaultConfig = {
+		type: "nothing",
+		openImmediately: true,
+		timeout: 5
+	};
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) return defaultConfig;
+	const obj = raw;
+	const config = {
+		type: VALID_URL_CONFIG_TYPES.includes(obj.type) ? obj.type : "nothing",
+		openImmediately: typeof obj.openImmediately === "boolean" ? obj.openImmediately : true,
+		timeout: typeof obj.timeout === "number" && Number.isFinite(obj.timeout) && obj.timeout >= 0 ? obj.timeout : 5
+	};
+	if (typeof obj.customUrl === "string" && obj.customUrl.trim()) config.customUrl = obj.customUrl.trim();
+	if (typeof obj.findLine === "string" && obj.findLine.trim()) config.findLine = obj.findLine.trim();
+	return config;
+}
+function sanitizeCategories(raw) {
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+	const obj = raw;
+	const categories = {};
+	for (const key of VALID_CATEGORIES) if (typeof obj[key] === "boolean") categories[key] = obj[key];
+	return categories;
+}
+function sanitizeActions(raw) {
+	if (!Array.isArray(raw)) return [];
+	const actions = [];
+	for (const item of raw) {
+		if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+		const obj = item;
+		const action = typeof obj.action === "string" ? obj.action : String(obj.action ?? "");
+		const type = VALID_ACTION_TYPES.includes(obj.type) ? obj.type : "command";
+		const id = typeof obj.id === "string" && obj.id.trim() ? obj.id.trim() : generateUUID();
+		const disabled = typeof obj.disabled === "boolean" ? obj.disabled : void 0;
+		const cwd = typeof obj.cwd === "string" && obj.cwd.trim() ? obj.cwd.trim() : void 0;
+		actions.push({
+			id,
+			action,
+			type,
+			...cwd ? { cwd } : {},
+			...disabled !== void 0 ? { disabled } : {}
+		});
+	}
+	return actions;
+}
+function sanitizeEnv(raw) {
+	if (!Array.isArray(raw)) return [];
+	const env = [];
+	for (const item of raw) {
+		if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+		const obj = item;
+		const key = typeof obj.key === "string" ? obj.key : String(obj.key ?? "");
+		const value = typeof obj.value === "string" ? obj.value : String(obj.value ?? "");
+		if (key.trim() || value.trim()) env.push({
+			key,
+			value
+		});
+	}
+	return env;
+}
+function sanitizeCard(raw) {
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+	const obj = raw;
+	return {
+		id: typeof obj.id === "string" && obj.id.trim() ? obj.id.trim() : generateUUID(),
+		title: typeof obj.title === "string" && obj.title.trim() ? obj.title.trim() : "Untitled Action",
+		description: typeof obj.description === "string" ? obj.description : void 0,
+		icon: typeof obj.icon === "string" && obj.icon.trim() ? obj.icon.trim() : "bot",
+		cwd: typeof obj.cwd === "string" && obj.cwd.trim() ? obj.cwd.trim() : void 0,
+		requireConfirmation: typeof obj.requireConfirmation === "boolean" ? obj.requireConfirmation : void 0,
+		confirmationMessage: typeof obj.confirmationMessage === "string" && obj.confirmationMessage.trim() ? obj.confirmationMessage.trim() : void 0,
+		cardType: VALID_CARD_TYPES.includes(obj.cardType) ? obj.cardType : "terminal_browser",
+		urlConfig: sanitizeUrlConfig(obj.urlConfig),
+		categories: sanitizeCategories(obj.categories),
+		actions: sanitizeActions(obj.actions),
+		env: sanitizeEnv(obj.env)
+	};
+}
+function sanitizeCards(raw) {
+	if (!raw) return [];
+	const items = Array.isArray(raw) ? raw : [raw];
+	const sanitized = [];
+	for (const item of items) {
+		const card = sanitizeCard(item);
+		if (card) sanitized.push(card);
+	}
+	return sanitized;
+}
+//#endregion
+//#region extension/src/common/utils/pathShortcuts.ts
 /**
-* IPC channels for file system operations.
-* Handles directory listing, file dialogs, path manipulation, and other file-related tasks.
+* Resolves path shortcuts (%WORKSPACE%, %HOME%, %DESKTOP%, %DOWNLOADS%, %DOCUMENTS%, %APPDATA%, ~)
+* in a path string to their actual OS directory paths.
 */
-var fileChannels = {
-	getAppDirectories: "app:getAppDirectories",
-	dialog: "app:openDialog",
-	extensionsNames: "app:extensionsFolder",
-	openPath: "app:openPath",
-	saveToFile: "app:saveToFile",
-	removeDir: "app:removeDir",
-	trashDir: "app:trashDir",
-	listDir: "app:listDir",
-	checkFilesExist: "app:checkFilesExist",
-	calcFolderSize: "app:calcFolderSize",
-	getRelativePath: "app:getRelativePath",
-	getAbsolutePath: "app:getAbsolutePath",
-	isEmptyDir: "app:isEmptyDir",
-	isAbsolute: "app:isAbsolute"
-};
+function resolvePathShortcuts(pathStr, systemPaths) {
+	if (!pathStr || !pathStr.trim()) return "";
+	if (!systemPaths) return pathStr.trim();
+	let resolved = pathStr.trim();
+	if (systemPaths.workspace) {
+		resolved = resolved.replace(/%WORKSPACE%/gi, systemPaths.workspace);
+		resolved = resolved.replace(/%PROJECT%/gi, systemPaths.workspace);
+	}
+	if (systemPaths.home) {
+		resolved = resolved.replace(/%HOME%/gi, systemPaths.home);
+		resolved = resolved.replace(/^~(?=[\\/]|$)/, systemPaths.home);
+	}
+	if (systemPaths.desktop) resolved = resolved.replace(/%DESKTOP%/gi, systemPaths.desktop);
+	if (systemPaths.downloads) resolved = resolved.replace(/%DOWNLOADS%/gi, systemPaths.downloads);
+	if (systemPaths.documents) resolved = resolved.replace(/%DOCUMENTS%/gi, systemPaths.documents);
+	if (systemPaths.appData) resolved = resolved.replace(/%APPDATA%/gi, systemPaths.appData);
+	return resolved;
+}
 //#endregion
-//#region src/renderer/shared/ipc/files.ts
-var filesIpc = {
-	openDlg: (option) => lynxIpc.invoke(fileChannels.dialog, option),
-	openDlgMany: (option) => lynxIpc.invoke(fileChannels.dialog, {
-		...option,
-		properties: Array.from(/* @__PURE__ */ new Set([...option.properties || [], "multiSelections"]))
-	}).then((result) => Array.isArray(result) ? result : result ? [result] : []),
-	openPath: (dir) => lynxIpc.send(fileChannels.openPath, dir),
-	saveToFile: (content, defaultFilename) => lynxIpc.invoke(fileChannels.saveToFile, content, defaultFilename),
-	getAppDirectories: (name) => lynxIpc.invoke(fileChannels.getAppDirectories, name),
-	removeDir: (dir) => lynxIpc.invoke(fileChannels.removeDir, dir),
-	trashDir: (dir) => lynxIpc.invoke(fileChannels.trashDir, dir),
-	listDir: (dirPath, relatives) => lynxIpc.invoke(fileChannels.listDir, dirPath, relatives),
-	checkFilesExist: (dir, fileNames) => lynxIpc.invoke(fileChannels.checkFilesExist, dir, fileNames),
-	calcFolderSize: (dir) => lynxIpc.invoke(fileChannels.calcFolderSize, dir),
-	getRelativePath: (basePath, targetPath) => lynxIpc.invoke(fileChannels.getRelativePath, basePath, targetPath),
-	getAbsolutePath: (basePath, targetPath) => lynxIpc.invoke(fileChannels.getAbsolutePath, basePath, targetPath),
-	isEmptyDir: (dir) => lynxIpc.invoke(fileChannels.isEmptyDir, dir),
-	isAbsolute: (dir) => lynxIpc.invoke(fileChannels.isAbsolute, dir)
-};
+//#region extension/src/common/utils/templateVariables.ts
+var TEMPLATE_VARIABLE_REGEX = /\{\{([a-zA-Z0-9_.-]+)(?::([^}]*))?\}\}/g;
+/**
+* Extracts raw template variables from a single string.
+*/
+function extractTemplateVariables(text) {
+	if (!text) return [];
+	const results = [];
+	const regex = new RegExp(TEMPLATE_VARIABLE_REGEX);
+	let match;
+	while ((match = regex.exec(text)) !== null) {
+		const [, name, defaultValue] = match;
+		if (name) results.push({
+			name,
+			defaultValue
+		});
+	}
+	return results;
+}
+/**
+* Extracts all unique template variables from a CustomCard across its actions, working directory, URL config, and env vars.
+*/
+function extractCardVariables(card) {
+	const variableMap = /* @__PURE__ */ new Map();
+	const addUsage = (name, defaultValue, usage) => {
+		const existing = variableMap.get(name);
+		if (existing) {
+			if (!existing.defaultValue && defaultValue) existing.defaultValue = defaultValue;
+			existing.usages.push(usage);
+		} else variableMap.set(name, {
+			defaultValue,
+			usages: [usage]
+		});
+	};
+	if (card.cwd) extractTemplateVariables(card.cwd).forEach(({ name, defaultValue }) => {
+		addUsage(name, defaultValue, {
+			type: "cwd",
+			snippet: `Working Directory: ${card.cwd}`
+		});
+	});
+	if (Array.isArray(card.actions)) card.actions.forEach((action) => {
+		if (action.disabled) return;
+		extractTemplateVariables(action.action || "").forEach(({ name, defaultValue }) => {
+			addUsage(name, defaultValue, {
+				type: action.type,
+				snippet: action.action
+			});
+		});
+		if (action.cwd) extractTemplateVariables(action.cwd).forEach(({ name, defaultValue }) => {
+			addUsage(name, defaultValue, {
+				type: "cwd",
+				snippet: action.cwd || ""
+			});
+		});
+	});
+	if (card.urlConfig) {
+		if (card.urlConfig.customUrl) extractTemplateVariables(card.urlConfig.customUrl).forEach(({ name, defaultValue }) => {
+			addUsage(name, defaultValue, {
+				type: "url",
+				snippet: card.urlConfig.customUrl || ""
+			});
+		});
+		if (card.urlConfig.findLine) extractTemplateVariables(card.urlConfig.findLine).forEach(({ name, defaultValue }) => {
+			addUsage(name, defaultValue, {
+				type: "findLine",
+				snippet: card.urlConfig.findLine || ""
+			});
+		});
+	}
+	if (Array.isArray(card.env)) card.env.forEach((envItem) => {
+		if (envItem.value) extractTemplateVariables(envItem.value).forEach(({ name, defaultValue }) => {
+			addUsage(name, defaultValue, {
+				type: "env",
+				snippet: `${envItem.key}=${envItem.value}`
+			});
+		});
+	});
+	return Array.from(variableMap.entries()).map(([name, data]) => ({
+		name,
+		defaultValue: data.defaultValue,
+		usages: data.usages
+	}));
+}
+/**
+* Checks if a card contains any active template variables.
+*/
+function hasTemplateVariables(card) {
+	return extractCardVariables(card).length > 0;
+}
+/**
+* Substitutes variables in a single string using user-provided values, falling back to defaults or empty strings.
+*/
+function substituteVariables(text, values) {
+	if (!text) return text;
+	return text.replace(new RegExp(TEMPLATE_VARIABLE_REGEX), (_match, name, defaultValue) => {
+		const val = values[name];
+		if (val !== void 0 && val !== "") return val;
+		return defaultValue !== void 0 ? defaultValue : "";
+	});
+}
+/**
+* Returns a cloned CustomCard with all template variables substituted with resolved values.
+*/
+function substituteCardVariables(card, values) {
+	return {
+		...card,
+		cwd: card.cwd ? substituteVariables(card.cwd, values) : void 0,
+		actions: card.actions.map((action) => ({
+			...action,
+			action: substituteVariables(action.action, values),
+			cwd: action.cwd ? substituteVariables(action.cwd, values) : void 0
+		})),
+		urlConfig: {
+			...card.urlConfig,
+			customUrl: card.urlConfig.customUrl ? substituteVariables(card.urlConfig.customUrl, values) : void 0,
+			findLine: card.urlConfig.findLine ? substituteVariables(card.urlConfig.findLine, values) : void 0
+		},
+		env: card.env ? card.env.map((envVar) => ({
+			key: substituteVariables(envVar.key, values),
+			value: substituteVariables(envVar.value, values)
+		})) : void 0
+	};
+}
 //#endregion
-//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/arrow-left.mjs
-var { forwardRef: t$14 } = await importShared("react");
-var i$14 = t$14((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+//#region src/renderer/mainWindow/layouts/tabs/TabContext.tsx
+var { createContext: createContext$8, useContext: useContext$11 } = await importShared("react");
+var TabContext = createContext$8(void 0);
+var useCurrentTabId = () => useContext$11(TabContext);
+//#endregion
+//#region src/renderer/mainWindow/components/TabAlertDialog.tsx
+var { AlertDialog: AlertDialog$2 } = await importShared("@heroui/react");
+var { useCallback: useCallback$6, useLayoutEffect: useLayoutEffect$2, useRef: useRef$12, useState: useState$16 } = await importShared("react");
+var { UNSAFE_PortalProvider: UNSAFE_PortalProvider$1 } = await importShared("react-aria");
+function TabAlertDialog({ trigger, isOpen, onOpenChange, children, size = "md", placement, isDismissable = false, backdropVariant, dialogClassName, containerClassName, isKeyboardDismissDisabled, tabId: explicitTabId }) {
+	const anchorRef = useRef$12(null);
+	const contextTabId = useCurrentTabId();
+	const [domTabId, setDomTabId] = useState$16(void 0);
+	useLayoutEffect$2(() => {
+		if (anchorRef.current) {
+			const wrapper = anchorRef.current.closest("[id$=\"_wrapper\"]");
+			if (wrapper?.id) setDomTabId(wrapper.id.replace(/_wrapper$/, ""));
+		}
+	}, []);
+	const resolvedTabId = explicitTabId ?? contextTabId ?? domTabId;
+	const isControlled = typeof isOpen === "boolean";
+	const getContainer = useCallback$6(() => {
+		if (resolvedTabId) {
+			const el = document.getElementById(`${resolvedTabId}_wrapper`);
+			if (el) return el;
+		}
+		if (anchorRef.current) {
+			const wrapper = anchorRef.current.closest("[id$=\"_wrapper\"]");
+			if (wrapper) return wrapper;
+		}
+		return document.body;
+	}, [resolvedTabId]);
+	const handleOpenChange = useCallback$6((open) => {
+		onOpenChange?.(open);
+	}, [isControlled, onOpenChange]);
+	const mouseDownTargetRef = useRef$12(null);
+	const handleBackdropMouseDown = useCallback$6((e) => {
+		mouseDownTargetRef.current = e.target;
+	}, []);
+	const handleBackdropClick = useCallback$6((e) => {
+		const mouseDownTarget = mouseDownTargetRef.current;
+		mouseDownTargetRef.current = null;
+		if (isDismissable && mouseDownTarget instanceof HTMLElement && mouseDownTarget.closest(".alert-dialog__backdrop, .alert-dialog__container") && !mouseDownTarget.closest(".alert-dialog__dialog") && e.target instanceof HTMLElement && e.target.closest(".alert-dialog__backdrop, .alert-dialog__container") && !e.target.closest(".alert-dialog__dialog")) handleOpenChange(false);
+	}, [isDismissable, handleOpenChange]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+		ref: anchorRef,
+		className: "hidden",
+		"aria-hidden": "true"
+	}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AlertDialog$2, {
+		isOpen,
+		onOpenChange: handleOpenChange,
+		children: [trigger, /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UNSAFE_PortalProvider$1, {
+			getContainer,
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AlertDialog$2.Backdrop, {
+				isDismissable: false,
+				variant: backdropVariant,
+				onClick: handleBackdropClick,
+				onMouseDown: handleBackdropMouseDown,
+				className: "h-full pointer-events-auto",
+				isKeyboardDismissDisabled,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AlertDialog$2.Container, {
+					size,
+					placement,
+					className: containerClassName ? `h-full max-h-full ${containerClassName}` : "h-full max-h-full",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AlertDialog$2.Dialog, {
+						className: size === "cover" ? dialogClassName ? `h-full max-h-full ${dialogClassName}` : "h-full max-h-full" : dialogClassName,
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UNSAFE_PortalProvider$1, {
+							getContainer: () => document.body,
+							children
+						})
+					})
+				})
+			})
+		})]
+	})] });
+}
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/check-circle.mjs
+var { forwardRef: t$29 } = await importShared("react");
+var i$28 = t$29((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
-	iconName: `arrow-left-bold-duotone`,
+	iconName: `check-circle-bold-duotone`,
 	children: [(0, import_jsx_runtime.jsx)(`path`, {
-		fillRule: `evenodd`,
-		clipRule: `evenodd`,
-		d: `M20.75 12C20.75 11.5858 20.4142 11.25 20 11.25H10.75V12.75H20C20.4142 12.75 20.75 12.4142 20.75 12Z`,
+		d: `M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z`,
 		fill: `currentColor`,
 		style: {
 			color: `var(--solar-secondary-color, currentColor)`,
 			opacity: `var(--solar-secondary-opacity, 0.5)`
 		}
 	}), (0, import_jsx_runtime.jsx)(`path`, {
-		d: `M10.75 18C10.75 18.3034 10.5673 18.5768 10.287 18.6929C10.0068 18.809 9.68417 18.7449 9.46967 18.5304L3.46967 12.5304C3.32902 12.3897 3.25 12.1989 3.25 12C3.25 11.8011 3.32902 11.6103 3.46967 11.4697L9.46967 5.46969C9.68417 5.25519 10.0068 5.19103 10.287 5.30711C10.5673 5.4232 10.75 5.69668 10.75 6.00002V18Z`,
-		fill: `currentColor`
-	})]
-}));
-//#endregion
-//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/bookmark.mjs
-var { forwardRef: t$13 } = await importShared("react");
-var i$13 = t$13((t, i) => (0, import_jsx_runtime.jsxs)(a, {
-	ref: i,
-	...t,
-	iconName: `bookmark-bold-duotone`,
-	children: [(0, import_jsx_runtime.jsx)(`path`, {
-		d: `M21 11.0975V16.0909C21 19.1875 21 20.7358 20.2659 21.4123C19.9158 21.735 19.4739 21.9377 19.0031 21.9915C18.016 22.1045 16.8633 21.0849 14.5578 19.0458C13.5388 18.1445 13.0292 17.6938 12.4397 17.5751C12.1494 17.5166 11.8506 17.5166 11.5603 17.5751C10.9708 17.6938 10.4612 18.1445 9.44216 19.0458C7.13673 21.0849 5.98402 22.1045 4.99692 21.9915C4.52615 21.9377 4.08421 21.735 3.73411 21.4123C3 20.7358 3 19.1875 3 16.0909V11.0975C3 6.80891 3 4.6646 4.31802 3.3323C5.63604 2 7.75736 2 12 2C16.2426 2 18.364 2 19.682 3.3323C21 4.6646 21 6.80891 21 11.0975Z`,
-		fill: `currentColor`,
-		style: {
-			color: `var(--solar-secondary-color, currentColor)`,
-			opacity: `var(--solar-secondary-opacity, 0.5)`
-		}
-	}), (0, import_jsx_runtime.jsx)(`path`, {
-		d: `M9 5.25C8.58579 5.25 8.25 5.58579 8.25 6C8.25 6.41421 8.58579 6.75 9 6.75H15C15.4142 6.75 15.75 6.41421 15.75 6C15.75 5.58579 15.4142 5.25 15 5.25H9Z`,
+		d: `M16.0303 8.96967C16.3232 9.26256 16.3232 9.73744 16.0303 10.0303L11.0303 15.0303C10.7374 15.3232 10.2626 15.3232 9.96967 15.0303L7.96967 13.0303C7.67678 12.7374 7.67678 12.2626 7.96967 11.9697C8.26256 11.6768 8.73744 11.6768 9.03033 11.9697L10.5 13.4393L12.7348 11.2045L14.9697 8.96967C15.2626 8.67678 15.7374 8.67678 16.0303 8.96967Z`,
 		fill: `currentColor`
 	})]
 }));
 //#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/clipboard.mjs
-var { forwardRef: t$12 } = await importShared("react");
-var i$12 = t$12((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$28 } = await importShared("react");
+var i$27 = t$28((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `clipboard-bold-duotone`,
@@ -3450,15 +3753,15 @@ var i$12 = t$12((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	]
 }));
 //#endregion
-//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/code.mjs
-var { forwardRef: t$11 } = await importShared("react");
-var i$11 = t$11((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/code-2.mjs
+var { forwardRef: t$27 } = await importShared("react");
+var i$26 = t$27((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
-	iconName: `code-bold-duotone`,
+	iconName: `code-2-bold-duotone`,
 	children: [
 		(0, import_jsx_runtime.jsx)(`path`, {
-			d: `M14.1816 4.2755C14.5817 4.3827 14.8191 4.79396 14.7119 5.19406L10.7383 20.0238C10.6311 20.4239 10.2198 20.6613 9.81974 20.5541C9.41964 20.4469 9.18221 20.0356 9.28941 19.6355L13.263 4.80583C13.3702 4.40573 13.7815 4.16829 14.1816 4.2755Z`,
+			d: `M14.1797 4.27511C14.58 4.38151 14.8182 4.79228 14.7118 5.19259L10.725 20.1926C10.6186 20.5929 10.2078 20.8312 9.80753 20.7248C9.40722 20.6184 9.16895 20.2076 9.27535 19.8073L13.2622 4.80729C13.3686 4.40697 13.7793 4.16871 14.1797 4.27511Z`,
 			fill: `currentColor`,
 			style: {
 				color: `var(--solar-secondary-color, currentColor)`,
@@ -3466,19 +3769,19 @@ var i$11 = t$11((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 			}
 		}),
 		(0, import_jsx_runtime.jsx)(`path`, {
-			d: `M16.4425 7.32787C16.7196 7.01999 17.1938 6.99503 17.5017 7.27213L19.2392 8.83587C19.9756 9.49853 20.5864 10.0482 21.0058 10.5468C21.4468 11.071 21.7603 11.6343 21.7603 12.3296C21.7603 13.0249 21.4468 13.5882 21.0058 14.1124C20.5864 14.611 19.9756 15.1607 19.2392 15.8233L17.5017 17.3871C17.1938 17.6642 16.7196 17.6392 16.4425 17.3313C16.1654 17.0234 16.1904 16.5492 16.4983 16.2721L18.1947 14.7453C18.9826 14.0362 19.5138 13.5558 19.8579 13.1468C20.1882 12.7542 20.2603 12.525 20.2603 12.3296C20.2603 12.1342 20.1882 11.905 19.8579 11.5124C19.5138 11.1034 18.9826 10.623 18.1947 9.91389L16.4983 8.38707C16.1904 8.10997 16.1654 7.63576 16.4425 7.32787Z`,
+			d: `M8.50226 5.38707C8.81015 5.10997 8.8351 4.63576 8.55801 4.32787C8.28092 4.01999 7.8067 3.99503 7.49882 4.27213L5.76133 5.83587C5.02499 6.49853 4.41418 7.04822 3.99477 7.54679C3.55374 8.07104 3.24023 8.6343 3.24023 9.3296C3.24023 10.0249 3.55374 10.5882 3.99477 11.1124C4.41418 11.611 5.02498 12.1607 5.76132 12.8233L7.49882 14.3871C7.8067 14.6642 8.28092 14.6392 8.55801 14.3313C8.8351 14.0234 8.81015 13.5492 8.50226 13.2721L6.80579 11.7453C6.01792 11.0362 5.48672 10.5558 5.14262 10.1468C4.81237 9.7542 4.74023 9.52502 4.74023 9.3296C4.74023 9.13417 4.81237 8.90499 5.14262 8.51241C5.48672 8.10338 6.01792 7.62298 6.80579 6.91389L8.50226 5.38707Z`,
 			fill: `currentColor`
 		}),
 		(0, import_jsx_runtime.jsx)(`path`, {
-			d: `M7.50178 8.38707C7.80966 8.10997 7.83462 7.63576 7.55752 7.32787C7.28043 7.01999 6.80621 6.99503 6.49833 7.27213L4.76084 8.83587C4.0245 9.49853 3.41369 10.0482 2.99428 10.5468C2.55325 11.071 2.23975 11.6343 2.23975 12.3296C2.23975 13.0249 2.55325 13.5882 2.99428 14.1124C3.41369 14.611 4.02449 15.1607 4.76082 15.8233L6.49833 17.3871C6.80621 17.6642 7.28043 17.6392 7.55752 17.3313C7.83462 17.0234 7.80966 16.5492 7.50178 16.2721L5.80531 14.7453C5.01743 14.0362 4.48623 13.5558 4.14213 13.1468C3.81188 12.7542 3.73975 12.525 3.73975 12.3296C3.73975 12.1342 3.81188 11.905 4.14213 11.5124C4.48623 11.1034 5.01743 10.623 5.80531 9.91389L7.50178 8.38707Z`,
+			d: `M15.443 10.4983C15.7201 10.1904 16.1943 10.1654 16.5022 10.4425L18.2397 12.0063C18.976 12.6689 19.5868 13.2186 20.0063 13.7172C20.4473 14.2415 20.7608 14.8047 20.7608 15.5C20.7608 16.1953 20.4473 16.7586 20.0063 17.2828C19.5868 17.7814 18.976 18.3311 18.2397 18.9937L16.5022 20.5575C16.1943 20.8346 15.7201 20.8096 15.443 20.5017C15.1659 20.1938 15.1909 19.7196 15.4988 19.4425L17.1952 17.9157C17.9831 17.2066 18.5143 16.7262 18.8584 16.3172C19.1887 15.9246 19.2608 15.6954 19.2608 15.5C19.2608 15.3046 19.1887 15.0754 18.8584 14.6828C18.5143 14.2738 17.9831 13.7934 17.1952 13.0843L15.4988 11.5575C15.1909 11.2804 15.1659 10.8062 15.443 10.4983Z`,
 			fill: `currentColor`
 		})
 	]
 }));
 //#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/copy.mjs
-var { forwardRef: t$10 } = await importShared("react");
-var i$10 = t$10((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$26 } = await importShared("react");
+var i$25 = t$26((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `copy-bold-duotone`,
@@ -3496,8 +3799,8 @@ var i$10 = t$10((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 }));
 //#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/diskette.mjs
-var { forwardRef: t$9 } = await importShared("react");
-var i$9 = t$9((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$25 } = await importShared("react");
+var i$24 = t$25((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `diskette-bold-duotone`,
@@ -3521,9 +3824,68 @@ var i$9 = t$9((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	]
 }));
 //#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/document-text.mjs
+var { forwardRef: t$24 } = await importShared("react");
+var i$23 = t$24((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `document-text-bold-duotone`,
+	children: [
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M3 10C3 6.22876 3 4.34315 4.17157 3.17157C5.34315 2 7.22876 2 11 2H13C16.7712 2 18.6569 2 19.8284 3.17157C21 4.34315 21 6.22876 21 10V14C21 17.7712 21 19.6569 19.8284 20.8284C18.6569 22 16.7712 22 13 22H11C7.22876 22 5.34315 22 4.17157 20.8284C3 19.6569 3 17.7712 3 14V10Z`,
+			fill: `currentColor`,
+			style: {
+				color: `var(--solar-secondary-color, currentColor)`,
+				opacity: `var(--solar-secondary-opacity, 0.5)`
+			}
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			fillRule: `evenodd`,
+			clipRule: `evenodd`,
+			d: `M7.25 12C7.25 11.5858 7.58579 11.25 8 11.25H16C16.4142 11.25 16.75 11.5858 16.75 12C16.75 12.4142 16.4142 12.75 16 12.75H8C7.58579 12.75 7.25 12.4142 7.25 12Z`,
+			fill: `currentColor`
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			fillRule: `evenodd`,
+			clipRule: `evenodd`,
+			d: `M7.25 8C7.25 7.58579 7.58579 7.25 8 7.25H16C16.4142 7.25 16.75 7.58579 16.75 8C16.75 8.41421 16.4142 8.75 16 8.75H8C7.58579 8.75 7.25 8.41421 7.25 8Z`,
+			fill: `currentColor`
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			fillRule: `evenodd`,
+			clipRule: `evenodd`,
+			d: `M7.25 16C7.25 15.5858 7.58579 15.25 8 15.25H13C13.4142 15.25 13.75 15.5858 13.75 16C13.75 16.4142 13.4142 16.75 13 16.75H8C7.58579 16.75 7.25 16.4142 7.25 16Z`,
+			fill: `currentColor`
+		})
+	]
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/download-minimalistic.mjs
+var { forwardRef: t$23 } = await importShared("react");
+var i$22 = t$23((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `download-minimalistic-bold-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M3 14.25C3.41421 14.25 3.75 14.5858 3.75 15C3.75 16.4354 3.75159 17.4365 3.85315 18.1919C3.9518 18.9257 4.13225 19.3142 4.40901 19.591C4.68577 19.8678 5.07435 20.0482 5.80812 20.1469C6.56347 20.2484 7.56459 20.25 9 20.25H15C16.4354 20.25 17.4365 20.2484 18.1919 20.1469C18.9257 20.0482 19.3142 19.8678 19.591 19.591C19.8678 19.3142 20.0482 18.9257 20.1469 18.1919C20.2484 17.4365 20.25 16.4354 20.25 15C20.25 14.5858 20.5858 14.25 21 14.25C21.4142 14.25 21.75 14.5858 21.75 15V15.0549C21.75 16.4225 21.75 17.5248 21.6335 18.3918C21.5125 19.2919 21.2536 20.0497 20.6517 20.6516C20.0497 21.2536 19.2919 21.5125 18.3918 21.6335C17.5248 21.75 16.4225 21.75 15.0549 21.75H8.94513C7.57754 21.75 6.47522 21.75 5.60825 21.6335C4.70814 21.5125 3.95027 21.2536 3.34835 20.6517C2.74643 20.0497 2.48754 19.2919 2.36652 18.3918C2.24996 17.5248 2.24998 16.4225 2.25 15.0549C2.25 15.0366 2.25 15.0183 2.25 15C2.25 14.5858 2.58579 14.25 3 14.25Z`,
+		fill: `currentColor`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M12 16.75C12.2106 16.75 12.4114 16.6615 12.5535 16.5061L16.5535 12.1311C16.833 11.8254 16.8118 11.351 16.5061 11.0715C16.2004 10.792 15.726 10.8132 15.4465 11.1189L12.75 14.0682V3C12.75 2.58579 12.4142 2.25 12 2.25C11.5858 2.25 11.25 2.58579 11.25 3V14.0682L8.55353 11.1189C8.27403 10.8132 7.79963 10.792 7.49393 11.0715C7.18823 11.351 7.16698 11.8254 7.44648 12.1311L11.4465 16.5061C11.5886 16.6615 11.7894 16.75 12 16.75Z`,
+		fill: `currentColor`
+	})]
+}));
+//#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/earth.mjs
-var { forwardRef: t$8 } = await importShared("react");
-var i$8 = t$8((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$22 } = await importShared("react");
+var i$21 = t$22((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `earth-bold-duotone`,
@@ -3550,8 +3912,8 @@ var i$8 = t$8((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 }));
 //#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/export.mjs
-var { forwardRef: t$7 } = await importShared("react");
-var i$7 = t$7((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$21 } = await importShared("react");
+var i$20 = t$21((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `export-bold-duotone`,
@@ -3570,9 +3932,51 @@ var i$7 = t$7((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	})]
 }));
 //#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/eye-closed.mjs
+var { forwardRef: t$20 } = await importShared("react");
+var i$19 = t$20((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `eye-closed-bold-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		d: `M15.2209 12.3984C14.2784 12.7694 13.209 13.0002 12 13.0002V17.5002C12.5523 17.5002 13 17.0525 13 16.5002V14.9559C13.772 14.8867 14.4974 14.7392 15.1764 14.5311L16.1618 16.0456C16.463 16.5085 17.0825 16.6396 17.5454 16.3384C18.0083 16.0372 18.1394 15.4177 17.8382 14.9548L17.0558 13.7524C17.757 13.3816 18.3885 12.9517 18.9527 12.496L19.7929 13.3361C20.1834 13.7267 20.8166 13.7267 21.2071 13.3361C21.5976 12.9456 21.5976 12.3124 21.2071 11.9219L20.4097 11.1245C21.1521 10.3164 21.7181 9.51502 22.1207 8.86887C22.384 8.44627 22.5799 8.08609 22.7116 7.82793C22.7775 7.69874 22.8274 7.59476 22.8619 7.5209C22.8791 7.48397 22.8924 7.45453 22.902 7.4332L22.9134 7.40736L22.917 7.39913L22.9191 7.39411C23.1367 6.88648 22.9015 6.2986 22.3939 6.08105C21.8864 5.86355 21.2985 6.09892 21.0809 6.60627L21.0759 6.61747C21.0706 6.62926 21.0617 6.6489 21.0492 6.6758C21.0241 6.72962 20.9844 6.81235 20.9299 6.91928C20.8207 7.13337 20.6526 7.4431 20.4233 7.81119C19.9628 8.55023 19.2652 9.50857 18.3156 10.3999C17.4746 11.1893 16.4469 11.9158 15.2209 12.3984Z`,
+		fill: `currentColor`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M2.91858 6.60465C2.70062 6.09784 2.11327 5.86324 1.60603 6.08063C1.0984 6.29818 0.863613 6.8869 1.08117 7.39453L1.0816 7.39553L1.08267 7.39802L1.08566 7.4049L1.09505 7.42618C1.10282 7.44366 1.11363 7.46765 1.12752 7.49772C1.15529 7.55783 1.19539 7.64235 1.2481 7.74777C1.35345 7.95845 1.5096 8.25357 1.71879 8.605C2.12772 9.29201 2.74529 10.2043 3.59029 11.1241L2.79285 11.9215C2.40232 12.312 2.40232 12.9452 2.79285 13.3357C3.18337 13.7262 3.81654 13.7262 4.20706 13.3357L5.04746 12.4953C5.61245 12.9515 6.24405 13.3814 6.94417 13.7519L6.16177 14.9544C5.86056 15.4173 5.99165 16.0367 6.45457 16.338C6.91748 16.6392 7.53693 16.5081 7.83814 16.0452L8.82334 14.531C9.50014 14.7386 10.2253 14.8864 11 14.9556V16.4998C11 17.0521 11.4477 17.4998 12 17.4998V12.9998C9.25227 12.9998 7.18102 11.8012 5.69633 10.4109C5.68823 10.4031 5.68003 10.3954 5.67173 10.3878C5.47324 10.2009 5.28532 10.0105 5.10775 9.81932C4.35439 9.00801 3.80137 8.19355 3.43737 7.58204C3.25594 7.27722 3.12302 7.02546 3.03696 6.85334C2.99397 6.76735 2.96278 6.70147 2.94319 6.65905C2.93339 6.63785 2.92651 6.62253 2.9225 6.61352L2.91858 6.60465ZM1.08117 7.39453L1.99995 6.99977C1.08081 7.39369 1.08117 7.39453 1.08117 7.39453Z`,
+		fill: `currentColor`
+	})]
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/eye.mjs
+var { forwardRef: t$19 } = await importShared("react");
+var i$18 = t$19((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `eye-bold-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		d: `M2 12C2 13.6394 2.42496 14.1915 3.27489 15.2957C4.97196 17.5004 7.81811 20 12 20C16.1819 20 19.028 17.5004 20.7251 15.2957C21.575 14.1915 22 13.6394 22 12C22 10.3606 21.575 9.80853 20.7251 8.70433C19.028 6.49956 16.1819 4 12 4C7.81811 4 4.97196 6.49956 3.27489 8.70433C2.42496 9.80853 2 10.3606 2 12Z`,
+		fill: `currentColor`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M8.25 12C8.25 9.92893 9.92893 8.25 12 8.25C14.0711 8.25 15.75 9.92893 15.75 12C15.75 14.0711 14.0711 15.75 12 15.75C9.92893 15.75 8.25 14.0711 8.25 12ZM9.75 12C9.75 10.7574 10.7574 9.75 12 9.75C13.2426 9.75 14.25 10.7574 14.25 12C14.25 13.2426 13.2426 14.25 12 14.25C10.7574 14.25 9.75 13.2426 9.75 12Z`,
+		fill: `currentColor`
+	})]
+}));
+//#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/file-check.mjs
-var { forwardRef: t$6 } = await importShared("react");
-var i$6 = t$6((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$18 } = await importShared("react");
+var i$17 = t$18((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `file-check-bold-duotone`,
@@ -3598,9 +4002,28 @@ var i$6 = t$6((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	]
 }));
 //#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/folder-2.mjs
+var { forwardRef: t$17 } = await importShared("react");
+var i$16 = t$17((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `folder-2-bold-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		d: `M11 4L10.4497 3.44975C10.1763 3.17633 10.0396 3.03961 9.89594 2.92051C9.27652 2.40704 8.51665 2.09229 7.71557 2.01738C7.52976 2 7.33642 2 6.94975 2C6.06722 2 5.62595 2 5.25839 2.06935C3.64031 2.37464 2.37464 3.64031 2.06935 5.25839C2 5.62595 2 6.06722 2 6.94975V9.25V10H22L21.9531 9.25C21.8809 8.20117 21.6973 7.51276 21.2305 6.99383C21.1598 6.91514 21.0849 6.84024 21.0062 6.76946C20.1506 6 18.8345 6 16.2021 6H15.8284C14.6747 6 14.0979 6 13.5604 5.84678C13.2651 5.7626 12.9804 5.64471 12.7121 5.49543C12.2237 5.22367 11.8158 4.81578 11 4Z`,
+		fill: `currentColor`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M22 14V11.7979C22 11.4227 21.9978 10.75 21.9978 10.75L22 10H2V10.75V14C2 17.7712 2 19.6569 3.17157 20.8284C4.34315 22 6.22876 22 10 22H14C17.7712 22 19.6569 22 20.8284 20.8284C22 19.6569 22 17.7712 22 14Z`,
+		fill: `currentColor`
+	})]
+}));
+//#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/folder-open.mjs
-var { forwardRef: t$5 } = await importShared("react");
-var i$5 = t$5((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$16 } = await importShared("react");
+var i$15 = t$16((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `folder-open-bold-duotone`,
@@ -3619,9 +4042,56 @@ var i$5 = t$5((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	})]
 }));
 //#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/gallery.mjs
+var { forwardRef: t$15 } = await importShared("react");
+var i$14 = t$15((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `gallery-bold-duotone`,
+	children: [
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M20.6069 19.1463L17.7765 16.599C16.737 15.6634 15.1889 15.5702 14.0446 16.3744L13.7464 16.5839C12.9513 17.1428 11.8695 17.0491 11.1822 16.3618L6.89252 12.0721C6.03631 11.2159 4.66289 11.1702 3.75162 11.9675L2.75049 12.8435C2.75077 13.0665 2.75128 13.2835 2.7522 13.4949C2.7604 15.369 2.80229 16.7406 2.99032 17.7978C3.17451 18.8333 3.48788 19.4981 3.99494 20.0052C4.5646 20.5749 5.33532 20.9018 6.61372 21.0736C7.9137 21.2484 9.62192 21.25 12.0001 21.25C14.3784 21.25 16.0866 21.2484 17.3866 21.0736C18.665 20.9018 19.4357 20.5749 20.0054 20.0052C20.2153 19.7953 20.3873 19.5631 20.5303 19.2976C20.5568 19.2485 20.5823 19.1981 20.6069 19.1463Z`,
+			fill: `currentColor`,
+			style: {
+				color: `var(--solar-secondary-color, currentColor)`,
+				opacity: `var(--solar-secondary-opacity, 0.5)`
+			}
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M18 8C18 9.10457 17.1046 10 16 10C14.8954 10 14 9.10457 14 8C14 6.89543 14.8954 6 16 6C17.1046 6 18 6.89543 18 8Z`,
+			fill: `currentColor`
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			fillRule: `evenodd`,
+			clipRule: `evenodd`,
+			d: `M11.9426 1.25H12.0574C14.3658 1.24999 16.1748 1.24998 17.5863 1.43975C19.031 1.63399 20.1711 2.03933 21.0659 2.93414C21.9607 3.82895 22.366 4.96897 22.5603 6.41371C22.75 7.82519 22.75 9.63423 22.75 11.9426V12.0309C22.75 13.9397 22.75 15.5023 22.6463 16.7745C22.5422 18.0531 22.3287 19.1214 21.8509 20.0087C21.6401 20.4001 21.3812 20.7506 21.0659 21.0659C20.1711 21.9607 19.031 22.366 17.5863 22.5603C16.1748 22.75 14.3658 22.75 12.0574 22.75H11.9426C9.63423 22.75 7.82519 22.75 6.41371 22.5603C4.96897 22.366 3.82895 21.9607 2.93414 21.0659C2.14086 20.2726 1.7312 19.2852 1.51335 18.0604C1.29935 16.8573 1.2602 15.3603 1.25207 13.5015C1.25 13.0287 1.25 12.5286 1.25 12.001L1.25 11.9426C1.24999 9.63423 1.24998 7.82519 1.43975 6.41371C1.63399 4.96897 2.03933 3.82895 2.93414 2.93414C3.82895 2.03933 4.96897 1.63399 6.41371 1.43975C7.82519 1.24998 9.63423 1.24999 11.9426 1.25ZM6.61358 2.92637C5.33517 3.09825 4.56445 3.42514 3.9948 3.9948C3.42514 4.56445 3.09825 5.33517 2.92637 6.61358C2.75159 7.91356 2.75 9.62177 2.75 12C2.75 12.5287 2.75 13.0257 2.75205 13.4949C2.76025 15.369 2.80214 16.7406 2.99017 17.7978C3.17436 18.8333 3.48774 19.4981 3.9948 20.0052C4.56445 20.5749 5.33517 20.9018 6.61358 21.0736C7.91356 21.2484 9.62177 21.25 12 21.25C14.3782 21.25 16.0864 21.2484 17.3864 21.0736C18.6648 20.9018 19.4355 20.5749 20.0052 20.0052C20.2151 19.7953 20.3872 19.5631 20.5302 19.2976C20.8619 18.6816 21.0531 17.8578 21.1513 16.6527C21.2494 15.4482 21.25 13.9459 21.25 12C21.25 9.62177 21.2484 7.91356 21.0736 6.61358C20.9018 5.33517 20.5749 4.56445 20.0052 3.9948C19.4355 3.42514 18.6648 3.09825 17.3864 2.92637C16.0864 2.75159 14.3782 2.75 12 2.75C9.62177 2.75 7.91356 2.75159 6.61358 2.92637Z`,
+			fill: `currentColor`
+		})
+	]
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/home-2.mjs
+var { forwardRef: t$14 } = await importShared("react");
+var i$13 = t$14((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `home-2-bold-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		d: `M2 12.2039C2 9.91549 2 8.77128 2.5192 7.82274C3.0384 6.87421 3.98695 6.28551 5.88403 5.10813L7.88403 3.86687C9.88939 2.62229 10.8921 2 12 2C13.1079 2 14.1106 2.62229 16.116 3.86687L18.116 5.10812C20.0131 6.28551 20.9616 6.87421 21.4808 7.82274C22 8.77128 22 9.91549 22 12.2039V13.725C22 17.6258 22 19.5763 20.8284 20.7881C19.6569 22 17.7712 22 14 22H10C6.22876 22 4.34315 22 3.17157 20.7881C2 19.5763 2 17.6258 2 13.725V12.2039Z`,
+		fill: `currentColor`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M11.25 18C11.25 18.4142 11.5858 18.75 12 18.75C12.4142 18.75 12.75 18.4142 12.75 18V15C12.75 14.5858 12.4142 14.25 12 14.25C11.5858 14.25 11.25 14.5858 11.25 15V18Z`,
+		fill: `currentColor`
+	})]
+}));
+//#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/import.mjs
-var { forwardRef: t$4 } = await importShared("react");
-var i$4 = t$4((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$13 } = await importShared("react");
+var i$12 = t$13((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `import-bold-duotone`,
@@ -3640,9 +4110,136 @@ var i$4 = t$4((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	})]
 }));
 //#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/info-circle.mjs
+var { forwardRef: t$12 } = await importShared("react");
+var i$11 = t$12((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `info-circle-bold-duotone`,
+	children: [
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12Z`,
+			fill: `currentColor`,
+			style: {
+				color: `var(--solar-secondary-color, currentColor)`,
+				opacity: `var(--solar-secondary-opacity, 0.5)`
+			}
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M12 17.75C12.4142 17.75 12.75 17.4142 12.75 17V11C12.75 10.5858 12.4142 10.25 12 10.25C11.5858 10.25 11.25 10.5858 11.25 11V17C11.25 17.4142 11.5858 17.75 12 17.75Z`,
+			fill: `currentColor`
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M12 7C12.5523 7 13 7.44771 13 8C13 8.55229 12.5523 9 12 9C11.4477 9 11 8.55229 11 8C11 7.44771 11.4477 7 12 7Z`,
+			fill: `currentColor`
+		})
+	]
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/layers.mjs
+var { forwardRef: t$11 } = await importShared("react");
+var i$10 = t$11((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `layers-bold-duotone`,
+	children: [
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M5.76613 10L4.97883 10.3149C2.99294 11.1093 2 11.5065 2 12C2 12.4935 2.99294 12.8907 4.97883 13.6851L7.7873 14.8085C9.77318 15.6028 10.7661 16 12 16C13.2339 16 14.2268 15.6028 16.2127 14.8085L19.0212 13.6851C21.0071 12.8907 22 12.4935 22 12C22 11.5065 21.0071 11.1093 19.0212 10.3149L18.2339 10L16.2127 10.8085C14.2268 11.6028 13.2339 12 12 12C10.7661 12 9.77318 11.6028 7.7873 10.8085L5.76613 10Z`,
+			fill: `currentColor`,
+			style: {
+				color: `var(--solar-secondary-color, currentColor)`,
+				opacity: `var(--solar-secondary-opacity, 0.5)`
+			}
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M5.76613 10L4.97883 10.3149C2.99294 11.1093 2 11.5065 2 12C2 12.4935 2.99294 12.8907 4.97883 13.6851L7.7873 14.8085C9.77318 15.6028 10.7661 16 12 16C13.2339 16 14.2268 15.6028 16.2127 14.8085L19.0212 13.6851C21.0071 12.8907 22 12.4935 22 12C22 11.5065 21.0071 11.1093 19.0212 10.3149L18.2339 10L16.2127 10.8085C14.2268 11.6028 13.2339 12 12 12C10.7661 12 9.77318 11.6028 7.7873 10.8085L5.76613 10Z`,
+			fill: `currentColor`,
+			style: {
+				color: `var(--solar-secondary-color, currentColor)`,
+				opacity: `var(--solar-secondary-opacity, 0.5)`
+			}
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M5.76613 14L4.97883 14.3149C2.99294 15.1093 2 15.5065 2 16C2 16.4935 2.99294 16.8907 4.97883 17.6851L7.7873 18.8085C9.77318 19.6028 10.7661 20 12 20C13.2339 20 14.2268 19.6028 16.2127 18.8085L19.0212 17.6851C21.0071 16.8907 22 16.4935 22 16C22 15.5065 21.0071 15.1093 19.0212 14.3149L18.2339 14L16.2127 14.8085C14.2268 15.6028 13.2339 16 12 16C10.7661 16 9.77318 15.6028 7.7873 14.8085L5.76613 14Z`,
+			fill: `currentColor`,
+			style: {
+				color: `var(--solar-secondary-color, currentColor)`,
+				opacity: `var(--solar-secondary-opacity, 0.5)`
+			}
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M4.97883 9.68508C2.99294 8.89073 2 8.49355 2 8C2 7.50645 2.99294 7.10927 4.97883 6.31492L7.7873 5.19153C9.77318 4.39718 10.7661 4 12 4C13.2339 4 14.2268 4.39718 16.2127 5.19153L19.0212 6.31492C21.0071 7.10927 22 7.50645 22 8C22 8.49355 21.0071 8.89073 19.0212 9.68508L16.2127 10.8085C14.2268 11.6028 13.2339 12 12 12C10.7661 12 9.77318 11.6028 7.7873 10.8085L4.97883 9.68508Z`,
+			fill: `currentColor`
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			fillRule: `evenodd`,
+			clipRule: `evenodd`,
+			d: `M2 8C2 8.49355 2.99294 8.89073 4.97883 9.68508L7.7873 10.8085C9.77318 11.6028 10.7661 12 12 12C13.2339 12 14.2268 11.6028 16.2127 10.8085L19.0212 9.68508C21.0071 8.89073 22 8.49355 22 8C22 7.50645 21.0071 7.10927 19.0212 6.31492L16.2127 5.19153C14.2268 4.39718 13.2339 4 12 4C10.7661 4 9.77318 4.39718 7.7873 5.19153L4.97883 6.31492C2.99294 7.10927 2 7.50645 2 8Z`,
+			fill: `currentColor`
+		})
+	]
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/magnifier.mjs
+var { forwardRef: t$10 } = await importShared("react");
+var i$9 = t$10((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `magnifier-bold-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		d: `M20.3133 11.1566C20.3133 16.2137 16.2137 20.3133 11.1566 20.3133C6.09956 20.3133 2 16.2137 2 11.1566C2 6.09956 6.09956 2 11.1566 2C16.2137 2 20.3133 6.09956 20.3133 11.1566Z`,
+		fill: `currentColor`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M17.1001 18.1219L20.7664 21.7882C21.0487 22.0705 21.5064 22.0705 21.7887 21.7882C22.071 21.5059 22.071 21.0482 21.7887 20.7659L18.1224 17.0996C17.809 17.4666 17.4671 17.8085 17.1001 18.1219Z`,
+		fill: `currentColor`
+	})]
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/monitor.mjs
+var { forwardRef: t$9 } = await importShared("react");
+var i$8 = t$9((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `monitor-bold-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		d: `M10 2H14C17.7712 2 19.6569 2 20.8284 3.17157C22 4.34315 22 6.22876 22 10V11C22 11.5516 22 12.5494 21.9935 13H2.00652C2 12.5494 2 11.5516 2 11V10C2 6.22876 2 4.34315 3.17157 3.17157C4.34315 2 6.22876 2 10 2Z`,
+		fill: `currentColor`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M7.9846 17.5C5.14528 17.5 3.72562 17.5 2.84356 16.6213C2.27207 16.052 2.07085 15.2579 2 14V13H22V14C21.9292 15.2579 21.7279 16.052 21.1564 16.6213C20.2744 17.5 18.8547 17.5 16.0154 17.5H12.7529V21.5H16.0154C16.4312 21.5 16.7683 21.8358 16.7683 22.25C16.7683 22.6642 16.4312 23 16.0154 23H7.9846C7.56879 23 7.23171 22.6642 7.23171 22.25C7.23171 21.8358 7.56879 21.5 7.9846 21.5H11.2471V17.5H7.9846Z`,
+		fill: `currentColor`
+	})]
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/music-notes.mjs
+var { forwardRef: t$8 } = await importShared("react");
+var i$7 = t$8((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `music-notes-bold-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		d: `M7.75 2C7.75 1.58579 7.41421 1.25 7 1.25C6.58579 1.25 6.25 1.58579 6.25 2V7.76091C5.74485 7.4375 5.14432 7.25 4.5 7.25C2.70507 7.25 1.25 8.70507 1.25 10.5C1.25 12.2949 2.70507 13.75 4.5 13.75C6.29493 13.75 7.75 12.2949 7.75 10.5V5.0045C8.44852 5.50913 9.27955 5.75 10 5.75C10.4142 5.75 10.75 5.41421 10.75 5C10.75 4.58579 10.4142 4.25 10 4.25C9.54565 4.25 8.9663 4.07389 8.51159 3.69837C8.0784 3.34061 7.75 2.79785 7.75 2Z`,
+		fill: `currentColor`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M12.75 12.508L21.25 9.108V14.7609C20.7449 14.4375 20.1443 14.25 19.5 14.25C17.7051 14.25 16.25 15.7051 16.25 17.5C16.25 19.2949 17.7051 20.75 19.5 20.75C21.2949 20.75 22.75 19.2949 22.75 17.5C22.75 17.5 22.75 17.5 22.75 17.5L22.75 7.94625C22.75 6.80342 22.75 5.84496 22.6696 5.08131C22.6582 4.97339 22.6448 4.86609 22.63 4.76597C22.5525 4.24426 22.4156 3.75757 22.1514 3.35115C22.0193 3.14794 21.8553 2.96481 21.6511 2.80739C21.6128 2.77788 21.573 2.74927 21.5319 2.7216L21.5236 2.71608C20.8164 2.2454 20.0213 2.27906 19.2023 2.48777C18.4102 2.68961 17.4282 3.10065 16.224 3.60469L14.13 4.48115C13.5655 4.71737 13.0873 4.91751 12.712 5.1248C12.3126 5.34535 11.9686 5.60548 11.7106 5.99311C11.4527 6.38075 11.3455 6.7985 11.2963 7.25204C11.25 7.67831 11.25 8.19671 11.25 8.80858V16.7609C10.7448 16.4375 10.1443 16.25 9.5 16.25C7.70507 16.25 6.25 17.7051 6.25 19.5C6.25 21.2949 7.70507 22.75 9.5 22.75C11.2949 22.75 12.75 21.2949 12.75 19.5C12.75 19.5 12.75 19.5 12.75 19.5L12.75 12.508Z`,
+		fill: `currentColor`
+	})]
+}));
+//#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/pen.mjs
-var { forwardRef: t$3 } = await importShared("react");
-var i$3 = t$3((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$7 } = await importShared("react");
+var i$6 = t$7((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `pen-bold-duotone`,
@@ -3659,30 +4256,77 @@ var i$3 = t$3((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	})]
 }));
 //#endregion
-//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/play.mjs
-var { forwardRef: t$2 } = await importShared("react");
-var i$2 = t$2((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/play-circle.mjs
+var { forwardRef: t$6 } = await importShared("react");
+var i$5 = t$6((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
-	iconName: `play-bold-duotone`,
+	iconName: `play-circle-bold-duotone`,
 	children: [(0, import_jsx_runtime.jsx)(`path`, {
-		d: `M8.59662 21.6145L21.4086 14.6474C22.4695 14.0705 23 13.0352 23 12H4L4 18.9671C4 21.2763 6.53435 22.736 8.59662 21.6145Z`,
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z`,
 		fill: `currentColor`,
 		style: {
 			color: `var(--solar-secondary-color, currentColor)`,
 			opacity: `var(--solar-secondary-opacity, 0.5)`
 		}
 	}), (0, import_jsx_runtime.jsx)(`path`, {
-		fillRule: `evenodd`,
-		clipRule: `evenodd`,
-		d: `M23 12C23 10.9648 22.4695 9.92953 21.4086 9.35258L8.59661 2.38548C6.53435 1.26402 4 2.72368 4 5.0329L4 12H23Z`,
+		d: `M15.4137 13.059L10.6935 15.8458C9.93371 16.2944 9 15.7105 9 14.7868V9.21316C9 8.28947 9.93371 7.70561 10.6935 8.15419L15.4137 10.941C16.1954 11.4026 16.1954 12.5974 15.4137 13.059Z`,
 		fill: `currentColor`
 	})]
 }));
 //#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/restart.mjs
+var { forwardRef: t$5 } = await importShared("react");
+var i$4 = t$5((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `restart-bold-duotone`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		fillRule: `evenodd`,
+		clipRule: `evenodd`,
+		d: `M6.87348 7.87338C9.01606 5.7308 12.1674 5.20902 14.8007 6.31041L15.9309 5.18019C12.6515 3.53111 8.55119 4.07435 5.81282 6.81272C2.39573 10.2298 2.39573 15.77 5.81282 19.1871C9.2299 22.6042 14.7701 22.6042 18.1872 19.1871C20.1746 17.1997 21.0057 14.4933 20.6819 11.9072C20.6304 11.4962 20.2555 11.2048 19.8445 11.2562C19.4335 11.3077 19.142 11.6826 19.1935 12.0936C19.4622 14.24 18.7727 16.4802 17.1265 18.1264C14.2952 20.9577 9.70478 20.9577 6.87348 18.1264C4.04217 15.2951 4.04217 10.7047 6.87348 7.87338Z`,
+		fill: `currentColor`,
+		style: {
+			color: `var(--solar-secondary-color, currentColor)`,
+			opacity: `var(--solar-secondary-opacity, 0.5)`
+		}
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M18.7212 4.20119C18.7212 3.89785 18.5384 3.62437 18.2582 3.50828C17.9779 3.3922 17.6553 3.45637 17.4408 3.67086L15.9314 5.18028L14.8012 6.3105L13.1982 7.9135C12.9837 8.128 12.9195 8.45059 13.0356 8.73085C13.1517 9.0111 13.4252 9.19383 13.7285 9.19383H17.9712C18.3854 9.19383 18.7212 8.85805 18.7212 8.44383V4.20119Z`,
+		fill: `currentColor`
+	})]
+}));
+//#endregion
+//#region node_modules/@solar-icons/react/dist/icons/bold-duotone/shield-warning.mjs
+var { forwardRef: t$4 } = await importShared("react");
+var i$3 = t$4((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `shield-warning-bold-duotone`,
+	children: [
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M3 10.4167C3 7.21907 3 5.62028 3.37752 5.08241C3.75503 4.54454 5.25832 4.02996 8.26491 3.00079L8.83772 2.80472C10.405 2.26824 11.1886 2 12 2C12.8114 2 13.595 2.26824 15.1623 2.80472L15.7351 3.00079C18.7417 4.02996 20.245 4.54454 20.6225 5.08241C21 5.62028 21 7.21907 21 10.4167V11.9914C21 17.6294 16.761 20.3655 14.1014 21.5273C13.38 21.8424 13.0193 22 12 22C10.9807 22 10.62 21.8424 9.89856 21.5273C7.23896 20.3655 3 17.6294 3 11.9914V10.4167Z`,
+			fill: `currentColor`,
+			style: {
+				color: `var(--solar-secondary-color, currentColor)`,
+				opacity: `var(--solar-secondary-opacity, 0.5)`
+			}
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M12 7.25C12.4142 7.25 12.75 7.58579 12.75 8V12C12.75 12.4142 12.4142 12.75 12 12.75C11.5858 12.75 11.25 12.4142 11.25 12V8C11.25 7.58579 11.5858 7.25 12 7.25Z`,
+			fill: `currentColor`
+		}),
+		(0, import_jsx_runtime.jsx)(`path`, {
+			d: `M12 16C12.5523 16 13 15.5523 13 15C13 14.4477 12.5523 14 12 14C11.4477 14 11 14.4477 11 15C11 15.5523 11.4477 16 12 16Z`,
+			fill: `currentColor`
+		})
+	]
+}));
+//#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/trash-bin-2.mjs
-var { forwardRef: t$1 } = await importShared("react");
-var i$1 = t$1((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$3 } = await importShared("react");
+var i$2 = t$3((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `trash-bin-2-bold-duotone`,
@@ -3700,8 +4344,8 @@ var i$1 = t$1((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 }));
 //#endregion
 //#region node_modules/@solar-icons/react/dist/icons/bold-duotone/widget-6.mjs
-var { forwardRef: t } = await importShared("react");
-var i = t((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+var { forwardRef: t$2 } = await importShared("react");
+var i$1 = t$2((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	ref: i,
 	...t,
 	iconName: `widget-6-bold-duotone`,
@@ -3730,29 +4374,99 @@ var i = t((t, i) => (0, import_jsx_runtime.jsxs)(a, {
 	]
 }));
 //#endregion
-//#region extension/src/cross/CrossUtils.ts
-var customActionsChannels = {
-	setCards: "customActions_setCards",
-	getCards: "customActions_getCards",
-	startExe: "customActions_startExe",
-	exportToFile: "customActions_exportToFile",
-	importFromFile: "customActions_importFromFile"
-};
-//#endregion
-//#region src/renderer/mainWindow/layouts/tabs/TabContext.tsx
-var { createContext: createContext$9, useContext: useContext$12 } = await importShared("react");
-var TabContext = createContext$9(void 0);
-var useCurrentTabId = () => useContext$12(TabContext);
+//#region extension/src/renderer/components/modals/BatchDeleteModal.tsx
+var { AlertDialog: AlertDialog$1, Button: Button$12 } = await importShared("@heroui/react");
+function BatchDeleteModal({ isOpen, onOpenChange, selectedCount, cardTitles, onConfirm }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabAlertDialog, {
+		isOpen,
+		dialogClassName: "max-w-md",
+		onOpenChange,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AlertDialog$1.CloseTrigger, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AlertDialog$1.Header, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AlertDialog$1.Icon, { status: "danger" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AlertDialog$1.Heading, { children: [
+				"Delete ",
+				selectedCount,
+				" Action",
+				selectedCount !== 1 ? "s" : "",
+				"?"
+			] })] }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AlertDialog$1.Body, {
+				className: "space-y-3",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+					className: "text-xs text-muted leading-relaxed",
+					children: [
+						"Are you sure you want to permanently delete",
+						" ",
+						selectedCount === 1 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "font-semibold text-foreground",
+							children: [
+								"\"",
+								cardTitles[0] || "Untitled",
+								"\""
+							]
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "font-semibold text-foreground",
+							children: [
+								"these ",
+								selectedCount,
+								" custom actions"
+							]
+						}),
+						"? This action cannot be undone."
+					]
+				}), cardTitles.length > 1 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "max-h-28 overflow-y-auto rounded-xl bg-surface-secondary/70 p-2 border border-border/50 space-y-1",
+					children: [cardTitles.slice(0, 5).map((title, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-1.5 text-[11px] text-foreground/80 truncate",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { className: "size-1.5 rounded-full bg-danger shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "truncate",
+							children: title || "Untitled Action"
+						})]
+					}, i)), cardTitles.length > 5 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+						className: "text-[10px] text-muted pl-3 pt-0.5 font-mono",
+						children: [
+							"+",
+							cardTitles.length - 5,
+							" more..."
+						]
+					})]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AlertDialog$1.Footer, {
+				className: "flex items-center justify-end gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$12, {
+					size: "md",
+					variant: "secondary",
+					onPress: () => onOpenChange(false),
+					children: "Cancel"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$12, {
+					onPress: () => {
+						onConfirm();
+						onOpenChange(false);
+					},
+					size: "md",
+					variant: "danger",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$2, { className: "size-4" }),
+						"Delete ",
+						selectedCount,
+						" Action",
+						selectedCount !== 1 ? "s" : ""
+					]
+				})]
+			})
+		]
+	});
+}
 //#endregion
 //#region src/renderer/mainWindow/components/TabModal.tsx
-var { Modal: Modal$1 } = await importShared("@heroui/react");
-var { useCallback: useCallback$3, useEffect: useEffect$8, useLayoutEffect: useLayoutEffect$1, useMemo: useMemo$15, useRef: useRef$11, useState: useState$10 } = await importShared("react");
+var { Modal: Modal$2 } = await importShared("@heroui/react");
+var { useCallback: useCallback$5, useLayoutEffect: useLayoutEffect$1, useRef: useRef$11, useState: useState$15 } = await importShared("react");
 var { UNSAFE_PortalProvider } = await importShared("react-aria");
 function TabModal({ isOpen, onOpenChange, children, size = "cover", isDismissable = true, backdropVariant, dialogClassName, containerClassName, isKeyboardDismissDisabled, tabId: explicitTabId }) {
 	const anchorRef = useRef$11(null);
 	const contextTabId = useCurrentTabId();
-	const [domTabId, setDomTabId] = useState$10(void 0);
-	const runningCards = useCardsState("runningCard");
+	const [domTabId, setDomTabId] = useState$15(void 0);
 	useLayoutEffect$1(() => {
 		if (anchorRef.current) {
 			const wrapper = anchorRef.current.closest("[id$=\"_wrapper\"]");
@@ -3760,53 +4474,47 @@ function TabModal({ isOpen, onOpenChange, children, size = "cover", isDismissabl
 		}
 	}, []);
 	const resolvedTabId = explicitTabId ?? contextTabId ?? domTabId;
-	const [targetContainer, setTargetContainer] = useState$10(() => {
-		if (typeof document === "undefined") return null;
-		return resolvedTabId ? document.getElementById(`${resolvedTabId}_wrapper`) : null;
-	});
-	const currentRunningCard = useMemo$15(() => resolvedTabId ? runningCards.find((card) => card.tabId === resolvedTabId) : void 0, [runningCards, resolvedTabId]);
-	useEffect$8(() => {
-		if (!isOpen) {
-			setTargetContainer(null);
-			return;
+	const getContainer = useCallback$5(() => {
+		if (resolvedTabId) {
+			const el = document.getElementById(`${resolvedTabId}_wrapper`);
+			if (el) return el;
 		}
-		if (resolvedTabId) setTargetContainer(document.getElementById(`${resolvedTabId}_wrapper`));
-		else if (anchorRef.current) {
+		if (anchorRef.current) {
 			const wrapper = anchorRef.current.closest("[id$=\"_wrapper\"]");
-			setTargetContainer(wrapper ?? null);
-		} else setTargetContainer(null);
-	}, [isOpen, resolvedTabId]);
-	useEffect$8(() => {
-		if (isOpen && currentRunningCard && currentRunningCard.currentView === "browser") {
-			browserIpc.send.setVisible(currentRunningCard.id, false);
-			return () => {
-				browserIpc.send.setVisible(currentRunningCard.id, true);
-			};
+			if (wrapper) return wrapper;
 		}
-	}, [isOpen, currentRunningCard]);
-	const handleBackdropClick = useCallback$3((e) => {
-		if (isDismissable && e.target instanceof HTMLElement && e.target.closest(".modal__backdrop, .modal__container") && !e.target.closest(".modal__dialog")) onOpenChange?.(false);
+		return document.body;
+	}, [resolvedTabId]);
+	const mouseDownTargetRef = useRef$11(null);
+	const handleBackdropMouseDown = useCallback$5((e) => {
+		mouseDownTargetRef.current = e.target;
+	}, []);
+	const handleBackdropClick = useCallback$5((e) => {
+		const mouseDownTarget = mouseDownTargetRef.current;
+		mouseDownTargetRef.current = null;
+		if (isDismissable && mouseDownTarget instanceof HTMLElement && mouseDownTarget.closest(".modal__backdrop, .modal__container") && !mouseDownTarget.closest(".modal__dialog") && e.target instanceof HTMLElement && e.target.closest(".modal__backdrop, .modal__container") && !e.target.closest(".modal__dialog")) onOpenChange?.(false);
 	}, [isDismissable, onOpenChange]);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 		ref: anchorRef,
 		className: "hidden",
 		"aria-hidden": "true"
-	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1, {
+	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$2, {
 		isOpen,
 		onOpenChange,
-		children: targetContainer ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UNSAFE_PortalProvider, {
-			getContainer: () => targetContainer,
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Backdrop, {
-				className: "h-full",
+		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UNSAFE_PortalProvider, {
+			getContainer,
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$2.Backdrop, {
 				isDismissable: false,
 				variant: backdropVariant,
 				onClick: handleBackdropClick,
+				onMouseDown: handleBackdropMouseDown,
+				className: "h-full pointer-events-auto",
 				isKeyboardDismissDisabled,
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Container, {
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$2.Container, {
 					size,
 					scroll: "inside",
 					className: `h-full max-h-full ${containerClassName}`,
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Dialog, {
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$2.Dialog, {
 						className: size === "cover" ? `h-full max-h-full ${dialogClassName}` : dialogClassName,
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UNSAFE_PortalProvider, {
 							getContainer: () => document.body,
@@ -3815,32 +4523,349 @@ function TabModal({ isOpen, onOpenChange, children, size = "cover", isDismissabl
 					})
 				})
 			})
-		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Backdrop, {
-			className: "h-full",
-			isDismissable: false,
-			variant: backdropVariant,
-			onClick: handleBackdropClick,
-			isKeyboardDismissDisabled,
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Container, {
-				size,
-				scroll: "inside",
-				className: `h-full max-h-full ${containerClassName}`,
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Dialog, {
-					className: size === "cover" ? `h-full max-h-full ${dialogClassName}` : dialogClassName,
-					children
-				})
-			})
 		})
 	})] });
 }
 //#endregion
-//#region extension/src/renderer/toastHolder.ts
+//#region extension/src/renderer/services/terminalStream.ts
+/**
+* Escapes special characters in a string for use in a regular expression.
+*/
+function escapeRegExp(str) {
+	return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+/**
+* Extracts a URL from terminal output that contains a specific keyword.
+* @param input - The raw string data from the terminal.
+* @param keyword - The keyword to search for (e.g., "To see the GUI go to").
+* @returns The captured URL string or undefined if not found.
+*/
+function catchTerminalAddress(input, keyword) {
+	const escapedKeyword = escapeRegExp(keyword);
+	const pattern = new RegExp(`${escapedKeyword}.*?:\\s*.*?(https?:\\/\\/.*?)(?=\\s|\\u001b|$)`, "i");
+	const match = input.match(pattern);
+	if (match) return match[1];
+}
+//#endregion
+//#region extension/src/renderer/services/toast.ts
 var toastHolder;
 var setToast = (t) => toastHolder = t;
+var customActionsSlice = createSlice({
+	initialState: {
+		customCards: [],
+		view: "list",
+		editingCard: void 0,
+		saveCards: false,
+		urlCatchingSession: void 0,
+		systemPaths: void 0,
+		runningExecutions: []
+	},
+	name: "customActions",
+	reducers: {
+		updateState: (state, action) => {
+			state[action.payload.key] = action.payload.value;
+		},
+		addCard: (state) => {
+			state.editingCard = {
+				id: crypto.randomUUID(),
+				title: "",
+				icon: "bot",
+				cardType: "terminal_browser",
+				urlConfig: {
+					type: "nothing",
+					openImmediately: true,
+					timeout: 5
+				},
+				categories: { pinned: true },
+				actions: [],
+				env: []
+			};
+			state.view = "form";
+		},
+		removeCard: (state) => {
+			state.customCards = state.customCards.filter((item) => item.id !== state.editingCard?.id);
+			state.editingCard = void 0;
+			state.view = "list";
+			state.saveCards = true;
+		},
+		saveCard: (state) => {
+			const targetCard = state.editingCard;
+			let targetUrl = targetCard.urlConfig.customUrl;
+			if (targetUrl) {
+				if (targetCard.urlConfig.type === "htmlFile") targetUrl = formatLocalPathToUrl(targetUrl);
+				else targetUrl = formatWebAddress(targetUrl);
+				targetCard.urlConfig.customUrl = targetUrl;
+			}
+			if (state.customCards.some((card) => card.id === targetCard.id)) state.customCards = state.customCards.map((card) => card.id === targetCard.id ? targetCard : card);
+			else state.customCards = [...state.customCards, targetCard];
+			state.view = "list";
+			state.editingCard = void 0;
+			state.saveCards = true;
+		},
+		setTitle: (state, action) => {
+			if (state.editingCard) state.editingCard.title = action.payload;
+		},
+		setCardType: (state, action) => {
+			if (state.editingCard) state.editingCard.cardType = action.payload;
+		},
+		setDescription: (state, action) => {
+			if (state.editingCard) state.editingCard.description = action.payload;
+		},
+		setIcon: (state, action) => {
+			if (state.editingCard) state.editingCard.icon = action.payload;
+		},
+		setCwd: (state, action) => {
+			if (state.editingCard) state.editingCard.cwd = action.payload;
+		},
+		setRequireConfirmation: (state, action) => {
+			if (state.editingCard) state.editingCard.requireConfirmation = action.payload;
+		},
+		setConfirmationMessage: (state, action) => {
+			if (state.editingCard) state.editingCard.confirmationMessage = action.payload;
+		},
+		setSystemPaths: (state, action) => {
+			state.systemPaths = action.payload;
+		},
+		setView: (state, action) => {
+			state.view = action.payload;
+		},
+		setEditingCard: (state, action) => {
+			if (action.payload) state.editingCard = sanitizeCard(action.payload) ?? void 0;
+			else state.editingCard = void 0;
+		},
+		setUrlConfigType: (state, action) => {
+			if (state.editingCard) state.editingCard.urlConfig.type = action.payload;
+		},
+		setCustomUrl: (state, action) => {
+			if (state.editingCard) state.editingCard.urlConfig.customUrl = action.payload;
+		},
+		setOpenImmediately: (state, action) => {
+			if (state.editingCard) state.editingCard.urlConfig.openImmediately = action.payload;
+		},
+		setTimeoutValue: (state, action) => {
+			if (state.editingCard) state.editingCard.urlConfig.timeout = action.payload;
+		},
+		setFindLine: (state, action) => {
+			if (state.editingCard) state.editingCard.urlConfig.findLine = action.payload;
+		},
+		setCategories: (state, action) => {
+			if (state.editingCard) {
+				if (!state.editingCard.categories) state.editingCard.categories = {};
+				state.editingCard.categories[action.payload.id] = action.payload.value;
+			}
+		},
+		setAllCategories: (state, action) => {
+			if (state.editingCard) state.editingCard.categories = action.payload;
+		},
+		setActions: (state, action) => {
+			if (state.editingCard) state.editingCard.actions = action.payload;
+		},
+		removeAction: (state, action) => {
+			if (state.editingCard) state.editingCard.actions = state.editingCard.actions.filter((_, index) => index !== action.payload);
+		},
+		addAction: (state, action) => {
+			if (state.editingCard) {
+				const item = {
+					id: action.payload.id || crypto.randomUUID(),
+					...action.payload
+				};
+				state.editingCard.actions = [...state.editingCard.actions, item];
+			}
+		},
+		duplicateAction: (state, action) => {
+			if (state.editingCard && state.editingCard.actions[action.payload]) {
+				const newItem = {
+					...state.editingCard.actions[action.payload],
+					id: crypto.randomUUID()
+				};
+				state.editingCard.actions.splice(action.payload + 1, 0, newItem);
+			}
+		},
+		toggleActionDisabled: (state, action) => {
+			if (state.editingCard && state.editingCard.actions[action.payload]) {
+				const current = state.editingCard.actions[action.payload].disabled;
+				state.editingCard.actions[action.payload].disabled = !current;
+			}
+		},
+		updateAction: (state, action) => {
+			if (state.editingCard && state.editingCard.actions[action.payload.index]) state.editingCard.actions[action.payload.index].action = action.payload.newAction;
+		},
+		setEnv: (state, action) => {
+			if (state.editingCard) state.editingCard.env = action.payload;
+		},
+		addEnv: (state, action) => {
+			if (state.editingCard) state.editingCard.env = [...state.editingCard.env || [], action.payload];
+		},
+		removeEnv: (state, action) => {
+			if (state.editingCard && state.editingCard.env) state.editingCard.env = state.editingCard.env.filter((_, index) => index !== action.payload);
+		},
+		updateEnv: (state, action) => {
+			if (state.editingCard && state.editingCard.env && state.editingCard.env[action.payload.index]) state.editingCard.env[action.payload.index] = {
+				key: action.payload.key,
+				value: action.payload.value
+			};
+		},
+		clearSaveCards: (state) => {
+			state.saveCards = false;
+		},
+		startUrlCatching: (state, action) => {
+			state.urlCatchingSession = {
+				ptyId: action.payload.ptyId,
+				tabId: action.payload.tabId,
+				findLine: action.payload.findLine,
+				urlFound: false
+			};
+		},
+		stopUrlCatching: (state) => {
+			state.urlCatchingSession = void 0;
+		},
+		setUrlFound: (state) => {
+			if (state.urlCatchingSession) state.urlCatchingSession.urlFound = true;
+		},
+		importCards: (state, action) => {
+			const sanitized = sanitizeCards(action.payload);
+			if (sanitized.length === 0) return;
+			const existingIds = new Set(state.customCards.map((c) => c.id));
+			const newCards = sanitized.map((card) => {
+				let newId = card.id || crypto.randomUUID();
+				let newTitle = card.title;
+				let counter = 1;
+				while (existingIds.has(newId)) {
+					newId = crypto.randomUUID();
+					newTitle = `${card.title} (Imported ${counter})`;
+					counter++;
+				}
+				existingIds.add(newId);
+				const actions = (card.actions || []).map((a) => ({
+					...a,
+					id: a.id || crypto.randomUUID()
+				}));
+				return {
+					...card,
+					id: newId,
+					title: newTitle,
+					actions
+				};
+			});
+			state.customCards = [...state.customCards, ...newCards];
+			state.saveCards = true;
+		},
+		batchDeleteCards: (state, action) => {
+			const idsToDelete = new Set(action.payload);
+			state.customCards = state.customCards.filter((card) => !idsToDelete.has(card.id));
+			if (state.editingCard && idsToDelete.has(state.editingCard.id)) {
+				state.editingCard = void 0;
+				state.view = "list";
+			}
+			state.saveCards = true;
+		},
+		batchDuplicateCards: (state, action) => {
+			const idsToDuplicate = new Set(action.payload);
+			const duplicatedCards = [];
+			for (const card of state.customCards) if (idsToDuplicate.has(card.id)) {
+				const newCard = {
+					...card,
+					id: crypto.randomUUID(),
+					title: `${card.title} (Copy)`,
+					cwd: card.cwd,
+					requireConfirmation: card.requireConfirmation,
+					confirmationMessage: card.confirmationMessage,
+					urlConfig: { ...card.urlConfig },
+					categories: { ...card.categories },
+					actions: (card.actions || []).map((actionItem) => ({
+						...actionItem,
+						id: crypto.randomUUID()
+					})),
+					env: card.env ? card.env.map((e) => ({ ...e })) : void 0
+				};
+				duplicatedCards.push(newCard);
+			}
+			if (duplicatedCards.length > 0) {
+				state.customCards = [...state.customCards, ...duplicatedCards];
+				state.saveCards = true;
+			}
+		},
+		batchSetCategory: (state, action) => {
+			const targetIds = new Set(action.payload.cardIds);
+			state.customCards = state.customCards.map((card) => {
+				if (!targetIds.has(card.id)) return card;
+				const categories = card.categories ? { ...card.categories } : {};
+				categories[action.payload.category] = action.payload.value;
+				return {
+					...card,
+					categories
+				};
+			});
+			state.saveCards = true;
+		},
+		batchToggleCategory: (state, action) => {
+			const targetIds = new Set(action.payload.cardIds);
+			const selectedCards = state.customCards.filter((card) => targetIds.has(card.id));
+			if (selectedCards.length === 0) return;
+			const newValue = !selectedCards.every((card) => Boolean(card.categories?.[action.payload.category]));
+			state.customCards = state.customCards.map((card) => {
+				if (!targetIds.has(card.id)) return card;
+				const categories = card.categories ? { ...card.categories } : {};
+				categories[action.payload.category] = newValue;
+				return {
+					...card,
+					categories
+				};
+			});
+			state.saveCards = true;
+		},
+		addRunningExecution: (state, action) => {
+			state.runningExecutions = [...(state.runningExecutions || []).filter((item) => item.cardId !== action.payload.cardId && item.tabId !== action.payload.tabId), action.payload];
+		},
+		removeRunningExecution: (state, action) => {
+			const { cardId, ptyId, tabId } = action.payload;
+			state.runningExecutions = (state.runningExecutions || []).filter((item) => {
+				if (cardId && item.cardId === cardId) return false;
+				if (ptyId && item.ptyId === ptyId) return false;
+				if (tabId && item.tabId === tabId) return false;
+				return true;
+			});
+		},
+		clearRunningExecutions: (state) => {
+			state.runningExecutions = [];
+		}
+	}
+});
+var selectCustomCards = (state) => state.customActions.customCards;
+var selectView = (state) => state.customActions.view;
+var selectEditingCard = (state) => state.customActions.editingCard;
+var selectSaveCards = (state) => state.customActions.saveCards;
+var selectUrlCatchingSession = (state) => state.customActions.urlCatchingSession;
+var selectSystemPaths = (state) => state.customActions.systemPaths;
+var selectRunningExecutions = (state) => state.customActions.runningExecutions || [];
+var reducerActions = customActionsSlice.actions;
+var customActionsSlice_default = customActionsSlice.reducer;
+//#endregion
+//#region src/renderer/shared/assets/icons/index.tsx
+function Terminal_Icon(props) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
+		...props,
+		fill: "none",
+		height: "1em",
+		viewBox: "0 0 24 24",
+		xmlns: "http://www.w3.org/2000/svg",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			strokeWidth: "2.5",
+			stroke: "currentColor",
+			strokeLinecap: "round",
+			strokeLinejoin: "round",
+			d: "M5.46967 7.46967C5.17678 7.17678 5.17678 6.7019 5.46967 6.40901C5.76256 6.11612 6.23744 6.11612 6.53033 6.40901L11.5303 11.409C11.8232 11.7019 11.8232 12.1768 11.5303 12.4697L6.53033 17.4697C6.23744 17.7626 5.76256 17.7626 5.46967 17.4697C5.17678 17.1768 5.17678 16.7019 5.46967 16.409L9.93934 11.9393L5.46967 7.46967Z"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
+			opacity: "0.5",
+			fill: "currentColor",
+			d: "M13.5 16C13.5 15.1716 14.1716 14.5 15 14.5H19C19.8284 14.5 20.5 15.1716 20.5 16C20.5 16.8284 19.8284 17.5 19 17.5H15C14.1716 17.5 13.5 16.8284 13.5 16Z"
+		})]
+	});
+}
 //#endregion
 //#region node_modules/framer-motion/dist/es/context/LayoutGroupContext.mjs
-var { createContext: createContext$8 } = await importShared("react");
-var LayoutGroupContext = createContext$8({});
+var { createContext: createContext$7 } = await importShared("react");
+var LayoutGroupContext = createContext$7({});
 //#endregion
 //#region node_modules/framer-motion/dist/es/utils/use-constant.mjs
 var { useRef: useRef$10 } = await importShared("react");
@@ -3861,15 +4886,15 @@ function useConstant(init) {
 var isBrowser$2 = typeof window !== "undefined";
 //#endregion
 //#region node_modules/framer-motion/dist/es/utils/use-isomorphic-effect.mjs
-var { useLayoutEffect, useEffect: useEffect$7 } = await importShared("react");
-var useIsomorphicLayoutEffect = isBrowser$2 ? useLayoutEffect : useEffect$7;
+var { useLayoutEffect, useEffect: useEffect$10 } = await importShared("react");
+var useIsomorphicLayoutEffect = isBrowser$2 ? useLayoutEffect : useEffect$10;
 //#endregion
 //#region node_modules/framer-motion/dist/es/context/PresenceContext.mjs
-var { createContext: createContext$7 } = await importShared("react");
+var { createContext: createContext$6 } = await importShared("react");
 /**
 * @public
 */
-var PresenceContext = /* @__PURE__ */ createContext$7(null);
+var PresenceContext = /* @__PURE__ */ createContext$6(null);
 //#endregion
 //#region node_modules/motion-utils/dist/es/array.mjs
 function addUniqueItem(arr, item) {
@@ -11062,30 +12087,6 @@ var DocumentProjectionNode = createProjectionNode$1({
 	checkIsScrollRoot: () => true
 });
 //#endregion
-//#region node_modules/motion-dom/dist/es/projection/node/group.mjs
-var notify = (node) => !node.isLayoutDirty && node.willUpdate(false);
-function nodeGroup() {
-	const nodes = /* @__PURE__ */ new Set();
-	const subscriptions = /* @__PURE__ */ new WeakMap();
-	const dirtyAll = () => nodes.forEach(notify);
-	return {
-		add: (node) => {
-			nodes.add(node);
-			subscriptions.set(node, node.addEventListener("willUpdate", dirtyAll));
-		},
-		remove: (node) => {
-			nodes.delete(node);
-			const unsubscribe = subscriptions.get(node);
-			if (unsubscribe) {
-				unsubscribe();
-				subscriptions.delete(node);
-			}
-			dirtyAll();
-		},
-		dirty: dirtyAll
-	};
-}
-//#endregion
 //#region node_modules/motion-dom/dist/es/projection/node/HTMLProjectionNode.mjs
 var rootProjectionNode = { current: void 0 };
 var HTMLProjectionNode = createProjectionNode$1({
@@ -11109,11 +12110,11 @@ var HTMLProjectionNode = createProjectionNode$1({
 });
 //#endregion
 //#region node_modules/framer-motion/dist/es/context/MotionConfigContext.mjs
-var { createContext: createContext$6 } = await importShared("react");
+var { createContext: createContext$5 } = await importShared("react");
 /**
 * @public
 */
-var MotionConfigContext = createContext$6({
+var MotionConfigContext = createContext$5({
 	transformPagePoint: (p) => p,
 	isStatic: false,
 	reducedMotion: "never"
@@ -11163,7 +12164,7 @@ function useComposedRefs(...refs) {
 //#endregion
 //#region node_modules/framer-motion/dist/es/components/AnimatePresence/PopChild.mjs
 var React$1 = await importShared("react");
-var { useId: useId$2, useRef: useRef$9, useContext: useContext$11, useInsertionEffect: useInsertionEffect$2 } = await importShared("react");
+var { useId: useId$3, useRef: useRef$9, useContext: useContext$10, useInsertionEffect: useInsertionEffect$2 } = await importShared("react");
 /**
 * Measurement functionality has to be within a separate component
 * to leverage snapshot lifecycle.
@@ -11196,7 +12197,7 @@ var PopChildMeasure = class extends React$1.Component {
 	}
 };
 function PopChild({ children, isPresent, anchorX, anchorY, root, pop }) {
-	const id = useId$2();
+	const id = useId$3();
 	const ref = useRef$9(null);
 	const size = useRef$9({
 		width: 0,
@@ -11207,7 +12208,7 @@ function PopChild({ children, isPresent, anchorX, anchorY, root, pop }) {
 		bottom: 0,
 		direction: "ltr"
 	});
-	const { nonce } = useContext$11(MotionConfigContext);
+	const { nonce } = useContext$10(MotionConfigContext);
 	const composedRef = useComposedRefs(ref, pop !== false ? children.props?.ref ?? children?.ref : void 0);
 	/**
 	* We create and inject a style block so we can apply this explicit
@@ -11254,10 +12255,10 @@ function PopChild({ children, isPresent, anchorX, anchorY, root, pop }) {
 //#endregion
 //#region node_modules/framer-motion/dist/es/components/AnimatePresence/PresenceChild.mjs
 var React = await importShared("react");
-var { useId: useId$1, useRef: useRef$8, useMemo: useMemo$14 } = await importShared("react");
+var { useId: useId$2, useRef: useRef$8, useMemo: useMemo$19 } = await importShared("react");
 var PresenceChild = ({ children, initial, isPresent, onExitComplete, custom, presenceAffectsLayout, mode, anchorX, anchorY, root }) => {
 	const presenceChildren = useConstant(newChildrenMap);
-	const id = useId$1();
+	const id = useId$2();
 	const isPresentRef = useRef$8(isPresent);
 	const onExitCompleteRef = useRef$8(onExitComplete);
 	useIsomorphicLayoutEffect(() => {
@@ -11265,7 +12266,7 @@ var PresenceChild = ({ children, initial, isPresent, onExitComplete, custom, pre
 		onExitCompleteRef.current = onExitComplete;
 	});
 	let isReusedContext = true;
-	let context = useMemo$14(() => {
+	let context = useMemo$19(() => {
 		isReusedContext = false;
 		return {
 			id,
@@ -11296,7 +12297,7 @@ var PresenceChild = ({ children, initial, isPresent, onExitComplete, custom, pre
 	* so they can detect that layout change.
 	*/
 	if (presenceAffectsLayout && isReusedContext) context = { ...context };
-	useMemo$14(() => {
+	useMemo$19(() => {
 		presenceChildren.forEach((_, key) => presenceChildren.set(key, false));
 	}, [isPresent]);
 	/**
@@ -11324,7 +12325,7 @@ function newChildrenMap() {
 }
 //#endregion
 //#region node_modules/framer-motion/dist/es/components/AnimatePresence/use-presence.mjs
-var { useContext: useContext$10, useId, useEffect: useEffect$6, useCallback: useCallback$2 } = await importShared("react");
+var { useContext: useContext$9, useId: useId$1, useEffect: useEffect$9, useCallback: useCallback$4 } = await importShared("react");
 /**
 * When a component is the child of `AnimatePresence`, it can use `usePresence`
 * to access information about whether it's still present in the React tree.
@@ -11349,14 +12350,14 @@ var { useContext: useContext$10, useId, useEffect: useEffect$6, useCallback: use
 * @public
 */
 function usePresence(subscribe = true) {
-	const context = useContext$10(PresenceContext);
+	const context = useContext$9(PresenceContext);
 	if (context === null) return [true, null];
 	const { isPresent, onExitComplete, register } = context;
-	const id = useId();
-	useEffect$6(() => {
+	const id = useId$1();
+	useEffect$9(() => {
 		if (subscribe) return register(id);
 	}, [subscribe]);
-	const safeToRemove = useCallback$2(() => subscribe && onExitComplete && onExitComplete(id), [
+	const safeToRemove = useCallback$4(() => subscribe && onExitComplete && onExitComplete(id), [
 		id,
 		onExitComplete,
 		subscribe
@@ -11376,7 +12377,7 @@ function onlyElements(children) {
 }
 //#endregion
 //#region node_modules/framer-motion/dist/es/components/AnimatePresence/index.mjs
-var { useMemo: useMemo$13, useRef: useRef$7, useState: useState$9, useContext: useContext$9 } = await importShared("react");
+var { useMemo: useMemo$18, useRef: useRef$7, useState: useState$14, useContext: useContext$8 } = await importShared("react");
 /**
 * `AnimatePresence` enables the animation of components that have been removed from the tree.
 *
@@ -11416,7 +12417,7 @@ var AnimatePresence = ({ children, custom, initial = true, onExitComplete, prese
 	* Filter any children that aren't ReactElements. We can only track components
 	* between renders with a props.key.
 	*/
-	const presentChildren = useMemo$13(() => onlyElements(children), [children]);
+	const presentChildren = useMemo$18(() => onlyElements(children), [children]);
 	/**
 	* Track the keys of the currently rendered children. This is used to
 	* determine which children are exiting.
@@ -11444,8 +12445,8 @@ var AnimatePresence = ({ children, custom, initial = true, onExitComplete, prese
 	* Save children to render as React state. To ensure this component is concurrent-safe,
 	* we check for exiting children via an effect.
 	*/
-	const [diffedChildren, setDiffedChildren] = useState$9(presentChildren);
-	const [renderedChildren, setRenderedChildren] = useState$9(presentChildren);
+	const [diffedChildren, setDiffedChildren] = useState$14(presentChildren);
+	const [renderedChildren, setRenderedChildren] = useState$14(presentChildren);
 	useIsomorphicLayoutEffect(() => {
 		if (propagate && !isParentPresent && !renderedChildren.length) safeToRemove?.();
 	}, [
@@ -11513,7 +12514,7 @@ var AnimatePresence = ({ children, custom, initial = true, onExitComplete, prese
 	* we can use it to force a re-render amongst all surrounding components once
 	* all components have finished animating out.
 	*/
-	const { forceRender } = useContext$9(LayoutGroupContext);
+	const { forceRender } = useContext$8(LayoutGroupContext);
 	return (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: renderedChildren.map((child) => {
 		const key = getChildKey(child);
 		const isPresent = propagate && !isParentPresent ? false : presentChildren === renderedChildren || presentKeys.includes(key);
@@ -11547,66 +12548,6 @@ var AnimatePresence = ({ children, custom, initial = true, onExitComplete, prese
 			children: child
 		}, key);
 	}) });
-};
-//#endregion
-//#region node_modules/framer-motion/dist/es/context/DeprecatedLayoutGroupContext.mjs
-var { createContext: createContext$5 } = await importShared("react");
-/**
-* Note: Still used by components generated by old versions of Framer
-*
-* @deprecated
-*/
-var DeprecatedLayoutGroupContext = createContext$5(null);
-//#endregion
-//#region node_modules/framer-motion/dist/es/utils/use-is-mounted.mjs
-var { useRef: useRef$6 } = await importShared("react");
-function useIsMounted() {
-	const isMounted = useRef$6(false);
-	useIsomorphicLayoutEffect(() => {
-		isMounted.current = true;
-		return () => {
-			isMounted.current = false;
-		};
-	}, []);
-	return isMounted;
-}
-//#endregion
-//#region node_modules/framer-motion/dist/es/utils/use-force-update.mjs
-var { useState: useState$8, useCallback: useCallback$1 } = await importShared("react");
-function useForceUpdate() {
-	const isMounted = useIsMounted();
-	const [forcedRenderCount, setForcedRenderCount] = useState$8(0);
-	const forceRender = useCallback$1(() => {
-		isMounted.current && setForcedRenderCount(forcedRenderCount + 1);
-	}, [forcedRenderCount]);
-	return [useCallback$1(() => frame.postRender(forceRender), [forceRender]), forcedRenderCount];
-}
-//#endregion
-//#region node_modules/framer-motion/dist/es/components/LayoutGroup/index.mjs
-var { useContext: useContext$8, useRef: useRef$5, useMemo: useMemo$12 } = await importShared("react");
-var shouldInheritGroup = (inherit) => inherit === true;
-var shouldInheritId = (inherit) => shouldInheritGroup(inherit === true) || inherit === "id";
-var LayoutGroup = ({ children, id, inherit = true }) => {
-	const layoutGroupContext = useContext$8(LayoutGroupContext);
-	const deprecatedLayoutGroupContext = useContext$8(DeprecatedLayoutGroupContext);
-	const [forceRender, key] = useForceUpdate();
-	const context = useRef$5(null);
-	const upstreamId = layoutGroupContext.id || deprecatedLayoutGroupContext;
-	if (context.current === null) {
-		if (shouldInheritId(inherit) && upstreamId) id = id ? upstreamId + "-" + id : upstreamId;
-		context.current = {
-			id,
-			group: shouldInheritGroup(inherit) ? layoutGroupContext.group || nodeGroup() : nodeGroup()
-		};
-	}
-	const memoizedContext = useMemo$12(() => ({
-		...context.current,
-		forceRender
-	}), [key]);
-	return (0, import_jsx_runtime.jsx)(LayoutGroupContext.Provider, {
-		value: memoizedContext,
-		children
-	});
 };
 //#endregion
 //#region node_modules/framer-motion/dist/es/context/LazyContext.mjs
@@ -11699,10 +12640,10 @@ function getCurrentTreeVariants(props, context) {
 }
 //#endregion
 //#region node_modules/framer-motion/dist/es/context/MotionContext/create.mjs
-var { useContext: useContext$7, useMemo: useMemo$11 } = await importShared("react");
+var { useContext: useContext$7, useMemo: useMemo$17 } = await importShared("react");
 function useCreateMotionContext(props) {
 	const { initial, animate } = getCurrentTreeVariants(props, useContext$7(MotionContext));
-	return useMemo$11(() => ({
+	return useMemo$17(() => ({
 		initial,
 		animate
 	}), [variantLabelsAsDependency(initial), variantLabelsAsDependency(animate)]);
@@ -11720,12 +12661,12 @@ var createHtmlRenderState = () => ({
 });
 //#endregion
 //#region node_modules/framer-motion/dist/es/render/html/use-props.mjs
-var { useMemo: useMemo$10 } = await importShared("react");
+var { useMemo: useMemo$16 } = await importShared("react");
 function copyRawValuesOnly(target, source, props) {
 	for (const key in source) if (!isMotionValue(source[key]) && !isForcedMotionValue(key, props)) target[key] = source[key];
 }
 function useInitialMotionValues({ transformTemplate }, visualState) {
-	return useMemo$10(() => {
+	return useMemo$16(() => {
 		const state = createHtmlRenderState();
 		buildHTMLStyles(state, visualState, transformTemplate);
 		return Object.assign({}, state.vars, state.style);
@@ -11761,9 +12702,9 @@ var createSvgRenderState = () => ({
 });
 //#endregion
 //#region node_modules/framer-motion/dist/es/render/svg/use-props.mjs
-var { useMemo: useMemo$9 } = await importShared("react");
+var { useMemo: useMemo$15 } = await importShared("react");
 function useSVGProps(props, visualState, _isStatic, Component) {
-	const visualProps = useMemo$9(() => {
+	const visualProps = useMemo$15(() => {
 		const state = createSvgRenderState();
 		buildSVGAttrs(state, visualState, isSVGTag(Component), props.transformTemplate, props.style);
 		return {
@@ -11896,11 +12837,11 @@ function isSVGComponent(Component) {
 }
 //#endregion
 //#region node_modules/framer-motion/dist/es/render/dom/use-render.mjs
-var { Fragment: Fragment$2, useMemo: useMemo$8, createElement: createElement$3 } = await importShared("react");
+var { Fragment: Fragment$1, useMemo: useMemo$14, createElement: createElement$3 } = await importShared("react");
 function useRender(Component, props, ref, { latestValues }, isStatic, forwardMotionProps = false, isSVG, isValidProp) {
 	const visualProps = (isSVG ?? isSVGComponent(Component) ? useSVGProps : useHTMLProps)(props, latestValues, isStatic, Component);
 	const filteredProps = filterProps(props, typeof Component === "string", forwardMotionProps, isValidProp);
-	const elementProps = Component !== Fragment$2 ? {
+	const elementProps = Component !== Fragment$1 ? {
 		...filteredProps,
 		...visualProps,
 		ref
@@ -11911,7 +12852,7 @@ function useRender(Component, props, ref, { latestValues }, isStatic, forwardMot
 	* will be handled by the onChange handler
 	*/
 	const { children } = props;
-	const renderedChildren = useMemo$8(() => isMotionValue(children) ? children.get() : children, [children]);
+	const renderedChildren = useMemo$14(() => isMotionValue(children) ? children.get() : children, [children]);
 	return createElement$3(Component, {
 		...elementProps,
 		children: renderedChildren
@@ -11987,7 +12928,7 @@ var useSVGVisualState = /*@__PURE__*/ makeUseVisualState({
 var motionComponentSymbol = Symbol.for("motionComponentSymbol");
 //#endregion
 //#region node_modules/framer-motion/dist/es/motion/utils/use-motion-ref.mjs
-var { useRef: useRef$4, useInsertionEffect: useInsertionEffect$1, useCallback } = await importShared("react");
+var { useRef: useRef$6, useInsertionEffect: useInsertionEffect$1, useCallback: useCallback$3 } = await importShared("react");
 /**
 * Creates a ref function that, when called, hydrates the provided
 * external ref and VisualElement.
@@ -12000,12 +12941,12 @@ function useMotionRef(visualState, visualElement, externalRef) {
 	* when using asChild - this would cause the callback to be recreated,
 	* triggering element remounts and breaking AnimatePresence exit animations.
 	*/
-	const externalRefContainer = useRef$4(externalRef);
+	const externalRefContainer = useRef$6(externalRef);
 	useInsertionEffect$1(() => {
 		externalRefContainer.current = externalRef;
 	});
-	const refCleanup = useRef$4(null);
-	return useCallback((instance) => {
+	const refCleanup = useRef$6(null);
+	return useCallback$3((instance) => {
 		if (instance) visualState.onMount?.(instance);
 		if (visualElement) instance ? visualElement.mount(instance) : visualElement.unmount();
 		const ref = externalRefContainer.current;
@@ -12034,7 +12975,7 @@ function isRefObject(ref) {
 }
 //#endregion
 //#region node_modules/framer-motion/dist/es/motion/utils/use-visual-element.mjs
-var { useContext: useContext$5, useRef: useRef$3, useInsertionEffect, useEffect: useEffect$5 } = await importShared("react");
+var { useContext: useContext$5, useRef: useRef$5, useInsertionEffect, useEffect: useEffect$8 } = await importShared("react");
 function useVisualElement(Component, visualState, props, createVisualElement, ProjectionNodeConstructor, isSVG) {
 	const { visualElement: parent } = useContext$5(MotionContext);
 	const lazyContext = useContext$5(LazyContext);
@@ -12042,12 +12983,12 @@ function useVisualElement(Component, visualState, props, createVisualElement, Pr
 	const motionConfig = useContext$5(MotionConfigContext);
 	const reducedMotionConfig = motionConfig.reducedMotion;
 	const skipAnimations = motionConfig.skipAnimations;
-	const visualElementRef = useRef$3(null);
+	const visualElementRef = useRef$5(null);
 	/**
 	* Track whether the component has been through React's commit phase.
 	* Used to detect when LazyMotion features load after the component has mounted.
 	*/
-	const hasMountedOnce = useRef$3(false);
+	const hasMountedOnce = useRef$5(false);
 	/**
 	* If we haven't preloaded a renderer, check to see if we have one lazy-loaded
 	*/
@@ -12078,7 +13019,7 @@ function useVisualElement(Component, visualState, props, createVisualElement, Pr
 	*/
 	const initialLayoutGroupConfig = useContext$5(SwitchLayoutGroupContext);
 	if (visualElement && !visualElement.projection && ProjectionNodeConstructor && (visualElement.type === "html" || visualElement.type === "svg")) createProjectionNode(visualElementRef.current, props, ProjectionNodeConstructor, initialLayoutGroupConfig);
-	const isMounted = useRef$3(false);
+	const isMounted = useRef$5(false);
 	useInsertionEffect(() => {
 		/**
 		* Check the component has already mounted before calling
@@ -12091,7 +13032,7 @@ function useVisualElement(Component, visualState, props, createVisualElement, Pr
 	* was present on initial render - it will be deleted after this.
 	*/
 	const optimisedAppearId = props[optimizedAppearDataAttribute];
-	const wantsHandoff = useRef$3(Boolean(optimisedAppearId) && typeof window !== "undefined" && !window.MotionHandoffIsComplete?.(optimisedAppearId) && window.MotionHasOptimisedAnimation?.(optimisedAppearId));
+	const wantsHandoff = useRef$5(Boolean(optimisedAppearId) && typeof window !== "undefined" && !window.MotionHandoffIsComplete?.(optimisedAppearId) && window.MotionHasOptimisedAnimation?.(optimisedAppearId));
 	useIsomorphicLayoutEffect(() => {
 		/**
 		* Track that this component has mounted. This is used to detect when
@@ -12115,7 +13056,7 @@ function useVisualElement(Component, visualState, props, createVisualElement, Pr
 		*/
 		if (wantsHandoff.current && visualElement.animationState) visualElement.animationState.animateChanges();
 	});
-	useEffect$5(() => {
+	useEffect$8(() => {
 		if (!visualElement) return;
 		if (!wantsHandoff.current && visualElement.animationState) visualElement.animationState.animateChanges();
 		if (wantsHandoff.current) {
@@ -12277,9 +13218,9 @@ get: (_target, key) => {
 }
 //#endregion
 //#region node_modules/framer-motion/dist/es/render/dom/create-visual-element.mjs
-var { Fragment: Fragment$1 } = await importShared("react");
+var { Fragment } = await importShared("react");
 var createDomVisualElement = (Component, options) => {
-	return options.isSVG ?? isSVGComponent(Component) ? new SVGVisualElement(options) : new HTMLVisualElement(options, { allowProjection: Component !== Fragment$1 });
+	return options.isSVG ?? isSVGComponent(Component) ? new SVGVisualElement(options) : new HTMLVisualElement(options, { allowProjection: Component !== Fragment });
 };
 //#endregion
 //#region node_modules/framer-motion/dist/es/motion/features/animation/index.mjs
@@ -13629,7 +14570,7 @@ var motion = /*@__PURE__*/ createMotionProxy({
 }, createDomVisualElement);
 //#endregion
 //#region node_modules/framer-motion/dist/es/value/use-motion-value.mjs
-var { useContext: useContext$2, useState: useState$7, useEffect: useEffect$4 } = await importShared("react");
+var { useContext: useContext$2, useState: useState$13, useEffect: useEffect$7 } = await importShared("react");
 /**
 * Creates a `MotionValue` to track the state and velocity of a value.
 *
@@ -13656,8 +14597,8 @@ function useMotionValue(initial) {
 	*/
 	const { isStatic } = useContext$2(MotionConfigContext);
 	if (isStatic) {
-		const [, setLatest] = useState$7(initial);
-		useEffect$4(() => value.on("change", setLatest), []);
+		const [, setLatest] = useState$13(initial);
+		useEffect$7(() => value.on("change", setLatest), []);
 	}
 	return value;
 }
@@ -13839,13 +14780,13 @@ function detectAxis(layouts) {
 }
 //#endregion
 //#region node_modules/framer-motion/dist/es/components/Reorder/Group.mjs
-var { forwardRef: forwardRef$3, useRef: useRef$2, useState: useState$6, useEffect: useEffect$3 } = await importShared("react");
+var { forwardRef: forwardRef$3, useRef: useRef$4, useState: useState$12, useEffect: useEffect$6 } = await importShared("react");
 function ReorderGroupComponent({ children, as = "ul", axis: axisOverride, onReorder, values, ...props }, externalRef) {
 	const Component = useConstant(() => motion[as]);
-	const itemLayouts = useRef$2(/* @__PURE__ */ new Map());
-	const [detectedAxis, setDetectedAxis] = useState$6("y");
-	const isReordering = useRef$2(false);
-	const groupRef = useRef$2(null);
+	const itemLayouts = useRef$4(/* @__PURE__ */ new Map());
+	const [detectedAxis, setDetectedAxis] = useState$12("y");
+	const isReordering = useRef$4(false);
+	const groupRef = useRef$4(null);
 	const axis = axisOverride || detectedAxis;
 	const valuesSet = new Set(values);
 	itemLayouts.current.forEach((_, value) => {
@@ -13886,7 +14827,7 @@ function ReorderGroupComponent({ children, as = "ul", axis: axisOverride, onReor
 			}
 		}
 	};
-	useEffect$3(() => {
+	useEffect$6(() => {
 		isReordering.current = false;
 	});
 	const setRef = (element) => {
@@ -14056,8 +14997,10 @@ function ReorderItemComponent({ children, style = {}, value, as = "li", onDrag, 
 }
 var ReorderItem = /*@__PURE__*/ forwardRef$2(ReorderItemComponent);
 //#endregion
-//#region extension/src/renderer/Components/CardIcons.tsx
+//#region extension/src/renderer/components/cards/CardIcons.tsx
+var { useId } = await importShared("react");
 function Image_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14068,15 +15011,15 @@ function Image_Icon(props) {
 			fill: "none",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVG08krhc6L)",
+					fill: `url(#${uid}_08krhc6L)`,
 					d: "M17.75 3A3.25 3.25 0 0 1 21 6.25v11.5A3.25 3.25 0 0 1 17.75 21H6.25A3.25 3.25 0 0 1 3 17.75V6.25A3.25 3.25 0 0 1 6.25 3z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGV0MXhbmY)",
+					fill: `url(#${uid}_V0MXhbmY)`,
 					d: "M20.515 19.46A3.25 3.25 0 0 1 17.75 21H6.25a3.25 3.25 0 0 1-2.765-1.54l6.939-6.812l.135-.123a2.25 2.25 0 0 1 2.889.006l.128.117z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGqcdaMRYX)",
+					fill: `url(#${uid}_qcdaMRYX)`,
 					d: "M16 6a2 2 0 1 1 0 4a2 2 0 0 1 0-4"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
@@ -14085,7 +15028,7 @@ function Image_Icon(props) {
 						x2: 11.594,
 						y1: 12.003,
 						y2: 21.477,
-						id: "SVGV0MXhbmY",
+						id: `${uid}_V0MXhbmY`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#b3e0ff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14097,7 +15040,7 @@ function Image_Icon(props) {
 						y1: 5.556,
 						x2: 16.661,
 						y2: 10.816,
-						id: "SVGqcdaMRYX",
+						id: `${uid}_qcdaMRYX`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#fdfdfd" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14108,7 +15051,7 @@ function Image_Icon(props) {
 						r: 1,
 						cx: 0,
 						cy: 0,
-						id: "SVG08krhc6L",
+						id: `${uid}_08krhc6L`,
 						gradientUnits: "userSpaceOnUse",
 						gradientTransform: "rotate(51.687 5.32 -7.765)scale(49.7729 45.2718)",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
@@ -14125,6 +15068,7 @@ function Image_Icon(props) {
 	});
 }
 function Folder_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14135,19 +15079,19 @@ function Folder_Icon(props) {
 			fill: "none",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGPrmugbjO)",
+					fill: `url(#${uid}_PrmugbjO)`,
 					d: "M8 6.25A2.25 2.25 0 0 1 10.25 4h7.5A2.25 2.25 0 0 1 20 6.25v8.5A2.25 2.25 0 0 1 17.75 17h-7.5A2.25 2.25 0 0 1 8 14.75z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGdBuGNmjL)",
+					fill: `url(#${uid}_dBuGNmjL)`,
 					d: "M8 6.25A2.25 2.25 0 0 1 10.25 4h7.5A2.25 2.25 0 0 1 20 6.25v8.5A2.25 2.25 0 0 1 17.75 17h-7.5A2.25 2.25 0 0 1 8 14.75z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGDSS2BeGC)",
+					fill: `url(#${uid}_DSS2BeGC)`,
 					d: "M4 4.25A2.25 2.25 0 0 1 6.25 2h9a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 15.25 17h-9A2.25 2.25 0 0 1 4 14.75z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGl7J9xcou)",
+					fill: `url(#${uid}_l7J9xcou)`,
 					d: "M5.25 8A2.25 2.25 0 0 0 3 10.25v8.5A3.25 3.25 0 0 0 6.25 22h11.5A3.25 3.25 0 0 0 21 18.75v-1.5A2.25 2.25 0 0 0 18.75 15h-2.846a.75.75 0 0 1-.55-.24l-5.61-6.04A2.25 2.25 0 0 0 8.097 8z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
@@ -14156,7 +15100,7 @@ function Folder_Icon(props) {
 						y1: 19.5,
 						y2: 5.773,
 						x2: 23.639,
-						id: "SVGPrmugbjO",
+						id: `${uid}_PrmugbjO`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#bb45ea" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14168,7 +15112,7 @@ function Folder_Icon(props) {
 						x2: 17,
 						y1: 8.5,
 						y2: 8.5,
-						id: "SVGdBuGNmjL",
+						id: `${uid}_dBuGNmjL`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: .338,
@@ -14184,7 +15128,7 @@ function Folder_Icon(props) {
 						x1: 6.857,
 						x2: 6.857,
 						y2: 27.091,
-						id: "SVGl7J9xcou",
+						id: `${uid}_l7J9xcou`,
 						gradientUnits: "userSpaceOnUse",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
@@ -14205,7 +15149,7 @@ function Folder_Icon(props) {
 						r: 1,
 						cx: 0,
 						cy: 0,
-						id: "SVGDSS2BeGC",
+						id: `${uid}_DSS2BeGC`,
 						gradientUnits: "userSpaceOnUse",
 						gradientTransform: "matrix(8.775 -11.5 18.53666 14.14428 8.05 14)",
 						children: [
@@ -14229,6 +15173,7 @@ function Folder_Icon(props) {
 	});
 }
 function Code_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14238,14 +15183,14 @@ function Code_Icon(props) {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
 			fill: "none",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-				fill: "url(#SVGE9DRbcVU)",
+				fill: `url(#${uid}_E9DRbcVU)`,
 				d: "m8.086 18.61l5.996-14.004a1 1 0 0 1 1.878.678l-.04.11l-5.996 14.004a1 1 0 0 1-1.878-.677zl5.996-14.005zm-5.793-7.317l4-4a1 1 0 0 1 1.497 1.32l-.083.094L4.414 12l3.293 3.293a1 1 0 0 1-1.32 1.497l-.094-.083l-4-4a1 1 0 0 1-.083-1.32zl4-4zm14-4.001a1 1 0 0 1 1.32-.083l.093.083l4.001 4a1 1 0 0 1 .083 1.321l-.083.095l-4.001 3.995a1 1 0 0 1-1.497-1.32l.084-.095l3.292-3.289l-3.293-3.293a1 1 0 0 1 0-1.414"
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
 				x1: 2.588,
 				y1: 2.933,
 				x2: 20.693,
 				y2: 22.309,
-				id: "SVGE9DRbcVU",
+				id: `${uid}_E9DRbcVU`,
 				gradientUnits: "userSpaceOnUse",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#c76efb" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 					offset: 1,
@@ -14256,6 +15201,7 @@ function Code_Icon(props) {
 	});
 }
 function Bot_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14266,27 +15212,27 @@ function Bot_Icon(props) {
 			fill: "none",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGsatl3bRo)",
+					fill: `url(#${uid}_satl3bRo)`,
 					d: "M17.753 14a2.25 2.25 0 0 1 2.25 2.25v.905A3.75 3.75 0 0 1 18.696 20C17.13 21.344 14.89 22.001 12 22.001s-5.128-.657-6.691-2a3.75 3.75 0 0 1-1.305-2.844v-.907A2.25 2.25 0 0 1 6.254 14z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGDzMmSUVC)",
+					fill: `url(#${uid}_DzMmSUVC)`,
 					d: "M17.753 14a2.25 2.25 0 0 1 2.25 2.25v.905A3.75 3.75 0 0 1 18.696 20C17.13 21.344 14.89 22.001 12 22.001s-5.128-.657-6.691-2a3.75 3.75 0 0 1-1.305-2.844v-.907A2.25 2.25 0 0 1 6.254 14z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVG7PdDye0s)",
+					fill: `url(#${uid}_7PdDye0s)`,
 					d: "m12 2.5l-.102.007a.75.75 0 0 0-.648.743L11.243 5h1.5l.007-1.75l-.007-.102A.75.75 0 0 0 12 2.5"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGuJDvWcwX)",
+					fill: `url(#${uid}_uJDvWcwX)`,
 					d: "M18 6.25A2.25 2.25 0 0 0 15.75 4h-7.5A2.25 2.25 0 0 0 6 6.25v3.5A2.25 2.25 0 0 0 8.25 12h7.5A2.25 2.25 0 0 0 18 9.75z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGoBTYocsf)",
+					fill: `url(#${uid}_oBTYocsf)`,
 					d: "M14.242 6.5a1.25 1.25 0 1 0 0 2.499a1.25 1.25 0 0 0 0-2.499"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGZjj8ncBg)",
+					fill: `url(#${uid}_Zjj8ncBg)`,
 					d: "M9.75 6.5a1.25 1.25 0 1 0 0 2.499a1.25 1.25 0 0 0 0-2.499"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
@@ -14295,7 +15241,7 @@ function Bot_Icon(props) {
 						x2: 15.623,
 						y1: 13.047,
 						y2: 26.573,
-						id: "SVGDzMmSUVC",
+						id: `${uid}_DzMmSUVC`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							stopOpacity: 0,
@@ -14310,7 +15256,7 @@ function Bot_Icon(props) {
 						y2: 3.871,
 						x1: 11.209,
 						x2: 12.984,
-						id: "SVG7PdDye0s",
+						id: `${uid}_7PdDye0s`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#8b52f4" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14322,7 +15268,7 @@ function Bot_Icon(props) {
 						y2: 9.865,
 						x1: 13.585,
 						x2: 15.479,
-						id: "SVGoBTYocsf",
+						id: `${uid}_oBTYocsf`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#fdfdfd" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14334,7 +15280,7 @@ function Bot_Icon(props) {
 						y1: 6.596,
 						y2: 9.865,
 						x2: 10.986,
-						id: "SVGZjj8ncBg",
+						id: `${uid}_Zjj8ncBg`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#fdfdfd" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14345,7 +15291,7 @@ function Bot_Icon(props) {
 						r: 1,
 						cx: 0,
 						cy: 0,
-						id: "SVGsatl3bRo",
+						id: `${uid}_satl3bRo`,
 						gradientUnits: "userSpaceOnUse",
 						gradientTransform: "matrix(19.19176 11.26316 -17.94042 30.56942 .311 11.538)",
 						children: [
@@ -14364,7 +15310,7 @@ function Bot_Icon(props) {
 						r: 1,
 						cx: 0,
 						cy: 0,
-						id: "SVGuJDvWcwX",
+						id: `${uid}_uJDvWcwX`,
 						gradientUnits: "userSpaceOnUse",
 						gradientTransform: "matrix(15.82499 12.22856 -23.10104 29.89508 1.8 .571)",
 						children: [
@@ -14385,6 +15331,7 @@ function Bot_Icon(props) {
 	});
 }
 function Chat_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14397,20 +15344,20 @@ function Chat_Icon(props) {
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillRule: "evenodd",
 					clipRule: "evenodd",
-					fill: "url(#SVGV4VKeb3S)",
+					fill: `url(#${uid}_V4VKeb3S)`,
 					d: "M22 13.5a7.5 7.5 0 1 0-4.411 6.836c1.258.29 2.613.54 3.236.652a.996.996 0 0 0 1.153-1.17a68 68 0 0 0-.681-3.143A7.5 7.5 0 0 0 22 13.5M14.517 18h-.034z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillRule: "evenodd",
 					clipRule: "evenodd",
-					fill: "url(#SVGEg1SQ7ZX)",
+					fill: `url(#${uid}_Eg1SQ7ZX)`,
 					d: "M2 10.5a7.5 7.5 0 1 1 4.411 6.836c-1.258.29-2.613.54-3.236.652a.996.996 0 0 1-1.153-1.17a68 68 0 0 1 .681-3.143A7.5 7.5 0 0 1 2 10.5M9.483 15h.034z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("radialGradient", {
 					r: 1,
 					cx: 0,
 					cy: 0,
-					id: "SVGV4VKeb3S",
+					id: `${uid}_V4VKeb3S`,
 					gradientUnits: "userSpaceOnUse",
 					gradientTransform: "matrix(6.90278 8.0094 -8.01592 6.9084 11.027 10.005)",
 					children: [
@@ -14432,7 +15379,7 @@ function Chat_Icon(props) {
 					y1: 3,
 					y2: 18,
 					x2: 17.003,
-					id: "SVGEg1SQ7ZX",
+					id: `${uid}_Eg1SQ7ZX`,
 					gradientUnits: "userSpaceOnUse",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#0fafff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 						offset: 1,
@@ -14444,6 +15391,7 @@ function Chat_Icon(props) {
 	});
 }
 function Cloud_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14454,26 +15402,26 @@ function Cloud_Icon(props) {
 			fill: "none",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGGGkBpb5G)",
+					fill: `url(#${uid}_GGkBpb5G)`,
 					d: "M6.08 9.02a6.001 6.001 0 0 1 11.84 0A4.5 4.5 0 0 1 17.5 18h-11a4.5 4.5 0 0 1-.42-8.98"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillOpacity: .3,
-					fill: "url(#SVGfWl6seYt)",
+					fill: `url(#${uid}_fWl6seYt)`,
 					d: "M11 13.5a4.5 4.5 0 1 1-9 0a4.5 4.5 0 0 1 9 0"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillOpacity: .3,
-					fill: "url(#SVGkgWfbcdO)",
+					fill: `url(#${uid}_kgWfbcdO)`,
 					d: "M12 16a6 6 0 1 0-5.92-6.98Q6.287 9 6.5 9a4.5 4.5 0 0 1 3.881 6.779A6 6 0 0 0 12 16"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGncyoccSz)",
+					fill: `url(#${uid}_ncyoccSz)`,
 					d: "M12 16a6 6 0 1 0-5.92-6.98Q6.287 9 6.5 9a4.5 4.5 0 0 1 3.881 6.779A6 6 0 0 0 12 16"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillOpacity: .5,
-					fill: "url(#SVGrWxTRcwo)",
+					fill: `url(#${uid}_rWxTRcwo)`,
 					d: "M6.08 9.02a6.001 6.001 0 0 1 11.84 0A4.5 4.5 0 0 1 17.5 18h-11a4.5 4.5 0 0 1-.42-8.98"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
@@ -14482,7 +15430,7 @@ function Cloud_Icon(props) {
 						y1: 6.625,
 						x2: 11.675,
 						y2: 19.925,
-						id: "SVGGGkBpb5G",
+						id: `${uid}_GGkBpb5G`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#0fafff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14494,7 +15442,7 @@ function Cloud_Icon(props) {
 						x2: 8.067,
 						y1: 10.542,
 						y2: 15.912,
-						id: "SVGfWl6seYt",
+						id: `${uid}_fWl6seYt`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#fff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14507,7 +15455,7 @@ function Cloud_Icon(props) {
 						x2: 9.739,
 						y1: 4.675,
 						y2: 12.946,
-						id: "SVGkgWfbcdO",
+						id: `${uid}_kgWfbcdO`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#fff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14519,7 +15467,7 @@ function Cloud_Icon(props) {
 						r: 1,
 						cx: 0,
 						cy: 0,
-						id: "SVGncyoccSz",
+						id: `${uid}_ncyoccSz`,
 						gradientUnits: "userSpaceOnUse",
 						gradientTransform: "matrix(6.71887 -2.85 2.55285 6.01833 6.546 13.825)",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
@@ -14535,7 +15483,7 @@ function Cloud_Icon(props) {
 						r: 1,
 						cx: 0,
 						cy: 0,
-						id: "SVGrWxTRcwo",
+						id: `${uid}_rWxTRcwo`,
 						gradientUnits: "userSpaceOnUse",
 						gradientTransform: "matrix(7.70831 15.51136 -111.9801 55.64808 11.167 3.125)",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
@@ -14553,6 +15501,7 @@ function Cloud_Icon(props) {
 	});
 }
 function Database_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14563,16 +15512,16 @@ function Database_Icon(props) {
 			fill: "none",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGXjZNuwPh)",
+					fill: `url(#${uid}_XjZNuwPh)`,
 					d: "M18.328 7.117A7.6 7.6 0 0 0 20 6v12c0 2.21-3.582 4-8 4s-8-1.79-8-4V6c.502.45 1.084.823 1.672 1.117c1.697.848 3.936 1.33 6.328 1.33s4.63-.482 6.328-1.33"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillOpacity: .7,
-					fill: "url(#SVGAzI8Wbbi)",
+					fill: `url(#${uid}_AzI8Wbbi)`,
 					d: "M18.328 7.117A7.6 7.6 0 0 0 20 6v12c0 2.21-3.582 4-8 4s-8-1.79-8-4V6c.502.45 1.084.823 1.672 1.117c1.697.848 3.936 1.33 6.328 1.33s4.63-.482 6.328-1.33"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGQe0qScNA)",
+					fill: `url(#${uid}_Qe0qScNA)`,
 					d: "M12 10c4.418 0 8-1.79 8-4s-3.582-4-8-4s-8 1.79-8 4s3.582 4 8 4"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
@@ -14581,7 +15530,7 @@ function Database_Icon(props) {
 						y1: 2.396,
 						x2: 16.435,
 						y2: 20.577,
-						id: "SVGXjZNuwPh",
+						id: `${uid}_XjZNuwPh`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#29c3ff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14593,7 +15542,7 @@ function Database_Icon(props) {
 						x1: 14.476,
 						x2: 17.647,
 						y2: 23.721,
-						id: "SVGAzI8Wbbi",
+						id: `${uid}_AzI8Wbbi`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: .533,
@@ -14609,7 +15558,7 @@ function Database_Icon(props) {
 						y1: 14,
 						x2: 16.755,
 						y2: -2.828,
-						id: "SVGQe0qScNA",
+						id: `${uid}_Qe0qScNA`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#58aafe" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14622,6 +15571,7 @@ function Database_Icon(props) {
 	});
 }
 function Document_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14632,16 +15582,16 @@ function Document_Icon(props) {
 			fill: "none",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGaFQU4dZO)",
+					fill: `url(#${uid}_aFQU4dZO)`,
 					d: "M6 22h12a2 2 0 0 0 2-2V9l-5-2l-2-5H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillOpacity: .5,
-					fill: "url(#SVGKBDgydKg)",
+					fill: `url(#${uid}_KBDgydKg)`,
 					d: "M6 22h12a2 2 0 0 0 2-2V9l-5-2l-2-5H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGYLVeYfIb)",
+					fill: `url(#${uid}_YLVeYfIb)`,
 					d: "M13 7.5V2l7 7h-5.5A1.5 1.5 0 0 1 13 7.5"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
@@ -14650,7 +15600,7 @@ function Document_Icon(props) {
 						x1: 15.2,
 						y2: 18.87,
 						x2: 16.822,
-						id: "SVGaFQU4dZO",
+						id: `${uid}_aFQU4dZO`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#6ce0ff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14662,7 +15612,7 @@ function Document_Icon(props) {
 						y2: 7.833,
 						x1: 16.488,
 						x2: 14.738,
-						id: "SVGYLVeYfIb",
+						id: `${uid}_YLVeYfIb`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#9ff0f9" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14673,7 +15623,7 @@ function Document_Icon(props) {
 						r: 1,
 						cx: 0,
 						cy: 0,
-						id: "SVGKBDgydKg",
+						id: `${uid}_KBDgydKg`,
 						gradientUnits: "userSpaceOnUse",
 						gradientTransform: "matrix(-8.66665 9.09357 -5.3691 -5.11703 20.667 2.625)",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
@@ -14691,6 +15641,7 @@ function Document_Icon(props) {
 	});
 }
 function Globe_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14701,20 +15652,20 @@ function Globe_Icon(props) {
 			fill: "none",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGiQCt3dKb)",
+					fill: `url(#${uid}_iQCt3dKb)`,
 					d: "M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2S2 6.477 2 12s4.477 10 10 10"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillRule: "evenodd",
 					clipRule: "evenodd",
-					fill: "url(#SVGcxkzteKY)",
-					d: "M9.115 2.422a9.6 9.6 0 0 0-.85 1.704c-.48 1.23-.838 2.723-1.049 4.374H2.63q-.271.725-.43 1.5h4.87a29 29 0 0 0 .088 5h-4.7q.246.78.61 1.5h4.297c.215 1.255.52 2.397.9 3.374c.246.63.53 1.205.85 1.704A10 10 0 0 0 12 22a10 10 0 0 0 2.885-.422a9.6 9.6 0 0 0 .85-1.704c.38-.977.685-2.119.9-3.374h4.298q.364-.72.61-1.5h-4.7a29 29 0 0 0 .088-5h4.87a10 10 0 0 0-.43-1.5h-4.587c-.21-1.651-.57-3.144-1.05-4.374a9.6 9.6 0 0 0-.849-1.704A10 10 0 0 0 12 2a10 10 0 0 0-2.885.422M8.73 8.5c.2-1.47.522-2.774.934-3.829c.36-.92.77-1.612 1.194-2.062C11.278 2.163 11.663 2 12 2s.723.163 1.143.609c.423.45.835 1.142 1.194 2.062c.412 1.055.734 2.36.934 3.829zM12 22c.338 0 .723-.163 1.143-.609c.423-.45.835-1.142 1.194-2.062c.316-.81.58-1.765.775-2.829H8.888c.196 1.064.46 2.02.775 2.829c.36.92.77 1.612 1.194 2.062c.42.446.805.609 1.143.609M8.5 12c0 1.048.058 2.055.166 3h6.668a27 27 0 0 0 .094-5H8.573a27 27 0 0 0-.073 2"
+					fill: `url(#${uid}_cxkzteKY)`,
+					d: "M9.115 2.422a9.6 9.6 0 0 0-.85 1.704c-.48 1.23-.838 2.723-1.049 4.374H2.63q-.271.725-.43 1.5h4.87a29 29 0 0 0 .088 5h-4.7q.246.78.61 1.5h4.297c.215 1.255.52 2.397.9 3.374c.246.63.53 1.205.85 1.704A10 10 0 0 0 12 22a10 10 0 0 0 2.885-.422a9.6 9.6 0 0 0 .85-1.704c.38-.977.685-2.119.9-3.374h4.298q.364-.72.61-1.5h-4.7a29 29 0 0 0 .088-5h4.87a10 10 0 0 0-.43-1.5h-4.587c-.21-1.651-.57-3.144-1.05-4.374a9.6 9.6 0 0 0-.849-1.704A10 10 0 0 0 12 22a10 10 0 0 0-2.885.422M8.73 8.5c.2-1.47.522-2.774.934-3.829c.36-.92.77-1.612 1.194-2.062C11.278 2.163 11.663 2 12 2s.723.163 1.143.609c.423.45.835 1.142 1.194 2.062c.412 1.055.734 2.36.934 3.829zM12 22c.338 0 .723-.163 1.143-.609c.423-.45.835-1.142 1.194-2.062c.316-.81.58-1.765.775-2.829H8.888c.196 1.064.46 2.02.775 2.829c.36.92.77 1.612 1.194 2.062c.42.446.805.609 1.143.609M8.5 12c0 1.048.058 2.055.166 3h6.668a27 27 0 0 0 .094-5H8.573a27 27 0 0 0-.073 2"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("radialGradient", {
 					r: 1,
 					cx: 0,
 					cy: 0,
-					id: "SVGcxkzteKY",
+					id: `${uid}_cxkzteKY`,
 					gradientUnits: "userSpaceOnUse",
 					gradientTransform: "rotate(-135.338 12.654 4.738)scale(16.0089 16.0078)",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#25a2f0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
@@ -14726,7 +15677,7 @@ function Globe_Icon(props) {
 					y1: 5.333,
 					x2: 20.889,
 					y2: 18.667,
-					id: "SVGiQCt3dKb",
+					id: `${uid}_iQCt3dKb`,
 					gradientUnits: "userSpaceOnUse",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#29c3ff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 						offset: 1,
@@ -14738,6 +15689,7 @@ function Globe_Icon(props) {
 	});
 }
 function Heart_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14747,14 +15699,14 @@ function Heart_Icon(props) {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
 			fill: "none",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-				fill: "url(#SVGEr4iYdiH)",
+				fill: `url(#${uid}_Er4iYdiH)`,
 				d: "m12.82 5.58l-.821.822l-.823-.823a5.375 5.375 0 0 0-7.602 7.601l7.896 7.896a.75.75 0 0 0 1.06 0l7.902-7.897a5.38 5.38 0 0 0-7.612-7.6"
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
 				x2: 8.135,
 				x1: -2.376,
 				y1: -.938,
 				y2: 21.378,
-				id: "SVGEr4iYdiH",
+				id: `${uid}_Er4iYdiH`,
 				gradientUnits: "userSpaceOnUse",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#f97dbd" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 					offset: 1,
@@ -14765,6 +15717,7 @@ function Heart_Icon(props) {
 	});
 }
 function Home_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14776,22 +15729,22 @@ function Home_Icon(props) {
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					d: "M9 13h6v8H9z",
-					fill: "url(#SVGaNP9XdIb)"
+					fill: `url(#${uid}_aNP9XdIb)`
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGB90o1Tkk)",
+					fill: `url(#${uid}_B90o1Tkk)`,
 					d: "M13.45 4.533a2.25 2.25 0 0 0-2.9 0L3.8 10.228a2.25 2.25 0 0 0-.8 1.72v7.305c0 .966.784 1.75 1.75 1.75H9.5V15.25c0-.68.542-1.232 1.217-1.25h2.566a1.25 1.25 0 0 1 1.217 1.25v5.753h4.75a1.75 1.75 0 0 0 1.75-1.75v-7.305a2.25 2.25 0 0 0-.8-1.72z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillRule: "evenodd",
 					clipRule: "evenodd",
-					fill: "url(#SVGBRlFlcTU)",
+					fill: `url(#${uid}_BRlFlcTU)`,
 					d: "M12.804 2.299a1.23 1.23 0 0 0-1.608 0l-8.789 7.63a1.167 1.167 0 0 0-.102 1.672a1.23 1.23 0 0 0 1.711.1L12 4.771l7.984 6.93c.5.435 1.266.39 1.71-.1a1.167 1.167 0 0 0-.101-1.673z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillRule: "evenodd",
 					clipRule: "evenodd",
-					fill: "url(#SVGBRlFlcTU)",
+					fill: `url(#${uid}_BRlFlcTU)`,
 					d: "M11.196 2.299a1.23 1.23 0 0 1 1.608 0l8.789 7.63c.5.434.546 1.183.102 1.672a1.23 1.23 0 0 1-1.711.1L12 4.771L4.016 11.7a1.23 1.23 0 0 1-1.71-.1a1.167 1.167 0 0 1 .101-1.673z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
@@ -14800,7 +15753,7 @@ function Home_Icon(props) {
 						y1: 13,
 						x2: 6.707,
 						y2: 21.825,
-						id: "SVGaNP9XdIb",
+						id: `${uid}_aNP9XdIb`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#944600" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14812,7 +15765,7 @@ function Home_Icon(props) {
 						y1: 3.172,
 						x2: 21.568,
 						y2: 17.673,
-						id: "SVGB90o1Tkk",
+						id: `${uid}_B90o1Tkk`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#ffd394" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14824,7 +15777,7 @@ function Home_Icon(props) {
 						x2: 13.162,
 						y1: -.375,
 						y2: 11.505,
-						id: "SVGBRlFlcTU",
+						id: `${uid}_BRlFlcTU`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#ff921f" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14837,6 +15790,7 @@ function Home_Icon(props) {
 	});
 }
 function Megaphone_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14849,27 +15803,27 @@ function Megaphone_Icon(props) {
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillRule: "evenodd",
 					clipRule: "evenodd",
-					fill: "url(#SVGynQK5cnD)",
+					fill: `url(#${uid}_ynQK5cnD)`,
 					d: "M8 18a4 4 0 1 1 8 0a4 4 0 0 1-8 0m4-2.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 0 0 0-5"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillOpacity: .8,
 					fillRule: "evenodd",
 					clipRule: "evenodd",
-					fill: "url(#SVGyK6pKbkH)",
+					fill: `url(#${uid}_yK6pKbkH)`,
 					d: "M8 18a4 4 0 1 1 8 0a4 4 0 0 1-8 0m4-2.5a2.5 2.5 0 1 0 0 5a2.5 2.5 0 0 0 0-5"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGEIYkHdfr)",
+					fill: `url(#${uid}_EIYkHdfr)`,
 					d: "M9.076 4.318a2.325 2.325 0 0 1 3.795-.577l7.006 7.506a2.325 2.325 0 0 1-.758 3.712L6.968 20.343a1.8 1.8 0 0 1-1.964-.337L3.565 18.65a1.8 1.8 0 0 1-.387-2.091z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillOpacity: .8,
-					fill: "url(#SVGP0BGZbDc)",
+					fill: `url(#${uid}_P0BGZbDc)`,
 					d: "M9.076 4.318a2.325 2.325 0 0 1 3.795-.577l7.006 7.506a2.325 2.325 0 0 1-.758 3.712L6.968 20.343a1.8 1.8 0 0 1-1.964-.337L3.565 18.65a1.8 1.8 0 0 1-.387-2.091z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGloWD2dib)",
+					fill: `url(#${uid}_loWD2dib)`,
 					d: "M17.212 2.237a.75.75 0 0 0-1.423-.474l-.75 2.249a.75.75 0 0 0 1.423.474zm4.568-.017a.75.75 0 0 1 0 1.06l-2.5 2.5a.75.75 0 1 1-1.06-1.06l2.5-2.5a.75.75 0 0 1 1.06 0M19 8.25a.75.75 0 0 1 .75-.75h2a.75.75 0 0 1 0 1.5h-2a.75.75 0 0 1-.75-.75"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
@@ -14878,7 +15832,7 @@ function Megaphone_Icon(props) {
 						x2: 14.271,
 						y1: 27.143,
 						y2: 18.684,
-						id: "SVGynQK5cnD",
+						id: `${uid}_ynQK5cnD`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#43e5ca" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14890,7 +15844,7 @@ function Megaphone_Icon(props) {
 						x2: 13.717,
 						y1: 15.143,
 						y2: 23.713,
-						id: "SVGyK6pKbkH",
+						id: `${uid}_yK6pKbkH`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: .08,
@@ -14906,7 +15860,7 @@ function Megaphone_Icon(props) {
 						y1: 6.282,
 						x2: 15.699,
 						y2: 18.832,
-						id: "SVGEIYkHdfr",
+						id: `${uid}_EIYkHdfr`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#43e5ca" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -14918,7 +15872,7 @@ function Megaphone_Icon(props) {
 						x2: 19.408,
 						y1: 12.841,
 						y2: 25.419,
-						id: "SVGP0BGZbDc",
+						id: `${uid}_P0BGZbDc`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							stopOpacity: 0,
@@ -14932,7 +15886,7 @@ function Megaphone_Icon(props) {
 						r: 1,
 						cx: 0,
 						cy: 0,
-						id: "SVGloWD2dib",
+						id: `${uid}_loWD2dib`,
 						gradientUnits: "userSpaceOnUse",
 						gradientTransform: "matrix(16.15331 -16.69065 16.69331 16.15589 7.212 17.047)",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
@@ -14949,6 +15903,7 @@ function Megaphone_Icon(props) {
 	});
 }
 function Gem_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -14963,7 +15918,7 @@ function Gem_Icon(props) {
 					d: "M17.999 3a.75.75 0 0 1 .605.306l.055.087l3.263 6.028l.038.093l.012.04l.02.102l.006.094a.8.8 0 0 1-.027.2l-.024.062H15.5L13.5 3z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGYOCHuedn)",
+					fill: `url(#${uid}_YOCHuedn)`,
 					d: "M17.999 3a.75.75 0 0 1 .605.306l.055.087l3.263 6.028l.038.093l.012.04l.02.102l.006.094a.8.8 0 0 1-.027.2l-.024.062H15.5L13.5 3z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
@@ -14971,11 +15926,11 @@ function Gem_Icon(props) {
 					d: "M2.006 9.843L2 9.75l.003-.066l.013-.089l.024-.086l.022-.059l.028-.057l3.25-6a.75.75 0 0 1 .557-.386L5.999 3l4.501.007L8.25 10l-6.21-.009a1 1 0 0 1-.034-.148"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVG1VmhhcZd)",
+					fill: `url(#${uid}_1VmhhcZd)`,
 					d: "M2.006 9.843L2 9.75l.003-.066l.013-.089l.024-.086l.022-.059l.028-.057l3.25-6a.75.75 0 0 1 .557-.386L5.999 3l4.501.007L8.25 10l-6.21-.009a1 1 0 0 1-.034-.148"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGFYjFJeYC)",
+					fill: `url(#${uid}_FYjFJeYC)`,
 					d: "m21.96 9.514l-.038-.093L21.694 9h-5.928l-.769 1.5L12 18.187V21l.125-.01l.077-.017l.098-.033a.7.7 0 0 0 .297-.232l9.234-10.487l.04-.053l.016-.024l.038-.069l.047-.126a.8.8 0 0 0 .027-.199l-.006-.094l-.02-.102z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
@@ -14983,7 +15938,7 @@ function Gem_Icon(props) {
 					d: "m12 21l-.101-.006l-.118-.026a.7.7 0 0 1-.174-.076l-.009-.007a.7.7 0 0 1-.13-.104l-9.29-10.546l-.026-.032l-.04-.059a.75.75 0 0 1-.106-.301L2 9.75l.003-.066l.013-.089l.024-.086l.022-.059l.028-.057L2.303 9h6.04l.655 1.5l3 7.687z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGluppNdXo)",
+					fill: `url(#${uid}_luppNdXo)`,
 					d: "m12 21l-.101-.006l-.118-.026a.7.7 0 0 1-.174-.076l-.009-.007a.7.7 0 0 1-.13-.104l-9.29-10.546l-.026-.032l-.04-.059a.75.75 0 0 1-.106-.301L2 9.75l.003-.066l.013-.089l.024-.086l.022-.059l.028-.057L2.303 9h6.04l.655 1.5l3 7.687z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
@@ -14991,7 +15946,7 @@ function Gem_Icon(props) {
 					d: "M9.286 3.521A.75.75 0 0 1 10 3h4a.75.75 0 0 1 .714.521L16.628 9.5H7.373z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGYbSuYXMy)",
+					fill: `url(#${uid}_YbSuYXMy)`,
 					d: "M9.286 3.521A.75.75 0 0 1 10 3h4a.75.75 0 0 1 .714.521L16.628 9.5H7.373z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
@@ -14999,12 +15954,12 @@ function Gem_Icon(props) {
 					d: "m7.533 9l-.247.771a.75.75 0 0 0 .015.502l4 10.25a.75.75 0 0 0 1.398 0l4-10.25a.75.75 0 0 0 .015-.502L16.468 9z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-					fill: "url(#SVGDHbB3cmm)",
+					fill: `url(#${uid}_DHbB3cmm)`,
 					d: "m7.533 9l-.247.771a.75.75 0 0 0 .015.502l4 10.25a.75.75 0 0 0 1.398 0l4-10.25a.75.75 0 0 0 .015-.502L16.468 9z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
 					fillOpacity: .7,
-					fill: "url(#SVGuNsKwdNU)",
+					fill: `url(#${uid}_uNsKwdNU)`,
 					d: "M17.999 3a.75.75 0 0 1 .605.306l.055.087l3.263 6.028l.038.093l.012.04l.02.102l.006.094a.8.8 0 0 1-.027.2l-.047.125l-.038.069a1 1 0 0 1-.075.102l.06-.078l-.025.035l-9.25 10.505a.7.7 0 0 1-.297.232l-.098.033l-.078.017L12 21l-.1-.006l-.118-.026a.7.7 0 0 1-.174-.076l-.009-.007a.7.7 0 0 1-.13-.104l-9.29-10.546l-.026-.032l-.04-.059a.75.75 0 0 1-.106-.301L2 9.75l.003-.066l.013-.089l.024-.086l.022-.059l.028-.057l3.25-6a.75.75 0 0 1 .557-.386L5.999 3z"
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("defs", { children: [
@@ -15013,7 +15968,7 @@ function Gem_Icon(props) {
 						x1: 16.535,
 						x2: 21.091,
 						y2: 13.647,
-						id: "SVGYOCHuedn",
+						id: `${uid}_YOCHuedn`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#0fafff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -15025,7 +15980,7 @@ function Gem_Icon(props) {
 						x2: 5.308,
 						y1: .083,
 						y2: 8.955,
-						id: "SVG1VmhhcZd",
+						id: `${uid}_1VmhhcZd`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#9ff0f9" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -15037,7 +15992,7 @@ function Gem_Icon(props) {
 						x1: 24.351,
 						x2: 13.462,
 						y2: 19.603,
-						id: "SVGFYjFJeYC",
+						id: `${uid}_FYjFJeYC`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#1b44b1" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -15049,7 +16004,7 @@ function Gem_Icon(props) {
 						x1: 3.765,
 						x2: 11.05,
 						y2: 20.884,
-						id: "SVGluppNdXo",
+						id: `${uid}_luppNdXo`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#0094f0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -15061,7 +16016,7 @@ function Gem_Icon(props) {
 						x1: 12,
 						x2: 12,
 						y2: 11.125,
-						id: "SVGYbSuYXMy",
+						id: `${uid}_YbSuYXMy`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#3bd5ff" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -15073,7 +16028,7 @@ function Gem_Icon(props) {
 						y1: 4.8,
 						x1: 11.994,
 						x2: 11.994,
-						id: "SVGDHbB3cmm",
+						id: `${uid}_DHbB3cmm`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#2052cb" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: 1,
@@ -15085,7 +16040,7 @@ function Gem_Icon(props) {
 						x2: 15.123,
 						y1: -13.95,
 						y2: 22.799,
-						id: "SVGuNsKwdNU",
+						id: `${uid}_uNsKwdNU`,
 						gradientUnits: "userSpaceOnUse",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 							offset: .533,
@@ -15102,6 +16057,7 @@ function Gem_Icon(props) {
 	});
 }
 function Star_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -15111,14 +16067,14 @@ function Star_Icon(props) {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
 			fill: "none",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-				fill: "url(#SVGNtR7nbFe)",
+				fill: `url(#${uid}_NtR7nbFe)`,
 				d: "M10.788 3.103c.495-1.004 1.926-1.004 2.421 0l2.358 4.777l5.273.766c1.107.161 1.549 1.522.748 2.303l-3.816 3.72l.901 5.25c.19 1.103-.968 1.944-1.959 1.424l-4.716-2.48l-4.715 2.48c-.99.52-2.148-.32-1.96-1.424l.901-5.25l-3.815-3.72c-.801-.78-.359-2.142.748-2.302L8.43 7.88z"
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
 				y2: 2.53,
 				x2: 1.427,
 				x1: 21.994,
 				y1: 21.928,
-				id: "SVGNtR7nbFe",
+				id: `${uid}_NtR7nbFe`,
 				gradientUnits: "userSpaceOnUse",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#ff6f47" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 					offset: 1,
@@ -15129,6 +16085,7 @@ function Star_Icon(props) {
 	});
 }
 function Wrench_Icon(props) {
+	const uid = useId().replace(/:/g, "_");
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("svg", {
 		...props,
 		width: "1em",
@@ -15138,14 +16095,14 @@ function Wrench_Icon(props) {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("g", {
 			fill: "none",
 			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-				fill: "url(#SVGNdDgEeMo)",
+				fill: `url(#${uid}_NdDgEeMo)`,
 				d: "M16.5 2a5.5 5.5 0 0 0-5.348 6.789L2.841 17.1a2.871 2.871 0 1 0 4.06 4.06l8.313-8.311q.621.15 1.286.151a5.5 5.5 0 0 0 5.218-7.245a.75.75 0 0 0-1.242-.292l-2.444 2.444a.75.75 0 0 1-1.06 0l-.879-.878a.75.75 0 0 1 0-1.06l2.445-2.445a.75.75 0 0 0-.293-1.241A5.5 5.5 0 0 0 16.5 2"
 			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("linearGradient", {
 				y1: 3.249,
 				x1: 10.128,
 				x2: 13.694,
 				y2: 22.707,
-				id: "SVGNdDgEeMo",
+				id: `${uid}_NdDgEeMo`,
 				gradientUnits: "userSpaceOnUse",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", { stopColor: "#2bdabe" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("stop", {
 					offset: 1,
@@ -15174,243 +16131,164 @@ var CardIcons = {
 };
 var CardIconsList = Object.keys(CardIcons);
 function CardIconById(id) {
-	if (!id) return Star_Icon;
-	return CardIcons[id] || Star_Icon;
+	if (!id) return Bot_Icon;
+	return CardIcons[id] || Bot_Icon;
+}
+function CardIcon({ id, ...props }) {
+	switch (id) {
+		case "folder": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Folder_Icon, { ...props });
+		case "document": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Document_Icon, { ...props });
+		case "image": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Image_Icon, { ...props });
+		case "code": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Code_Icon, { ...props });
+		case "bot": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Bot_Icon, { ...props });
+		case "chat": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Chat_Icon, { ...props });
+		case "cloud": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Cloud_Icon, { ...props });
+		case "database": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Database_Icon, { ...props });
+		case "globe": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Globe_Icon, { ...props });
+		case "heart": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Heart_Icon, { ...props });
+		case "home": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Home_Icon, { ...props });
+		case "megaphone": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Megaphone_Icon, { ...props });
+		case "gem": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Gem_Icon, { ...props });
+		case "star": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Star_Icon, { ...props });
+		case "wrench": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Wrench_Icon, { ...props });
+		default: return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Bot_Icon, { ...props });
+	}
 }
 //#endregion
-//#region extension/src/renderer/Components/Modal/Elements/AddToCategories.tsx
-var { Checkbox: Checkbox$1 } = await importShared("@heroui/react");
-var { useMemo: useMemo$7 } = await importShared("react");
-var { useDispatch: useDispatch$12 } = await importShared("react-redux");
-var { useSelector: useSelector$9 } = await importShared("react-redux");
-function AddToCategories() {
-	const dispatch = useDispatch$12();
-	const editingCard = useSelector$9(selectEditingCard);
-	const categories = useMemo$7(() => editingCard?.categories, [editingCard]);
-	const handleCategoryChange = (id, value) => {
-		dispatch(reducerActions.setCategories({
-			id,
-			value
-		}));
+//#region src/common/consts/ipcChannels/files.ts
+/**
+* IPC channels for file system operations.
+* Handles directory listing, file dialogs, path manipulation, and other file-related tasks.
+*/
+var fileChannels = {
+	getAppDirectories: "app:getAppDirectories",
+	dialog: "app:openDialog",
+	extensionsNames: "app:extensionsFolder",
+	openPath: "app:openPath",
+	saveToFile: "app:saveToFile",
+	removeDir: "app:removeDir",
+	trashDir: "app:trashDir",
+	listDir: "app:listDir",
+	checkFilesExist: "app:checkFilesExist",
+	calcFolderSize: "app:calcFolderSize",
+	getRelativePath: "app:getRelativePath",
+	getAbsolutePath: "app:getAbsolutePath",
+	isEmptyDir: "app:isEmptyDir",
+	isAbsolute: "app:isAbsolute"
+};
+//#endregion
+//#region src/renderer/shared/ipc/files.ts
+var filesIpc = {
+	openDlg: (option) => lynxIpc.invoke(fileChannels.dialog, option),
+	openDlgMany: (option) => lynxIpc.invoke(fileChannels.dialog, {
+		...option,
+		properties: Array.from(/* @__PURE__ */ new Set([...option.properties || [], "multiSelections"]))
+	}).then((result) => Array.isArray(result) ? result : result ? [result] : []),
+	openPath: (dir) => lynxIpc.send(fileChannels.openPath, dir),
+	saveToFile: (content, defaultFilename) => lynxIpc.invoke(fileChannels.saveToFile, content, defaultFilename),
+	getAppDirectories: (name) => lynxIpc.invoke(fileChannels.getAppDirectories, name),
+	removeDir: (dir) => lynxIpc.invoke(fileChannels.removeDir, dir),
+	trashDir: (dir) => lynxIpc.invoke(fileChannels.trashDir, dir),
+	listDir: (dirPath, relatives) => lynxIpc.invoke(fileChannels.listDir, dirPath, relatives),
+	checkFilesExist: (dir, fileNames) => lynxIpc.invoke(fileChannels.checkFilesExist, dir, fileNames),
+	calcFolderSize: (dir) => lynxIpc.invoke(fileChannels.calcFolderSize, dir),
+	getRelativePath: (basePath, targetPath) => lynxIpc.invoke(fileChannels.getRelativePath, basePath, targetPath),
+	getAbsolutePath: (basePath, targetPath) => lynxIpc.invoke(fileChannels.getAbsolutePath, basePath, targetPath),
+	isEmptyDir: (dir) => lynxIpc.invoke(fileChannels.isEmptyDir, dir),
+	isAbsolute: (dir) => lynxIpc.invoke(fileChannels.isAbsolute, dir)
+};
+//#endregion
+//#region extension/src/renderer/components/manager/form/AddExeButton.tsx
+var { Button: Button$11 } = await importShared("@heroui/react");
+var { useState: useState$11 } = await importShared("react");
+var { useDispatch: useDispatch$14 } = await importShared("react-redux");
+function AddExeButton() {
+	const dispatch = useDispatch$14();
+	const [isLoading, setIsLoading] = useState$11(false);
+	const handleAdd = () => {
+		setIsLoading(true);
+		filesIpc.openDlg({ properties: ["openFile"] }).then((action) => {
+			if (action) dispatch(reducerActions.addAction({
+				action,
+				type: "exe"
+			}));
+			setIsLoading(false);
+		});
 	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "grid grid-cols-3 gap-4",
-		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1, {
-				id: "pinned",
-				isSelected: categories?.pinned || false,
-				onChange: (value) => handleCategoryChange("pinned", value),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Checkbox$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Control, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Indicator, {}) }), "Pinned"] })
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1, {
-				id: "recentlyUsed",
-				isSelected: categories?.recentlyUsed || false,
-				onChange: (value) => handleCategoryChange("recentlyUsed", value),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Checkbox$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Control, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Indicator, {}) }), "Recently Used"] })
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1, {
-				id: "all",
-				isSelected: categories?.all || false,
-				onChange: (value) => handleCategoryChange("all", value),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Checkbox$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Control, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Indicator, {}) }), "All"] })
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1, {
-				id: "image",
-				isSelected: categories?.image || false,
-				onChange: (value) => handleCategoryChange("image", value),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Checkbox$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Control, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Indicator, {}) }), "Image Generation"] })
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1, {
-				id: "text",
-				isSelected: categories?.text || false,
-				onChange: (value) => handleCategoryChange("text", value),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Checkbox$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Control, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Indicator, {}) }), "Text Generation"] })
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1, {
-				id: "audio",
-				isSelected: categories?.audio || false,
-				onChange: (value) => handleCategoryChange("audio", value),
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Checkbox$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Control, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Indicator, {}) }), "Audio Generation"] })
-			})
-		]
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$11, {
+		size: "sm",
+		onPress: handleAdd,
+		variant: "secondary",
+		isPending: isLoading,
+		className: "bg-surface shadow-surface hover:bg-surface/50",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$35, { className: "size-4 text-amber-400" }), "Choose Program (.exe)"]
 	});
 }
 //#endregion
-//#region extension/src/renderer/Components/Modal/Elements/CardDetails.tsx
-var { Button: Button$7, Input: Input$3, TextArea } = await importShared("@heroui/react");
-var { useEffect: useEffect$2, useRef: useRef$1, useState: useState$5 } = await importShared("react");
-var { useDispatch: useDispatch$11 } = await importShared("react-redux");
-var { useSelector: useSelector$8 } = await importShared("react-redux");
-function CardDetails() {
-	const dispatch = useDispatch$11();
-	const editingCard = useSelector$8(selectEditingCard);
-	const [title, setTitle] = useState$5(editingCard?.title || "");
-	const [desc, setDesc] = useState$5(editingCard?.description || "");
-	const debounceTimerRef = useRef$1(null);
-	useEffect$2(() => {
-		return () => {
-			if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-		};
-	}, []);
-	const changeIcon = (icon) => {
-		dispatch(reducerActions.setIcon(icon));
+//#region extension/src/renderer/components/manager/form/AddScriptButton.tsx
+var { Button: Button$10 } = await importShared("@heroui/react");
+var { useState: useState$10 } = await importShared("react");
+var { useDispatch: useDispatch$13, useSelector: useSelector$14 } = await importShared("react-redux");
+function AddScriptButton() {
+	const dispatch = useDispatch$13();
+	const editingCard = useSelector$14(selectEditingCard);
+	const [isLoading, setIsLoading] = useState$10(false);
+	const handleAdd = () => {
+		setIsLoading(true);
+		filesIpc.openDlg({ properties: ["openFile"] }).then((action) => {
+			if (action) {
+				const lastSeparator = Math.max(action.lastIndexOf("/"), action.lastIndexOf("\\"));
+				const directory = lastSeparator > 0 ? action.substring(0, lastSeparator) : void 0;
+				if (!editingCard?.cwd && directory) dispatch(reducerActions.setCwd(directory));
+				dispatch(reducerActions.addAction({
+					action,
+					type: "script",
+					cwd: directory
+				}));
+			}
+			setIsLoading(false);
+		});
 	};
-	const isFirstTitleRender = useRef$1(true);
-	const isFirstDescRender = useRef$1(true);
-	useEffect$2(() => {
-		if (isFirstTitleRender.current) {
-			isFirstTitleRender.current = false;
-			return;
-		}
-		if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-		debounceTimerRef.current = setTimeout(() => {
-			dispatch(reducerActions.setTitle(title));
-		}, 150);
-	}, [title]);
-	useEffect$2(() => {
-		if (isFirstDescRender.current) {
-			isFirstDescRender.current = false;
-			return;
-		}
-		if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
-		debounceTimerRef.current = setTimeout(() => {
-			dispatch(reducerActions.setDescription(desc));
-		}, 150);
-	}, [desc]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "flex flex-col gap-y-4",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "md:col-span-2 space-y-4",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$3, {
-				value: title || "",
-				placeholder: "Card Title (required)",
-				onChange: (e) => setTitle(e.target.value),
-				fullWidth: true
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TextArea, {
-				value: desc || "",
-				onChange: (e) => setDesc(e.target.value),
-				placeholder: "Card Description (optional)",
-				fullWidth: true
-			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "flex flex-col items-start justify-center gap-y-4",
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "flex flex-row flex-wrap gap-2",
-				children: CardIconsList.map((icon) => {
-					const Target = CardIconById(icon);
-					const isSelected = editingCard?.icon === icon;
-					return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$7, {
-						size: "lg",
-						variant: "ghost",
-						onPress: () => changeIcon(icon),
-						className: `size-20 ${isSelected ? "bg-accent-soft-hover" : ""}`,
-						isIconOnly: true,
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Target, { className: "size-14" })
-					}, icon);
-				})
-			})
-		})]
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$10, {
+		size: "sm",
+		onPress: handleAdd,
+		variant: "secondary",
+		isPending: isLoading,
+		className: "bg-surface shadow-surface hover:bg-surface/50",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$26, { className: "size-4 text-accent" }), "Run Script File"]
 	});
 }
 //#endregion
-//#region src/renderer/shared/assets/icons/index.tsx
-function Terminal_Icon(props) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
-		...props,
-		fill: "none",
-		height: "1em",
-		viewBox: "0 0 24 24",
-		xmlns: "http://www.w3.org/2000/svg",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-			strokeWidth: "2.5",
-			stroke: "currentColor",
-			strokeLinecap: "round",
-			strokeLinejoin: "round",
-			d: "M5.46967 7.46967C5.17678 7.17678 5.17678 6.7019 5.46967 6.40901C5.76256 6.11612 6.23744 6.11612 6.53033 6.40901L11.5303 11.409C11.8232 11.7019 11.8232 12.1768 11.5303 12.4697L6.53033 17.4697C6.23744 17.7626 5.76256 17.7626 5.46967 17.4697C5.17678 17.1768 5.17678 16.7019 5.46967 16.409L9.93934 11.9393L5.46967 7.46967Z"
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("path", {
-			opacity: "0.5",
-			fill: "currentColor",
-			d: "M13.5 16C13.5 15.1716 14.1716 14.5 15 14.5H19C19.8284 14.5 20.5 15.1716 20.5 16C20.5 16.8284 19.8284 17.5 19 17.5H15C14.1716 17.5 13.5 16.8284 13.5 16Z"
-		})]
-	});
-}
+//#region node_modules/@solar-icons/react/dist/icons/linear/alt-arrow-down.mjs
+var { forwardRef: t$1 } = await importShared("react");
+var r$1 = t$1((t, r) => (0, import_jsx_runtime.jsx)(a, {
+	ref: r,
+	...t,
+	iconName: `alt-arrow-down-linear`,
+	children: (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M19 9L12 15L5 9`,
+		stroke: `currentColor`,
+		strokeLinecap: `round`,
+		strokeLinejoin: `round`
+	})
+}));
 //#endregion
-//#region extension/src/renderer/Components/Modal/Elements/CardType.tsx
-var { Description: Description$1, Label: Label$2, ListBox, Select } = await importShared("@heroui/react");
-var { useMemo: useMemo$6 } = await importShared("react");
-var { useDispatch: useDispatch$10 } = await importShared("react-redux");
-var { useSelector: useSelector$7 } = await importShared("react-redux");
-function CardType() {
-	const dispatch = useDispatch$10();
-	const editingCard = useSelector$7(selectEditingCard);
-	const cardType = useMemo$6(() => editingCard?.cardType || "terminal_browser", [editingCard]);
-	const onSelectionChange = (key) => {
-		if (!key || typeof key === "number") return;
-		dispatch(reducerActions.setCardType(key));
-	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-		className: "flex flex-col gap-y-3",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
-			value: cardType,
-			onChange: onSelectionChange,
-			placeholder: "Select Card Type",
-			fullWidth: true,
-			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$2, { children: "Select the card type that fits your needs:" }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select.Trigger, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Select.Value, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Select.Indicator, {})] }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Select.Popover, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ListBox, { children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ListBox.Item, {
-						id: "executable",
-						textValue: "Executable",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex flex-col",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$2, {
-								className: "flex items-center gap-x-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$16, {}), "Executable"]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Description$1, { children: "Run and manage a program" })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ListBox.ItemIndicator, {})]
-					}, "executable"),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ListBox.Item, {
-						id: "terminal_browser",
-						textValue: "Terminal & Browser",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex flex-col",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$2, {
-								className: "flex items-center gap-x-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "flex flex-row items-center gap-x-1",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal_Icon, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$8, {})]
-								}), "Terminal & Browser"]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Description$1, { children: "Open a terminal and a browser simultaneously." })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ListBox.ItemIndicator, {})]
-					}, "terminal_browser"),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ListBox.Item, {
-						id: "browser",
-						textValue: "Browser",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex flex-col",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$2, {
-								className: "flex items-center gap-x-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$8, {}), "Browser"]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Description$1, { children: "Open a browser with a custom URL." })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ListBox.ItemIndicator, {})]
-					}, "browser"),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ListBox.Item, {
-						id: "terminal",
-						textValue: "Terminal",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "flex flex-col",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$2, {
-								className: "flex items-center gap-x-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal_Icon, {}), "Terminal"]
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Description$1, { children: "Open a terminal to run custom commands or scripts." })]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ListBox.ItemIndicator, {})]
-					}, "terminal")
-				] }) })
-			]
-		})
-	});
-}
+//#region node_modules/@solar-icons/react/dist/icons/linear/check-square.mjs
+var { forwardRef: t } = await importShared("react");
+var i = t((t, i) => (0, import_jsx_runtime.jsxs)(a, {
+	ref: i,
+	...t,
+	iconName: `check-square-linear`,
+	children: [(0, import_jsx_runtime.jsx)(`path`, {
+		d: `M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z`,
+		stroke: `currentColor`
+	}), (0, import_jsx_runtime.jsx)(`path`, {
+		d: `M8.5 12.5L10.5 14.5L15.5 9.5`,
+		stroke: `currentColor`,
+		strokeLinecap: `round`,
+		strokeLinejoin: `round`
+	})]
+}));
 //#endregion
 //#region node_modules/lucide-react/dist/esm/shared/src/utils/mergeClasses.mjs
 /**
@@ -15491,7 +16369,7 @@ var hasA11yProp = (props) => {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var { createContext, useContext, useMemo: useMemo$5, createElement: createElement$2 } = await importShared("react");
+var { createContext, useContext, useMemo: useMemo$13, createElement: createElement$2 } = await importShared("react");
 var LucideContext = createContext({});
 var useLucideContext = () => useContext(LucideContext);
 //#endregion
@@ -15594,16 +16472,819 @@ var Plus = createLucideIcon("plus", [["path", {
 	d: "M12 5v14",
 	key: "s699le"
 }]]);
+/**
+* @license lucide-react v1.33.0 - ISC
+*
+* This source code is licensed under the ISC license.
+* See the LICENSE file in the root directory of this source tree.
+*/
+var X = createLucideIcon("x", [["path", {
+	d: "M18 6 6 18",
+	key: "1bl5f8"
+}], ["path", {
+	d: "m6 6 12 12",
+	key: "d8bk6v"
+}]]);
 //#endregion
-//#region extension/src/renderer/Components/Modal/Elements/EnvConfig.tsx
-var { Button: Button$6, Input: Input$2 } = await importShared("@heroui/react");
-var { useState: useState$4 } = await importShared("react");
-var { useDispatch: useDispatch$9, useSelector: useSelector$6 } = await importShared("react-redux");
-function EnvConfig() {
+//#region extension/src/renderer/components/manager/list/BatchActionBar.tsx
+var { Button: Button$9, Dropdown: Dropdown$1, Label: Label$4 } = await importShared("@heroui/react");
+var { useMemo: useMemo$12, useState: useState$9 } = await importShared("react");
+var { useDispatch: useDispatch$12, useSelector: useSelector$13 } = await importShared("react-redux");
+var CATEGORY_OPTIONS = [
+	{
+		id: "pinned",
+		name: "Pinned",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$36, { className: "size-4 text-amber-500" })
+	},
+	{
+		id: "recentlyUsed",
+		name: "Recently Used",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$33, { className: "size-4 text-accent" })
+	},
+	{
+		id: "all",
+		name: "All Categories",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-4 text-purple-500 dark:text-purple-400" })
+	},
+	{
+		id: "image",
+		name: "Image Gen",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$14, { className: "size-4 text-cyan-600 dark:text-cyan-400" })
+	},
+	{
+		id: "text",
+		name: "Text Gen",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$23, { className: "size-4 text-emerald-600 dark:text-emerald-400" })
+	},
+	{
+		id: "audio",
+		name: "Audio Gen",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$7, { className: "size-4 text-pink-600 dark:text-pink-400" })
+	}
+];
+function BatchActionBar({ selectedCardIds, totalVisibleCount, onSelectAllVisible, onClearSelection }) {
+	const dispatch = useDispatch$12();
+	const customCards = useSelector$13(selectCustomCards);
+	const [isDeleteModalOpen, setIsDeleteModalOpen] = useState$9(false);
+	const selectedCards = useMemo$12(() => customCards.filter((card) => selectedCardIds.includes(card.id)), [customCards, selectedCardIds]);
+	const selectedTitles = useMemo$12(() => selectedCards.map((c) => c.title || "Untitled Action"), [selectedCards]);
+	const isAllVisibleSelected = selectedCards.length > 0 && selectedCards.length >= totalVisibleCount;
+	const getCategoryStatus = (catId) => {
+		if (selectedCards.length === 0) return "none";
+		const enabledCount = selectedCards.filter((c) => Boolean(c.categories?.[catId])).length;
+		if (enabledCount === selectedCards.length) return "all";
+		if (enabledCount > 0) return "some";
+		return "none";
+	};
+	const handleToggleCategory = (category, categoryName) => {
+		const currentStatus = getCategoryStatus(category);
+		dispatch(reducerActions.batchToggleCategory({
+			cardIds: selectedCardIds,
+			category
+		}));
+		const newStatus = currentStatus === "all" ? "removed from" : "assigned to";
+		toastHolder?.top.success(`Category "${categoryName}" ${newStatus} ${selectedCardIds.length} action(s).`);
+	};
+	const handleBatchDuplicate = () => {
+		const count = selectedCardIds.length;
+		if (count === 0) return;
+		dispatch(reducerActions.batchDuplicateCards(selectedCardIds));
+		toastHolder?.top.success(`Successfully duplicated ${count} action${count !== 1 ? "s" : ""}!`);
+	};
+	const handleExportClipboard = async () => {
+		try {
+			if (selectedCards.length === 0) return;
+			await navigator.clipboard.writeText(JSON.stringify(selectedCards, null, 2));
+			toastHolder?.top.success(`Copied ${selectedCards.length} selected action(s) to clipboard!`);
+		} catch (err) {
+			toastHolder?.top.danger("Failed to copy to clipboard.");
+			console.error(err);
+		}
+	};
+	const handleExportFile = async () => {
+		try {
+			if (selectedCards.length === 0) return;
+			if (await window.electron.ipcRenderer.invoke(customActionsChannels.exportToFile, selectedCards)) toastHolder?.top.success(`Exported ${selectedCards.length} action(s) to file!`);
+		} catch (err) {
+			toastHolder?.top.danger("Failed to export to file.");
+			console.error(err);
+		}
+	};
+	const handleConfirmBatchDelete = () => {
+		const count = selectedCardIds.length;
+		dispatch(reducerActions.batchDeleteCards(selectedCardIds));
+		onClearSelection();
+		toastHolder?.top.success(`Deleted ${count} action${count !== 1 ? "s" : ""}.`);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+		className: "sticky bottom-2 z-30 mx-auto mt-3 w-full max-w-2xl rounded-2xl border border-border/80 bg-surface/95 p-2 shadow-2xl backdrop-blur-lg ring-1 ring-border/50 flex flex-row items-center justify-between gap-2.5",
+		animate: {
+			opacity: 1,
+			y: 0,
+			scale: 1
+		},
+		exit: {
+			opacity: 0,
+			y: 24,
+			scale: .96
+		},
+		initial: {
+			opacity: 0,
+			y: 24,
+			scale: .96
+		},
+		transition: {
+			duration: .2,
+			ease: "easeOut"
+		},
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex items-center gap-2 pl-1",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/15 text-accent text-xs font-bold",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i, { className: "size-3.5" }),
+					selectedCardIds.length,
+					" selected"
+				]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$9, {
+				size: "sm",
+				variant: "ghost",
+				className: "text-xs text-muted hover:text-foreground",
+				onPress: isAllVisibleSelected ? onClearSelection : onSelectAllVisible,
+				children: isAllVisibleSelected ? "Deselect All" : `Select All (${totalVisibleCount})`
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex items-center gap-1.5 flex-nowrap justify-end",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown$1, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown$1.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$9, {
+					size: "sm",
+					variant: "secondary",
+					className: "text-xs",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-3.5 text-accent" }),
+						"Categories",
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$1, { className: "size-3 text-muted" })
+					]
+				}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown$1.Popover, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown$1.Menu, {
+					onAction: (key) => {
+						const opt = CATEGORY_OPTIONS.find((c) => c.id === key);
+						if (opt) handleToggleCategory(opt.id, opt.name);
+					},
+					children: CATEGORY_OPTIONS.map((cat) => {
+						const status = getCategoryStatus(cat.id);
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown$1.Item, {
+							id: cat.id,
+							textValue: cat.name,
+							className: "flex items-center justify-between gap-3",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2",
+								children: [cat.icon, /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$4, {
+									className: "text-xs",
+									children: cat.name
+								})]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[10px] font-semibold px-1.5 py-0.5 rounded-full ml-auto " + (status === "all" ? "bg-accent/20 text-accent font-bold" : status === "some" ? "bg-amber-500/20 text-amber-500" : "bg-surface-tertiary text-muted"),
+								children: status === "all" ? "All (On)" : status === "some" ? "Some" : "Off"
+							})]
+						}, cat.id);
+					})
+				}) })] }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$9, {
+					size: "sm",
+					variant: "secondary",
+					className: "text-xs",
+					onPress: handleBatchDuplicate,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$25, { className: "size-3.5 text-cyan-600 dark:text-cyan-400" }), "Duplicate"]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown$1, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown$1.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$9, {
+					size: "sm",
+					variant: "secondary",
+					className: "text-xs",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$20, { className: "size-3.5 text-muted" }),
+						"Export",
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$1, { className: "size-3 text-muted" })
+					]
+				}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown$1.Popover, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown$1.Menu, {
+					onAction: (key) => {
+						if (key === "export-clipboard") handleExportClipboard();
+						else if (key === "export-file") handleExportFile();
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown$1.Item, {
+						id: "export-clipboard",
+						textValue: "Copy to Clipboard",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$27, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$4, { children: "Copy to Clipboard" })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown$1.Item, {
+						id: "export-file",
+						textValue: "Export to JSON File",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$20, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$4, { children: "Export to File" })]
+					})]
+				}) })] }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$9, {
+					size: "sm",
+					className: "text-xs",
+					variant: "danger-soft",
+					onPress: () => setIsDeleteModalOpen(true),
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$2, { className: "size-3.5 text-danger" }), "Delete"]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$9, {
+					size: "sm",
+					variant: "ghost",
+					onPress: onClearSelection,
+					"aria-label": "Clear Selection",
+					className: "text-muted hover:text-foreground",
+					isIconOnly: true,
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(X, { className: "size-4" })
+				})
+			]
+		})]
+	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BatchDeleteModal, {
+		isOpen: isDeleteModalOpen,
+		cardTitles: selectedTitles,
+		onOpenChange: setIsDeleteModalOpen,
+		onConfirm: handleConfirmBatchDelete,
+		selectedCount: selectedCardIds.length
+	})] });
+}
+//#endregion
+//#region extension/src/renderer/components/manager/list/NewCardButton.tsx
+var { useDispatch: useDispatch$11 } = await importShared("react-redux");
+function NewCardButton() {
+	const dispatch = useDispatch$11();
+	const handleCreateNew = () => dispatch(reducerActions.addCard());
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+		className: "group relative flex flex-col items-center justify-center text-center p-3.5 rounded-3xl border-2 border-dashed border-border/70 hover:border-accent/60 bg-surface-secondary/30 hover:bg-accent/5 hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 cursor-pointer min-h-42 w-full select-none",
+		type: "button",
+		onClick: handleCreateNew,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "flex size-10 items-center justify-center rounded-full bg-surface-tertiary/80 text-muted group-hover:bg-accent/20 group-hover:text-accent group-hover:scale-105 border border-border/50 group-hover:border-accent/30 transition-all duration-200 mb-2.5 shadow-2xs",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-5" })
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-xs font-bold text-foreground group-hover:text-accent transition-colors",
+				children: "Create New Action"
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[11px] text-muted mt-0.5",
+				children: "Add custom script or shortcut"
+			})
+		]
+	});
+}
+//#endregion
+//#region extension/src/renderer/components/manager/list/PreviewCard.tsx
+var { Checkbox: Checkbox$1, Tooltip: Tooltip$1 } = await importShared("@heroui/react");
+var { useMemo: useMemo$11 } = await importShared("react");
+var { useSelector: useSelector$12 } = await importShared("react-redux");
+function PreviewCard({ card, handleEdit, icon, isSelected, onSelect }) {
+	const { title, description, cardType, actions, categories, urlConfig, cwd } = card;
+	const runningExecutions = useSelector$12(selectRunningExecutions);
+	const isRunning = useMemo$11(() => runningExecutions.some((item) => item.cardId === card.id), [runningExecutions, card.id]);
+	const variables = useMemo$11(() => extractCardVariables(card), [card]);
+	const getTypeBadge = () => {
+		switch (cardType) {
+			case "terminal_browser": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/15",
+				children: "Both"
+			});
+			case "terminal": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/15",
+				children: "CLI"
+			});
+			case "browser": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-accent/15 text-accent border border-accent/15",
+				children: "Web"
+			});
+			case "executable": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/15",
+				children: "EXE"
+			});
+			default: return null;
+		}
+	};
+	const getSummary = () => {
+		if (actions.length > 0) return `${actions.length} step${actions.length !== 1 ? "s" : ""}`;
+		if (urlConfig.customUrl) return urlConfig.customUrl.replace(/^https?:\/\//, "");
+		return "1 action";
+	};
+	const getShortCwd = (pathStr) => {
+		const parts = pathStr.replace(/[\\/]+$/, "").split(/[\\/]/).filter(Boolean);
+		if (parts.length === 0) return pathStr;
+		return parts[parts.length - 1];
+	};
+	const renderRunningIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1, {
+		delay: 150,
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip$1.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+			className: "flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 font-semibold text-[10px] border border-emerald-500/25 shrink-0",
+			children: "Running"
+		}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "text-xs font-semibold text-emerald-500",
+			children: "Active Process"
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+			className: "text-[10px] text-muted",
+			children: "Currently running in background"
+		})] })]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "group relative flex flex-col justify-between p-4 rounded-3xl border transition-all duration-200 cursor-pointer min-h-42 select-none " + (isSelected ? "border-accent bg-accent/10 shadow-sm ring-1 ring-accent/30" : "border-border/60 bg-surface-secondary/40 hover:bg-surface-secondary/70 hover:border-accent/40 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99]"),
+		onClick: () => handleEdit(card),
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-start justify-between gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-x-2.5 min-w-0",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex size-9.5 shrink-0 items-center justify-center rounded-full " + (isRunning ? "bg-emerald-500/15 ring-2 ring-emerald-500/80 animate-pulse " : "bg-surface-tertiary/90 ring-1 ring-border/60 group-hover:ring-accent/40 group-hover:bg-accent/15 ") + "p-2 transition-all duration-200",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "size-5 flex items-center justify-center",
+							children: icon
+						})
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-col min-w-0",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-xs font-bold text-foreground group-hover:text-accent transition-colors truncate",
+							children: title || "Untitled Action"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-[10px] font-mono text-muted truncate",
+							children: getSummary()
+						})]
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					onClick: (e) => e.stopPropagation(),
+					className: "flex items-center gap-1.5 shrink-0",
+					children: [isRunning ? renderRunningIndicator() : getTypeBadge(), onSelect && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "size-5 flex items-center justify-center",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1, {
+							variant: "secondary",
+							onChange: onSelect,
+							isSelected,
+							"aria-label": `Select ${title}`,
+							className: isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100 transition-opacity",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Content, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Control, {
+								className: "rounded-full before:rounded-full size-4",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox$1.Indicator, {})
+							}) })
+						})
+					})]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "flex-1 my-2.5 min-h-7 flex items-start",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "text-xs text-muted/80 line-clamp-2 leading-relaxed",
+					children: description || "No description provided."
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-between gap-2 pt-2.5 border-t border-border/40",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex items-center gap-1.5 min-w-0 flex-1",
+					children: cwd ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1, {
+						delay: 150,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip$1.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-1 text-[11px] font-mono text-muted hover:text-foreground transition-colors truncate max-w-32",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$16, { className: "size-3.5 shrink-0 text-accent/80" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "truncate",
+								children: getShortCwd(cwd)
+							})]
+						}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-xs font-semibold text-foreground",
+							children: "Working Directory"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-[10px] font-mono text-muted max-w-xs break-all",
+							children: cwd
+						})] })]
+					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-[10px] font-mono text-muted/60",
+						children: "Ready"
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-1.5 shrink-0",
+					children: [
+						categories?.pinned && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1, {
+							delay: 150,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip$1.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex size-5.5 items-center justify-center rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/15",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$36, { className: "size-3" })
+							}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip$1.Content, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-xs",
+								children: "Pinned to Top"
+							}) })]
+						}),
+						categories?.recentlyUsed && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1, {
+							delay: 150,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip$1.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex size-5.5 items-center justify-center rounded-full bg-accent/10 text-accent border border-accent/15",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$33, { className: "size-3" })
+							}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip$1.Content, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-xs",
+								children: "Recently Used"
+							}) })]
+						}),
+						variables.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1, {
+							delay: 150,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip$1.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-mono font-medium border border-accent/15",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$26, { className: "size-3 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: variables.length })]
+							}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-xs font-semibold text-accent",
+								children: [
+									variables.length,
+									" Template ",
+									variables.length === 1 ? "Variable" : "Variables"
+								]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[10px] font-mono text-muted",
+								children: variables.map((v) => v.name).join(", ")
+							})] })]
+						}),
+						card.requireConfirmation && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1, {
+							delay: 150,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip$1.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex size-5.5 items-center justify-center rounded-full bg-warning/10 text-warning border border-warning/15",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$3, { className: "size-3" })
+							}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip$1.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-xs font-semibold text-warning",
+								children: "Safety Confirmation"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+								className: "text-[10px] text-muted max-w-xs",
+								children: card.confirmationMessage || "Requires user confirmation before execution"
+							})] })]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "size-5.5 min-w-0 p-0 rounded-full text-muted flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-150",
+							"aria-label": "Edit action",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$6, { className: "size-3" })
+						})
+					]
+				})]
+			})
+		]
+	});
+}
+//#endregion
+//#region extension/src/renderer/components/manager/form/CardDetailsSection.tsx
+var { Input: Input$3, Label: Label$3, Switch, TextField: TextField$2 } = await importShared("@heroui/react");
+var { useEffect: useEffect$5, useRef: useRef$3, useState: useState$8 } = await importShared("react");
+var { useDispatch: useDispatch$10, useSelector: useSelector$11 } = await importShared("react-redux");
+function CardDetailsSection() {
+	const dispatch = useDispatch$10();
+	const editingCard = useSelector$11(selectEditingCard);
+	const [title, setTitle] = useState$8(editingCard?.title || "");
+	const [desc, setDesc] = useState$8(editingCard?.description || "");
+	const [confirmMsg, setConfirmMsg] = useState$8(editingCard?.confirmationMessage || "");
+	const requireConfirmation = Boolean(editingCard?.requireConfirmation);
+	const debounceTimerRef = useRef$3(null);
+	useEffect$5(() => {
+		return () => {
+			if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+		};
+	}, []);
+	const changeIcon = (icon) => {
+		dispatch(reducerActions.setIcon(icon));
+	};
+	const isFirstTitleRender = useRef$3(true);
+	const isFirstDescRender = useRef$3(true);
+	const isFirstConfirmMsgRender = useRef$3(true);
+	useEffect$5(() => {
+		if (isFirstTitleRender.current) {
+			isFirstTitleRender.current = false;
+			return;
+		}
+		if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+		debounceTimerRef.current = setTimeout(() => {
+			dispatch(reducerActions.setTitle(title));
+		}, 150);
+	}, [title, dispatch]);
+	useEffect$5(() => {
+		if (isFirstDescRender.current) {
+			isFirstDescRender.current = false;
+			return;
+		}
+		if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+		debounceTimerRef.current = setTimeout(() => {
+			dispatch(reducerActions.setDescription(desc));
+		}, 150);
+	}, [desc, dispatch]);
+	useEffect$5(() => {
+		if (isFirstConfirmMsgRender.current) {
+			isFirstConfirmMsgRender.current = false;
+			return;
+		}
+		if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+		debounceTimerRef.current = setTimeout(() => {
+			dispatch(reducerActions.setConfirmationMessage(confirmMsg));
+		}, 150);
+	}, [confirmMsg, dispatch]);
+	const selectedIcon = editingCard?.icon || "bot";
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex flex-col gap-y-3.5",
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "grid grid-cols-2 gap-3",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TextField$2, {
+					value: title,
+					onChange: setTitle,
+					isRequired: true,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$3, {
+						className: "text-xs font-semibold text-foreground flex items-center justify-between",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Action Title" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-[10px] text-muted font-normal",
+							children: "Required"
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$3, {
+						placeholder: "e.g. Start Dev Server",
+						fullWidth: true
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TextField$2, {
+					value: desc,
+					onChange: setDesc,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$3, {
+						className: "text-xs font-semibold text-foreground flex items-center justify-between",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Description" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-[10px] text-muted font-normal",
+							children: "Optional"
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$3, {
+						placeholder: "Optional short summary...",
+						fullWidth: true
+					})]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-col gap-y-2.5 p-3 rounded-3xl bg-surface border border-border",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Switch, {
+					size: "sm",
+					className: "w-full",
+					isSelected: requireConfirmation,
+					onChange: (val) => dispatch(reducerActions.setRequireConfirmation(val)),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Switch.Content, {
+						className: "flex items-center justify-between w-full",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-col pr-3",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-xs font-semibold text-foreground flex items-center gap-1.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$3, { className: "size-4 text-warning" }), "Require Confirmation Before Running"]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[11px] text-muted leading-tight mt-0.5",
+								children: "Prompts for safety confirmation before executing commands or opening URLs."
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Switch.Control, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Switch.Thumb, {}) })]
+					})
+				}), requireConfirmation && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "pt-2 border-t border-border/30",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TextField$2, {
+						value: confirmMsg,
+						variant: "secondary",
+						onChange: setConfirmMsg,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$3, {
+							className: "text-xs font-semibold text-foreground flex items-center justify-between",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Custom Warning Note" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[10px] text-muted font-normal",
+								children: "Optional"
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$3, {
+							placeholder: "e.g. This will drop local SQLite tables and rebuild Docker containers.",
+							fullWidth: true
+						})]
+					})
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-col gap-y-2 pt-1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-xs font-semibold text-foreground",
+						children: "Icon"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-surface-tertiary border border-border/50",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "size-3.5 shrink-0 flex items-center justify-center",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardIcon, {
+								id: selectedIcon,
+								className: "size-full"
+							})
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "font-semibold text-foreground capitalize text-[11px]",
+							children: selectedIcon
+						})]
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex flex-wrap justify-center items-center gap-2 p-3 rounded-3xl bg-surface/40 border border-border/30",
+					children: CardIconsList.map((icon) => {
+						return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							className: "flex size-13.5 shrink-0 items-center justify-center rounded-full border transition-all duration-150 cursor-pointer " + (selectedIcon === icon ? "border-accent bg-accent/20 ring-1 ring-accent text-accent shadow-xs scale-105" : "border-border/40 bg-surface/60 hover:bg-surface-hover hover:border-border text-muted hover:text-foreground shadow-surface"),
+							title: icon,
+							type: "button",
+							onClick: () => changeIcon(icon),
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "size-7 flex items-center justify-center",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardIcon, {
+									id: icon,
+									className: "size-full"
+								})
+							})
+						}, icon);
+					})
+				})]
+			})
+		]
+	});
+}
+//#endregion
+//#region extension/src/renderer/components/manager/form/CardTypeSection.tsx
+var { Radio, RadioGroup } = await importShared("@heroui/react");
+var { useMemo: useMemo$10 } = await importShared("react");
+var { useDispatch: useDispatch$9, useSelector: useSelector$10 } = await importShared("react-redux");
+var TYPE_OPTIONS = [
+	{
+		id: "terminal_browser",
+		title: "Terminal & Browser",
+		description: "Runs terminal commands and opens a live web view simultaneously.",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex items-center text-accent",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal_Icon, { className: "size-5" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$21, { className: "size-5 text-cyan-400" })]
+		}),
+		tag: "Full Stack"
+	},
+	{
+		id: "terminal",
+		title: "Terminal Only",
+		description: "Executes shell commands, run scripts, or starts interactive CLI processes.",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal_Icon, { className: "size-5 text-emerald-400" }),
+		tag: "CLI & Scripts"
+	},
+	{
+		id: "browser",
+		title: "Browser Only",
+		description: "Opens a dedicated web page, local dev server, or HTML file directly.",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$21, { className: "size-5 text-cyan-400" }),
+		tag: "Web & UI"
+	},
+	{
+		id: "executable",
+		title: "Native Executable",
+		description: "Launches standalone binaries, games, or native local applications.",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$34, { className: "size-5 text-amber-400" }),
+		tag: "Binary / App"
+	}
+];
+function CardTypeSection() {
 	const dispatch = useDispatch$9();
-	const env = useSelector$6(selectEditingCard)?.env || [];
-	const [newKey, setNewKey] = useState$4("");
-	const [newValue, setNewValue] = useState$4("");
+	const editingCard = useSelector$10(selectEditingCard);
+	const cardType = useMemo$10(() => editingCard?.cardType || "terminal_browser", [editingCard]);
+	const handleSelectType = (value) => {
+		dispatch(reducerActions.setCardType(value));
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(RadioGroup, {
+		className: "grid grid-cols-2 gap-2.5 w-full [&_[data-slot=radio]]:!mt-0 [&_[data-slot=radio]]:!m-0 [&_[data-slot=radio]]:w-full",
+		value: cardType,
+		onChange: handleSelectType,
+		"aria-label": "Select Card Type",
+		children: TYPE_OPTIONS.map((option) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Radio, {
+			value: option.id,
+			"aria-label": option.title,
+			className: "!mt-0 !m-0 w-full",
+			children: ({ isSelected }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Radio.Content, {
+				className: "group relative flex flex-col !items-start text-left p-3 rounded-2xl border !gap-0 transition-all duration-200 cursor-pointer w-full " + (isSelected ? "border-accent bg-accent/15 shadow-sm ring-1 ring-accent/30" : "border-border/60 bg-surface/50 hover:bg-surface-hover/80 hover:border-border"),
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between gap-2 w-full",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-x-2.5 min-w-0",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: `flex size-7 shrink-0 items-center justify-center rounded-full transition-colors ${isSelected ? "bg-accent/20" : "bg-surface-tertiary/70"}`,
+							children: option.icon
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-col min-w-0",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-xs font-semibold text-foreground truncate",
+								children: option.title
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[10px] uppercase font-bold tracking-wider text-muted",
+								children: option.tag
+							})]
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "shrink-0",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Radio.Control, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Radio.Indicator, {}) })
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+					className: "w-full text-left text-[11px] text-muted leading-tight mt-1.5",
+					children: option.description
+				})]
+			})
+		}, option.id))
+	});
+}
+//#endregion
+//#region extension/src/renderer/components/manager/form/CategoriesSection.tsx
+var { Checkbox, CheckboxGroup } = await importShared("@heroui/react");
+var { useMemo: useMemo$9 } = await importShared("react");
+var { useDispatch: useDispatch$8, useSelector: useSelector$9 } = await importShared("react-redux");
+var CATEGORIES = [
+	{
+		id: "pinned",
+		name: "Pinned",
+		desc: "Top of home workspace",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$36, { className: "size-4 text-amber-400" })
+	},
+	{
+		id: "recentlyUsed",
+		name: "Recently Used",
+		desc: "Quick access history",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$33, { className: "size-4 text-accent" })
+	},
+	{
+		id: "all",
+		name: "All Categories",
+		desc: "Included in global list",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-4 text-purple-400" })
+	},
+	{
+		id: "image",
+		name: "Image Gen",
+		desc: "Image tools page",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$14, { className: "size-4 text-cyan-400" })
+	},
+	{
+		id: "text",
+		name: "Text Gen",
+		desc: "Text & LLM tools page",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$23, { className: "size-4 text-emerald-400" })
+	},
+	{
+		id: "audio",
+		name: "Audio Gen",
+		desc: "Audio & speech tools page",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$7, { className: "size-4 text-pink-400" })
+	}
+];
+function CategoriesSection() {
+	const dispatch = useDispatch$8();
+	const editingCard = useSelector$9(selectEditingCard);
+	const categories = useMemo$9(() => editingCard?.categories, [editingCard]);
+	const selectedValues = useMemo$9(() => {
+		if (!categories) return [];
+		return Object.keys(categories).filter((key) => Boolean(categories[key]));
+	}, [categories]);
+	const handleGroupChange = (newValues) => {
+		const updatedCategories = {};
+		CATEGORIES.forEach((cat) => {
+			if (newValues.includes(cat.id)) updatedCategories[cat.id] = true;
+		});
+		dispatch(reducerActions.setAllCategories(updatedCategories));
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CheckboxGroup, {
+		value: selectedValues,
+		onChange: handleGroupChange,
+		className: "grid grid-cols-3 gap-2",
+		"aria-label": "Categories & Placement",
+		children: CATEGORIES.map((cat) => {
+			return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox, {
+				value: cat.id,
+				"aria-label": cat.name,
+				className: "w-full mt-0!",
+				children: ({ isSelected: checked }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Checkbox.Content, {
+					className: "group flex items-center justify-between p-2.5 rounded-3xl border text-left transition-all duration-150 cursor-pointer w-full " + (checked ? "border-accent bg-accent/15 ring-1 ring-accent/30 shadow-xs" : "border-border/50 bg-surface/50 hover:bg-surface-hover hover:border-border"),
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-x-2.5 min-w-0",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: `flex size-7 items-center justify-center rounded-full shrink-0 ${checked ? "bg-accent/20" : "bg-surface-tertiary/70"}`,
+							children: cat.icon
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-col min-w-0",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-xs font-semibold text-foreground truncate",
+								children: cat.name
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-[10px] text-muted truncate",
+								children: cat.desc
+							})]
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "shrink-0 ml-1.5",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox.Control, {
+							className: "rounded-full before:rounded-full",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox.Indicator, {})
+						})
+					})]
+				})
+			}, cat.id);
+		})
+	});
+}
+//#endregion
+//#region extension/src/renderer/components/manager/form/EnvConfigSection.tsx
+var { Button: Button$8, Input: Input$2 } = await importShared("@heroui/react");
+var { useState: useState$7 } = await importShared("react");
+var { useDispatch: useDispatch$7, useSelector: useSelector$8 } = await importShared("react-redux");
+function EnvConfigSection() {
+	const dispatch = useDispatch$7();
+	const env = useSelector$8(selectEditingCard)?.env || [];
+	const [newKey, setNewKey] = useState$7("");
+	const [newValue, setNewValue] = useState$7("");
 	const handleAdd = () => {
 		if (newKey.trim()) {
 			dispatch(reducerActions.addEnv({
@@ -15625,41 +17306,53 @@ function EnvConfig() {
 		}));
 	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "flex flex-col gap-y-4",
-		children: [env.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "flex flex-col gap-y-3",
+		children: [env.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 			className: "flex flex-col gap-y-2",
 			children: env.map((item, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "flex items-center gap-x-2 w-full",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$2, {
 						value: item.key,
-						className: "w-1/3",
-						placeholder: "KEY (e.g., PORT)",
+						placeholder: "KEY",
+						className: "w-1/3 font-JetBrainsMono text-xs",
 						onChange: (e) => handleUpdate(index, e.target.value, item.value)
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-muted text-xs font-mono font-bold",
+						children: "="
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$2, {
 						value: item.value,
-						className: "flex-1",
 						placeholder: "VALUE",
+						className: "flex-1 font-JetBrainsMono text-xs",
 						onChange: (e) => handleUpdate(index, item.key, e.target.value)
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$6, {
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$8, {
 						size: "sm",
 						variant: "danger-soft",
+						"aria-label": "Remove variable",
 						onPress: () => handleRemove(index),
 						isIconOnly: true,
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-4" })
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$2, { className: "size-3.5 text-danger" })
 					})
 				]
 			}, index))
+		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "p-3 rounded-3xl border border-border border-dashed bg-surface/70 text-center text-xs text-muted",
+			children: "No custom environment variables added."
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "flex items-center gap-x-2 w-full",
+			className: "flex items-center gap-x-2 w-full pt-2 border-t border-border/40",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$2, {
 					value: newKey,
-					className: "w-1/3",
-					placeholder: "New Key (e.g., NODE_ENV)",
-					onChange: (e) => setNewKey(e.target.value)
+					placeholder: "NEW_KEY (e.g. PORT)",
+					onChange: (e) => setNewKey(e.target.value),
+					className: "w-1/3 font-JetBrainsMono text-xs"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "text-muted text-xs font-mono font-bold",
+					children: "="
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$2, {
 					onKeyDown: (e) => {
@@ -15669,102 +17362,51 @@ function EnvConfig() {
 						}
 					},
 					value: newValue,
-					className: "flex-1",
-					placeholder: "Value (e.g., production)",
-					onChange: (e) => setNewValue(e.target.value)
+					placeholder: "value (e.g. 8080)",
+					onChange: (e) => setNewValue(e.target.value),
+					className: "flex-1 font-JetBrainsMono text-xs"
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$6, {
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$8, {
 					size: "sm",
-					variant: "tertiary",
+					variant: "secondary",
 					onPress: handleAdd,
-					isIconOnly: true,
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" })
+					isDisabled: !newKey.trim(),
+					"aria-label": "Add environment variable",
+					className: "bg-surface shadow-surface hover:bg-surface-secondary",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" }), "Add"]
 				})
 			]
 		})]
 	});
 }
 //#endregion
-//#region extension/src/renderer/Components/Modal/Elements/AddExe.tsx
-var { Button: Button$5 } = await importShared("@heroui/react");
-var { useState: useState$3 } = await importShared("react");
-var { useDispatch: useDispatch$8 } = await importShared("react-redux");
-function AddExe() {
-	const dispatch = useDispatch$8();
-	const [isLoading, setIsLoading] = useState$3(false);
-	const handleAdd = () => {
-		setIsLoading(true);
-		filesIpc.openDlg({ properties: ["openFile"] }).then((action) => {
-			if (action) dispatch(reducerActions.addAction({
-				action,
-				type: "exe"
-			}));
-			setIsLoading(false);
-		});
-	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$5, {
-		onPress: handleAdd,
-		isPending: isLoading,
-		fullWidth: true,
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$16, {}), "Add Executable"]
-	});
-}
-//#endregion
-//#region extension/src/renderer/Components/Modal/Elements/AddScript.tsx
-var { Button: Button$4 } = await importShared("@heroui/react");
-var { useState: useState$2 } = await importShared("react");
-var { useDispatch: useDispatch$7 } = await importShared("react-redux");
-function AddScript() {
-	const dispatch = useDispatch$7();
-	const [isLoading, setIsLoading] = useState$2(false);
-	const handleAdd = () => {
-		setIsLoading(true);
-		filesIpc.openDlg({ properties: ["openFile"] }).then((action) => {
-			if (action) {
-				const lastSeparator = Math.max(action.lastIndexOf("/"), action.lastIndexOf("\\"));
-				if (lastSeparator > 0) {
-					const directory = action.substring(0, lastSeparator);
-					dispatch(reducerActions.addAction({
-						action: `cd "${directory}"`,
-						type: "command"
-					}));
-				}
-				dispatch(reducerActions.addAction({
-					action,
-					type: "script"
-				}));
-			}
-			setIsLoading(false);
-		});
-	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$4, {
-		onPress: handleAdd,
-		isPending: isLoading,
-		fullWidth: true,
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$11, {}), "Add Script"]
-	});
-}
-//#endregion
-//#region extension/src/renderer/Components/Modal/Elements/ExecuteActions.tsx
-var { Button: Button$3, ButtonGroup: ButtonGroup$1, Input: Input$1, InputGroup } = await importShared("@heroui/react");
-var { useMemo: useMemo$4, useState: useState$1 } = await importShared("react");
-var { useDispatch: useDispatch$6 } = await importShared("react-redux");
-var { useSelector: useSelector$5 } = await importShared("react-redux");
-function ExecuteActions() {
+//#region extension/src/renderer/components/manager/form/ExecuteActionsSection.tsx
+var { Button: Button$7, ButtonGroup, Input: Input$1, InputGroup: InputGroup$3 } = await importShared("@heroui/react");
+var { useEffect: useEffect$4, useMemo: useMemo$8, useRef: useRef$2, useState: useState$6 } = await importShared("react");
+var { useDispatch: useDispatch$6, useSelector: useSelector$7 } = await importShared("react-redux");
+function ExecuteActionsSection() {
 	const dispatch = useDispatch$6();
-	const [commandInput, setCommandInput] = useState$1("");
-	const editingCard = useSelector$5(selectEditingCard);
-	const [addingFile, setAddingFile] = useState$1(false);
-	const [addingFolder, setAddingFolder] = useState$1(false);
-	const [addingCdFolder, setAddingCdFolder] = useState$1(false);
-	const [editingIndex, setEditingIndex] = useState$1(null);
-	const [editingValue, setEditingValue] = useState$1("");
-	const actions = useMemo$4(() => editingCard?.actions || [], [editingCard]);
-	const cardType = useMemo$4(() => editingCard?.cardType || [], [editingCard]);
+	const [commandInput, setCommandInput] = useState$6("");
+	const editingCard = useSelector$7(selectEditingCard);
+	const [addingFile, setAddingFile] = useState$6(false);
+	const [addingFolder, setAddingFolder] = useState$6(false);
+	const [addingCdFolder, setAddingCdFolder] = useState$6(false);
+	const [editingIndex, setEditingIndex] = useState$6(null);
+	const [editingValue, setEditingValue] = useState$6("");
+	const rawActions = useMemo$8(() => editingCard?.actions || [], [editingCard?.actions]);
+	const cardType = useMemo$8(() => editingCard?.cardType || "terminal_browser", [editingCard?.cardType]);
+	const [actions, setActions] = useState$6(rawActions);
+	const actionsRef = useRef$2(actions);
+	useEffect$4(() => {
+		setActions(rawActions);
+		actionsRef.current = rawActions;
+	}, [rawActions]);
+	const activeCount = useMemo$8(() => actions.filter((a) => !a.disabled).length, [actions]);
+	const disabledCount = actions.length - activeCount;
 	const handleAddCommand = () => {
 		if (commandInput.trim()) {
 			dispatch(reducerActions.addAction({
-				action: commandInput,
+				action: commandInput.trim(),
 				type: "command"
 			}));
 			setCommandInput("");
@@ -15779,19 +17421,29 @@ function ExecuteActions() {
 	const handleRemoveCommand = (indexToRemove) => {
 		dispatch(reducerActions.removeAction(indexToRemove));
 	};
+	const handleToggleDisable = (indexToToggle) => {
+		dispatch(reducerActions.toggleActionDisabled(indexToToggle));
+	};
+	const handleDuplicate = (indexToDuplicate) => {
+		dispatch(reducerActions.duplicateAction(indexToDuplicate));
+	};
 	const handleStartEdit = (index, currentValue) => {
 		setEditingIndex(index);
 		setEditingValue(currentValue);
 	};
 	const handleSaveEdit = () => {
-		if (editingIndex !== null && editingValue.trim()) dispatch(reducerActions.updateAction({
-			index: editingIndex,
-			newAction: editingValue.trim()
-		}));
+		if (editingIndex !== null) {
+			if (editingValue.trim()) dispatch(reducerActions.updateAction({
+				index: editingIndex,
+				newAction: editingValue.trim()
+			}));
+			else if (actions[editingIndex] && !actions[editingIndex].action) dispatch(reducerActions.removeAction(editingIndex));
+		}
 		setEditingIndex(null);
 		setEditingValue("");
 	};
 	const handleCancelEdit = () => {
+		if (editingIndex !== null && actions[editingIndex] && !actions[editingIndex].action) dispatch(reducerActions.removeAction(editingIndex));
 		setEditingIndex(null);
 		setEditingValue("");
 	};
@@ -15804,9 +17456,12 @@ function ExecuteActions() {
 			handleCancelEdit();
 		}
 	};
-	const onReorder = (items) => {
-		const newOrder = items.map((actionName) => actions.find((action) => action.action === actionName));
-		if (newOrder.every((item) => item !== void 0)) dispatch(reducerActions.setActions(newOrder));
+	const onReorder = (newOrder) => {
+		actionsRef.current = newOrder;
+		setActions(newOrder);
+	};
+	const handleDragEnd = () => {
+		dispatch(reducerActions.setActions(actionsRef.current));
 	};
 	const handleAddFile = () => {
 		setAddingFile(true);
@@ -15838,457 +17493,1058 @@ function ExecuteActions() {
 			setAddingCdFolder(false);
 		});
 	};
-	const renderBody = (item, index) => {
-		switch (item.type) {
-			case "exe":
-			case "script": return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [index + 1, "."] }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$2, {}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-					className: "w-full text-sm ml-1.5 truncate",
-					children: item.action
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$3, {
-					size: "sm",
-					className: "shrink-0",
-					variant: "danger-soft",
-					onPress: () => handleRemoveCommand(index),
-					isIconOnly: true,
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-4" })
-				})
-			] });
-			case "open": return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [index + 1, "."] }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$13, {}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-					className: "w-full text-sm ml-1.5 truncate",
-					children: item.action
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$3, {
-					size: "sm",
-					className: "shrink-0",
-					variant: "danger-soft",
-					onPress: () => handleRemoveCommand(index),
-					isIconOnly: true,
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-4" })
-				})
-			] });
-			case "command": return editingIndex === index ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [index + 1, "."] }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$11, { className: "shrink-0" }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$1, {
-					value: editingValue,
-					onBlur: handleSaveEdit,
-					onKeyDown: handleEditKeyDown,
-					onChange: (e) => setEditingValue(e.target.value),
-					fullWidth: true,
-					autoFocus: true
-				})
-			] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [index + 1, "."] }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$11, { className: "shrink-0" }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-					className: "w-full truncate bg-surface-secondary py-1.5 px-2 rounded-full font-JetBrainsMono",
-					children: item.action
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$3, {
-					size: "sm",
-					variant: "tertiary",
-					className: "shrink-0",
-					onPress: () => handleStartEdit(index, item.action),
-					isIconOnly: true,
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$3, { className: "size-4" })
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$3, {
-					size: "sm",
-					className: "shrink-0",
-					variant: "danger-soft",
-					onPress: () => handleRemoveCommand(index),
-					isIconOnly: true,
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-4" })
-				})
-			] });
+	const renderBadge = (type, disabled) => {
+		const disabledClass = disabled ? "opacity-50 grayscale" : "";
+		switch (type) {
+			case "command": return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent border border-accent/10 shrink-0 " + disabledClass,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$26, { className: "size-3" }), "Command"]
+			});
+			case "script": return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-cyan-500/15 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shrink-0 " + disabledClass,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$26, { className: "size-3" }), "Script"]
+			});
+			case "exe": return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0 " + disabledClass,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$35, { className: "size-3" }), "Executable"]
+			});
+			case "open": return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+				className: "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0 " + disabledClass,
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-3" }), "Open Path"]
+			});
+			default: return null;
 		}
 	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "w-full flex flex-row gap-x-4 items-center justify-center",
-		children: [cardType === "executable" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AddExe, {}) : cardType === "terminal_browser" || cardType === "terminal" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AddScript, {}) : null, /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ButtonGroup$1, {
-			variant: "secondary",
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex flex-col gap-y-4",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex flex-col gap-y-2.5",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$3, {
-					isPending: addingFile,
-					onPress: handleAddFile,
-					children: [!addingFile && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$6, {}), "Add File"]
+				(cardType === "terminal_browser" || cardType === "terminal") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-x-2",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(InputGroup$3, {
+						fullWidth: true,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$3.Prefix, {
+							className: "text-muted",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal_Icon, { className: "size-4 text-accent" })
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$3.Input, {
+							value: commandInput,
+							onKeyDown: handleCommandKeyDown,
+							className: "font-JetBrainsMono text-xs",
+							onChange: (e) => setCommandInput(e.target.value),
+							placeholder: "Type shell command and press Enter (e.g. npm run dev)..."
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$7, {
+						size: "md",
+						variant: "secondary",
+						onPress: handleAddCommand,
+						isDisabled: !commandInput.trim(),
+						className: "bg-surface shadow-surface hover:bg-surface/50",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, { className: "size-4" }), "Add"]
+					})]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$3, {
-					isPending: addingFolder,
-					onPress: handleAddFolder,
-					children: [!addingFolder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$5, {}), "Add Folder"]
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-wrap items-center gap-2",
+					children: [cardType === "executable" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AddExeButton, {}) : cardType === "terminal_browser" || cardType === "terminal" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AddScriptButton, {}) : null, /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ButtonGroup, {
+						variant: "secondary",
+						children: [
+							(cardType === "terminal_browser" || cardType === "terminal") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$7, {
+								size: "sm",
+								isPending: addingCdFolder,
+								onPress: handleAddCdFolder,
+								className: "bg-surface shadow-surface hover:bg-surface/50",
+								children: [!addingCdFolder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-3.5" }), "CD Folder"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$7, {
+								size: "sm",
+								isPending: addingFile,
+								onPress: handleAddFile,
+								className: "bg-surface shadow-surface hover:bg-surface/50",
+								children: [!addingFile && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$17, { className: "size-3.5" }), "File"]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$7, {
+								size: "sm",
+								isPending: addingFolder,
+								onPress: handleAddFolder,
+								className: "bg-surface shadow-surface hover:bg-surface/50",
+								children: [!addingFolder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-3.5" }), "Folder"]
+							})
+						]
+					})]
 				}),
-				(cardType === "terminal_browser" || cardType === "terminal") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$3, {
-					isPending: addingCdFolder,
-					onPress: handleAddCdFolder,
-					children: [!addingCdFolder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$5, {}), "CD Folder"]
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-accent/5 border border-accent/15 text-[11px] text-muted",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$11, { className: "size-3.5 text-accent shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+						"Use ",
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+							className: "text-accent font-JetBrainsMono font-semibold",
+							children: "{{VAR}}"
+						}),
+						" or ",
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+							className: "text-accent font-JetBrainsMono font-semibold",
+							children: "{{VAR:default}}"
+						}),
+						" in commands for dynamic runtime inputs."
+					] })]
 				})
 			]
-		})]
-	}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [(cardType === "terminal_browser" || cardType === "terminal") && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "flex items-center gap-x-4",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(InputGroup, {
-			fullWidth: true,
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup.Prefix, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal_Icon, {}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup.Input, {
-				value: commandInput,
-				onKeyDown: handleCommandKeyDown,
-				placeholder: "Enter command and press Enter...",
-				onChange: (e) => setCommandInput(e.target.value)
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex flex-col gap-y-2",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-between px-1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "text-xs font-semibold text-foreground",
+					children: "Execution Pipeline"
+				}), actions.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-1.5 text-[11px] font-mono text-muted",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+						activeCount,
+						"/",
+						actions.length,
+						" active step",
+						actions.length !== 1 ? "s" : ""
+					] }), disabledCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						className: "text-amber-600 dark:text-amber-400 font-semibold",
+						children: [
+							"(",
+							disabledCount,
+							" skipped)"
+						]
+					})]
+				})]
+			}), actions.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-center gap-2 p-3.5 rounded-3xl border border-dashed border-border bg-surface/50 text-center text-xs text-muted",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal_Icon, { className: "size-4 text-muted/60" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "No actions configured. Add a shell command, script, or path above." })]
+			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReorderGroup, {
+				axis: "y",
+				values: actions,
+				onReorder,
+				className: "flex flex-col gap-y-2",
+				children: actions.map((item, index) => {
+					const isEditing = editingIndex === index;
+					const isDisabled = Boolean(item.disabled);
+					const itemVars = extractTemplateVariables(item.action || "");
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ReorderItem, {
+						className: "group relative flex items-center justify-between gap-x-3 p-2.5 rounded-xl border transition-all duration-150 select-none " + (isDisabled ? "border-dashed border-border/50 bg-surface/40 text-muted opacity-65" : "border-border/60 bg-surface/70 hover:border-border hover:bg-surface-hover/70 shadow-2xs"),
+						value: item,
+						onDragEnd: handleDragEnd,
+						whileDrag: {
+							scale: 1.015,
+							zIndex: 50,
+							boxShadow: "0 8px 20px rgba(0,0,0,0.15)"
+						},
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-x-2 min-w-0 flex-1",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+									className: "cursor-grab active:cursor-grabbing text-muted/50 group-hover:text-muted shrink-0 p-0.5",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(GripVertical, { className: "size-4" })
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "size-4 flex items-center justify-center text-[9pt] font-bold shrink-0 " + (isDisabled ? "line-through text-muted/60" : "text-muted"),
+									children: index + 1
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-1.5 shrink-0",
+									children: [renderBadge(item.type, isDisabled), isDisabled && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20",
+										children: "Off"
+									})]
+								}),
+								isEditing ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-x-2 flex-1 min-w-0",
+									children: [
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input$1, {
+											value: editingValue,
+											onBlur: handleSaveEdit,
+											onKeyDown: handleEditKeyDown,
+											className: "font-JetBrainsMono text-xs",
+											placeholder: "Type command and press Enter...",
+											onChange: (e) => setEditingValue(e.target.value),
+											fullWidth: true,
+											autoFocus: true
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$7, {
+											size: "sm",
+											"aria-label": "Save",
+											variant: "tertiary",
+											onPress: handleSaveEdit,
+											isIconOnly: true,
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$39, { className: "size-3.5 text-accent" })
+										}),
+										/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$7, {
+											size: "sm",
+											variant: "ghost",
+											"aria-label": "Cancel",
+											onPress: handleCancelEdit,
+											isIconOnly: true,
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$37, { className: "size-3.5 text-muted" })
+										})
+									]
+								}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "flex items-center gap-x-2 flex-1 min-w-0",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "font-JetBrainsMono text-xs truncate min-w-0 px-1.5 py-0.5 select-all " + (isDisabled ? "line-through text-muted" : "text-foreground"),
+										children: item.action
+									}), itemVars.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "flex items-center gap-1 shrink-0",
+										children: itemVars.map((v) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "font-JetBrainsMono text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/20 font-semibold",
+											children: [
+												"{{",
+												v.name,
+												"}}"
+											]
+										}, v.name))
+									})]
+								})
+							]
+						}), !isEditing && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-x-1 shrink-0",
+							children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$7, {
+									className: isDisabled ? "text-amber-500 hover:text-amber-400 hover:bg-amber-500/10" : "text-muted hover:text-foreground",
+									size: "sm",
+									variant: "ghost",
+									onPress: () => handleToggleDisable(index),
+									"aria-label": isDisabled ? "Enable step" : "Disable step",
+									isIconOnly: true,
+									children: isDisabled ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$19, { className: "size-3.5" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$18, { className: "size-3.5" })
+								}),
+								item.type === "command" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$7, {
+									size: "sm",
+									variant: "ghost",
+									"aria-label": "Edit command",
+									className: "text-muted hover:text-foreground",
+									onPress: () => handleStartEdit(index, item.action),
+									isIconOnly: true,
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$6, { className: "size-3.5" })
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$7, {
+									size: "sm",
+									variant: "ghost",
+									"aria-label": "Duplicate step",
+									onPress: () => handleDuplicate(index),
+									className: "text-muted hover:text-foreground",
+									isIconOnly: true,
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$25, { className: "size-3.5" })
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$7, {
+									size: "sm",
+									variant: "danger-soft",
+									"aria-label": "Remove action",
+									onPress: () => handleRemoveCommand(index),
+									className: "bg-transparent hover:bg-danger-soft-hover",
+									isIconOnly: true,
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$2, { className: "size-4 text-danger" })
+								})
+							]
+						})]
+					}, item.id || `action-${index}`);
+				})
 			})]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$3, {
-			variant: "tertiary",
-			onPress: handleAddCommand,
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, {}), "Add"]
-		})]
-	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnimatePresence, { children: actions.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-		className: "overflow-hidden",
-		exit: {
-			opacity: 0,
-			height: 0,
-			marginTop: 0
-		},
-		initial: {
-			opacity: 0,
-			height: 0,
-			marginTop: 0
-		},
-		animate: {
-			opacity: 1,
-			height: "auto",
-			marginTop: "1rem"
-		},
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ReorderGroup, {
-			axis: "y",
-			onReorder,
-			className: "flex flex-col gap-y-2 p-1",
-			values: actions.map((item) => item.action),
-			children: actions.map((item, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ReorderItem, {
-				className: "rounded-full bg-surface shadow-surface cursor-grab active:cursor-grabbing flex flex-row items-center gap-x-2 p-1.5 px-2",
-				value: item.action,
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(GripVertical, { className: "text-muted shrink-0 size-4" }), renderBody(item, index)]
-			}, item.action))
-		})
-	}) })] })] });
-}
-//#endregion
-//#region extension/src/renderer/Components/Modal/Elements/FormSection.tsx
-function FormSection({ title, children }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "space-y-4",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
-			className: "text-sm font-base text-semi-muted",
-			children: title
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "flex flex-col gap-y-4 rounded-3xl bg-surface-secondary p-4",
-			children
 		})]
 	});
 }
 //#endregion
-//#region extension/src/renderer/Components/Modal/Elements/NewCard.tsx
-var { Card: Card$1 } = await importShared("@heroui/react");
-var { useDispatch: useDispatch$5 } = await importShared("react-redux");
-function NewCard() {
-	const dispatch = useDispatch$5();
-	const handleCreateNew = () => dispatch(reducerActions.addCard());
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-		transition: { duration: .2 },
-		whileHover: {
-			y: -2,
-			scale: 1.02
-		},
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card$1, {
-			className: "w-42.5 h-37.5 group items-center justify-center cursor-pointer  border-2 border-dashed border-muted/30 hover:border-muted/60 transition duration-200",
-			variant: "secondary",
-			onClick: handleCreateNew,
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "flex size-12 items-center justify-center rounded-full bg-surface-tertiary",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Plus, {})
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "font-semibold text-muted group-hover:text-foreground transition-colors duration-300",
-				children: "Create New"
-			})]
-		})
-	});
-}
-//#endregion
-//#region extension/src/renderer/Components/Modal/Elements/PreviewCard.tsx
-var { Card, Checkbox } = await importShared("@heroui/react");
-function PreviewCard({ card, handleEdit, icon, isSelected, onSelect }) {
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
-		className: "relative",
-		transition: { duration: .2 },
-		whileHover: {
-			y: -2,
-			scale: 1.02
-		},
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-			variant: "secondary",
-			onClick: () => handleEdit(card),
-			className: "w-42.5 h-37.5 cursor-pointer items-center justify-center group transition duration-200",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "flex size-[3.3rem] items-center justify-center shrink-0",
-				children: icon
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-				className: "font-semibold text-center px-2",
-				children: card.title
-			})]
-		}), onSelect && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			onClick: (e) => e.stopPropagation(),
-			className: "absolute top-2 right-2 z-10",
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox, {
-				onChange: onSelect,
-				isSelected,
-				"aria-label": `Select ${card.title}`,
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox.Content, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox.Control, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Checkbox.Indicator, {}) }) })
+//#region extension/src/renderer/components/manager/form/FormSection.tsx
+function FormSection({ title, description, icon, badge, headerAction, children, className = "" }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("section", {
+		className: `flex flex-col gap-y-2 ${className}`,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center justify-between px-0.5",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-x-2",
+					children: [icon && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "text-accent shrink-0",
+						children: icon
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-x-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "text-xs font-bold uppercase tracking-wider text-muted",
+							children: title
+						}), badge]
+					})]
+				}), headerAction]
+			}),
+			description && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-xs text-muted -mt-1 px-0.5",
+				children: description
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "flex flex-col gap-y-3.5 rounded-3xl bg-surface-secondary p-4 transition-colors",
+				children
 			})
-		})]
+		]
 	});
 }
 //#endregion
-//#region extension/src/renderer/Components/Modal/Elements/UrlConfig.tsx
-var { Button: Button$2, ButtonGroup, Description, Input, Label: Label$1, NumberField, Separator, TextField } = await importShared("@heroui/react");
-var { useMemo: useMemo$3 } = await importShared("react");
-var { useDispatch: useDispatch$4 } = await importShared("react-redux");
-var { useSelector: useSelector$4 } = await importShared("react-redux");
-function UrlConfig() {
-	const dispatch = useDispatch$4();
-	const editingCard = useSelector$4(selectEditingCard);
-	const urlConfigType = useMemo$3(() => editingCard?.urlConfig.type || "nothing", [editingCard]);
-	const customUrl = useMemo$3(() => editingCard?.urlConfig.customUrl, [editingCard]);
-	const openImmediately = useMemo$3(() => editingCard?.urlConfig.openImmediately, [editingCard]);
-	const timeout = useMemo$3(() => editingCard?.urlConfig.timeout, [editingCard]);
-	const findLine = useMemo$3(() => editingCard?.urlConfig.findLine, [editingCard]);
+//#region extension/src/renderer/components/manager/form/UrlConfigSection.tsx
+var { Button: Button$6, InputGroup: InputGroup$2, Label: Label$2, NumberField, TextField: TextField$1 } = await importShared("@heroui/react");
+var { useMemo: useMemo$7, useState: useState$5 } = await importShared("react");
+var { useDispatch: useDispatch$5, useSelector: useSelector$6 } = await importShared("react-redux");
+var STRATEGIES = [
+	{
+		id: "nothing",
+		title: "No Browser",
+		desc: "Do not open web tab"
+	},
+	{
+		id: "custom",
+		title: "Custom URL",
+		desc: "Direct HTTP or localhost",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$21, { className: "size-4 text-cyan-400" })
+	},
+	{
+		id: "htmlFile",
+		title: "Local HTML",
+		desc: "Local file in workspace",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$17, { className: "size-4 text-emerald-400" })
+	},
+	{
+		id: "findLine",
+		title: "Scan Terminal",
+		desc: "Extract URL from logs",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$9, { className: "size-4 text-accent" })
+	}
+];
+function UrlConfigSection() {
+	const dispatch = useDispatch$5();
+	const editingCard = useSelector$6(selectEditingCard);
+	const [isSelectingFile, setIsSelectingFile] = useState$5(false);
+	const urlConfigType = useMemo$7(() => editingCard?.urlConfig.type || "nothing", [editingCard]);
+	const customUrl = useMemo$7(() => editingCard?.urlConfig.customUrl, [editingCard]);
+	const openImmediately = useMemo$7(() => editingCard?.urlConfig.openImmediately ?? true, [editingCard]);
+	const timeout = useMemo$7(() => editingCard?.urlConfig.timeout || 5, [editingCard]);
+	const findLine = useMemo$7(() => editingCard?.urlConfig.findLine || "", [editingCard]);
+	const urlVars = useMemo$7(() => extractTemplateVariables(customUrl || ""), [customUrl]);
+	const findLineVars = useMemo$7(() => extractTemplateVariables(findLine || ""), [findLine]);
 	const setUrlConfigType = (value) => dispatch(reducerActions.setUrlConfigType(value));
 	const setCustomUrl = (value) => dispatch(reducerActions.setCustomUrl(value));
 	const setOpenImmediately = (value) => dispatch(reducerActions.setOpenImmediately(value));
 	const setTimeoutValue = (value) => dispatch(reducerActions.setTimeoutValue(value));
 	const setFindLine = (value) => dispatch(reducerActions.setFindLine(value));
+	const handleSelectHtmlFile = () => {
+		setIsSelectingFile(true);
+		filesIpc.openDlg({
+			properties: ["openFile"],
+			filters: [{
+				name: "HTML Files",
+				extensions: ["html", "htm"]
+			}, {
+				name: "All Files",
+				extensions: ["*"]
+			}]
+		}).then((action) => {
+			if (action) setCustomUrl(action);
+			setIsSelectingFile(false);
+		});
+	};
+	const renderTimingSelector = () => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex flex-row items-center justify-between gap-3 p-3 rounded-3xl bg-surface/70 shadow-surface",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex items-center gap-2",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$38, { className: "size-4 text-accent shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+				className: "text-xs font-semibold text-foreground",
+				children: "Open Browser Tab"
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex items-center gap-2 shrink-0",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$6, {
+					className: openImmediately ? "bg-accent/15 shadow-accent text-accent font-semibold" : "bg-surface shadow-surface hover:bg-surface-secondary",
+					size: "sm",
+					onPress: () => setOpenImmediately(true),
+					variant: openImmediately ? "secondary" : "ghost",
+					children: "Immediately"
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$6, {
+					className: !openImmediately ? "bg-accent/15 shadow-accent text-accent font-semibold" : "bg-surface shadow-surface hover:bg-surface-secondary",
+					size: "sm",
+					onPress: () => setOpenImmediately(false),
+					variant: !openImmediately ? "secondary" : "ghost",
+					children: "After Delay (Seconds)"
+				}),
+				!openImmediately && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NumberField, {
+					name: "delay",
+					minValue: .1,
+					maxValue: 300,
+					value: timeout,
+					defaultValue: 1,
+					onChange: setTimeoutValue,
+					className: "w-full max-w-40",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(NumberField.Group, { children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NumberField.DecrementButton, {}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NumberField.Input, {}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NumberField.IncrementButton, {})
+					] })
+				})
+			]
+		})]
+	});
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "flex flex-col gap-y-3.5",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+			className: "grid grid-cols-4 gap-2",
+			children: STRATEGIES.map((item) => {
+				const isSelected = urlConfigType === item.id;
+				return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+					className: "flex flex-col items-center justify-center text-center p-2.5 rounded-3xl transition-all duration-200 cursor-pointer " + (isSelected ? "border border-accent bg-accent/15 text-foreground ring-1 ring-accent/30 shadow-xs" : "shadow-surface bg-surface text-muted hover:text-foreground hover:bg-surface-hover "),
+					type: "button",
+					onClick: () => setUrlConfigType(item.id),
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-1.5 mb-1",
+						children: [item.icon, /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-xs font-semibold text-foreground",
+							children: item.title
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-[10px] text-muted line-clamp-1",
+						children: item.desc
+					})]
+				}, item.id);
+			})
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AnimatePresence, {
+			mode: "wait",
+			children: [
+				urlConfigType === "custom" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+					exit: {
+						opacity: 0,
+						y: -6
+					},
+					animate: {
+						opacity: 1,
+						y: 0
+					},
+					initial: {
+						opacity: 0,
+						y: -6
+					},
+					transition: { duration: .15 },
+					className: "flex flex-col gap-y-3 pt-1 border-t border-border/30",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TextField$1, {
+						value: customUrl || "",
+						onChange: setCustomUrl,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$2, {
+							className: "text-xs font-semibold text-foreground flex items-center justify-between",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Target URL" }), urlVars.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex items-center gap-1",
+								children: urlVars.map((v) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "font-JetBrainsMono text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/20 font-semibold",
+									children: [
+										"{{",
+										v.name,
+										"}}"
+									]
+								}, v.name))
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(InputGroup$2, {
+							fullWidth: true,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$2.Prefix, {
+								className: "text-muted",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$21, { className: "size-4 text-cyan-400" })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$2.Input, {
+								className: "font-JetBrainsMono text-xs",
+								placeholder: "e.g. http://localhost:3000 or https://..."
+							})]
+						})]
+					}), renderTimingSelector()]
+				}, "custom"),
+				urlConfigType === "htmlFile" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+					exit: {
+						opacity: 0,
+						y: -6
+					},
+					animate: {
+						opacity: 1,
+						y: 0
+					},
+					initial: {
+						opacity: 0,
+						y: -6
+					},
+					transition: { duration: .15 },
+					className: "flex flex-col gap-y-3 pt-1 border-t border-border/30",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-col gap-y-1.5",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$2, {
+							className: "text-xs font-semibold text-foreground flex items-center justify-between",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "HTML File Path" }), urlVars.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex items-center gap-1",
+								children: urlVars.map((v) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "font-JetBrainsMono text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/20 font-semibold",
+									children: [
+										"{{",
+										v.name,
+										"}}"
+									]
+								}, v.name))
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-center gap-x-2 w-full",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(InputGroup$2, {
+								fullWidth: true,
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$2.Prefix, {
+									className: "text-muted",
+									children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$17, { className: "size-4 text-emerald-400" })
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$2.Input, {
+									value: customUrl || "",
+									className: "font-JetBrainsMono text-xs",
+									onChange: (e) => setCustomUrl(e.target.value),
+									placeholder: "Enter or browse path to local HTML file..."
+								})]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$6, {
+								size: "md",
+								variant: "secondary",
+								isPending: isSelectingFile,
+								onPress: handleSelectHtmlFile,
+								className: "shrink-0 bg-surface shadow-surface hover:bg-surface-secondary",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-4" }), "Browse"]
+							})]
+						})]
+					}), renderTimingSelector()]
+				}, "htmlFile"),
+				urlConfigType === "findLine" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+					exit: {
+						opacity: 0,
+						y: -6
+					},
+					animate: {
+						opacity: 1,
+						y: 0
+					},
+					initial: {
+						opacity: 0,
+						y: -6
+					},
+					transition: { duration: .15 },
+					className: "flex flex-col gap-y-2 pt-1 border-t border-border/30",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TextField$1, {
+						value: findLine,
+						onChange: setFindLine,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$2, {
+							className: "text-xs font-semibold text-foreground flex items-center justify-between",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-1.5",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Terminal Trigger Line" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+									className: "text-[10px] text-muted font-normal",
+									children: "(Auto-extracts URL)"
+								})]
+							}), findLineVars.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "flex items-center gap-1",
+								children: findLineVars.map((v) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "font-JetBrainsMono text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/20 font-semibold",
+									children: [
+										"{{",
+										v.name,
+										"}}"
+									]
+								}, v.name))
+							})]
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(InputGroup$2, {
+							fullWidth: true,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$2.Prefix, {
+								className: "text-muted",
+								children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal_Icon, { className: "size-4 text-accent" })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$2.Input, {
+								className: "font-JetBrainsMono text-xs",
+								placeholder: "e.g. \"Running on local URL:\", \"Uvicorn running on\""
+							})]
+						})]
+					})
+				}, "findLine")
+			]
+		})]
+	});
+}
+//#endregion
+//#region extension/src/renderer/components/manager/form/WorkingDirectorySection.tsx
+var { Button: Button$5, InputGroup: InputGroup$1 } = await importShared("@heroui/react");
+var { useCallback: useCallback$2, useEffect: useEffect$3, useMemo: useMemo$6, useRef: useRef$1, useState: useState$4 } = await importShared("react");
+var { useDispatch: useDispatch$4, useSelector: useSelector$5 } = await importShared("react-redux");
+function WorkingDirectorySection() {
+	const dispatch = useDispatch$4();
+	const editingCard = useSelector$5(selectEditingCard);
+	const systemPaths = useSelector$5(selectSystemPaths);
+	const [cwdInput, setCwdInput] = useState$4(editingCard?.cwd || "");
+	const [isPickingFolder, setIsPickingFolder] = useState$4(false);
+	const debounceTimerRef = useRef$1(null);
+	const isFirstRender = useRef$1(true);
+	useEffect$3(() => {
+		setCwdInput(editingCard?.cwd || "");
+	}, [editingCard?.cwd]);
+	useEffect$3(() => {
+		if (isFirstRender.current) {
+			isFirstRender.current = false;
+			return;
+		}
+		if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+		debounceTimerRef.current = setTimeout(() => {
+			dispatch(reducerActions.setCwd(cwdInput.trim()));
+		}, 150);
+		return () => {
+			if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+		};
+	}, [cwdInput, dispatch]);
+	const handleBrowseFolder = useCallback$2(async () => {
+		setIsPickingFolder(true);
+		try {
+			const selected = await filesIpc.openDlg({
+				properties: ["openDirectory"],
+				title: "Select Working Directory"
+			});
+			if (selected) {
+				setCwdInput(selected);
+				dispatch(reducerActions.setCwd(selected));
+			}
+		} finally {
+			setIsPickingFolder(false);
+		}
+	}, [dispatch]);
+	const handleShortcutClick = useCallback$2((shortcutId) => {
+		setCwdInput(shortcutId);
+		dispatch(reducerActions.setCwd(shortcutId));
+	}, [dispatch]);
+	const handleClear = useCallback$2(() => {
+		setCwdInput("");
+		dispatch(reducerActions.setCwd(""));
+	}, [dispatch]);
+	const resolvedPreview = useMemo$6(() => {
+		if (!cwdInput.trim()) return null;
+		const hasVars = extractTemplateVariables(cwdInput).length > 0;
+		return {
+			resolved: resolvePathShortcuts(cwdInput, systemPaths),
+			hasVars,
+			isShortcut: PATH_SHORTCUTS.some((s) => s.id.toLowerCase() === cwdInput.trim().toLowerCase())
+		};
+	}, [cwdInput, systemPaths]);
+	const getShortcutIcon = (key) => {
+		switch (key) {
+			case "home": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$13, { className: "size-3 text-accent" });
+			case "desktop": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$8, { className: "size-3 text-cyan-500" });
+			case "downloads": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$22, { className: "size-3 text-emerald-500" });
+			case "documents": return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$23, { className: "size-3 text-amber-500" });
+			default: return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$16, { className: "size-3 text-accent" });
+		}
+	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "flex flex-col gap-y-3",
 		children: [
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-				className: "text-muted",
-				children: "URL Detection Method:"
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center gap-x-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(InputGroup$1, {
+					fullWidth: true,
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$1.Prefix, {
+							className: "text-muted",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-4 text-accent" })
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$1.Input, {
+							value: cwdInput,
+							className: "font-JetBrainsMono text-xs",
+							onChange: (e) => setCwdInput(e.target.value),
+							placeholder: "e.g. %WORKSPACE%, %HOME%/dev/my-app, C:\\projects... (Optional)"
+						}),
+						cwdInput && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup$1.Suffix, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+							type: "button",
+							onClick: handleClear,
+							"aria-label": "Clear working directory",
+							className: "text-muted hover:text-foreground p-0.5 rounded-full transition-colors cursor-pointer",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$37, { className: "size-3.5" })
+						}) })
+					]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$5, {
+					size: "md",
+					variant: "secondary",
+					isPending: isPickingFolder,
+					onPress: handleBrowseFolder,
+					className: "bg-surface shadow-surface hover:bg-surface/50 shrink-0",
+					children: [!isPickingFolder && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-4 text-accent" }), "Browse"]
+				})]
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(ButtonGroup, {
-				fullWidth: true,
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex flex-wrap items-center gap-1.5",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+					className: "text-[11px] font-semibold text-muted mr-1",
+					children: "Shortcuts:"
+				}), PATH_SHORTCUTS.map((shortcut) => {
+					const isActive = cwdInput.trim().toLowerCase() === shortcut.id.toLowerCase();
+					return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+						className: "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-mono transition-all duration-150 cursor-pointer border " + (isActive ? "bg-accent/15 border-accent text-accent font-semibold shadow-xs" : "bg-surface/60 hover:bg-surface-hover border-border/50 text-muted hover:text-foreground"),
+						type: "button",
+						onClick: () => handleShortcutClick(shortcut.id),
+						title: `${shortcut.description} (${shortcut.id})`,
+						children: [getShortcutIcon(shortcut.key), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: shortcut.id })]
+					}, shortcut.id);
+				})]
+			}),
+			resolvedPreview ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-surface-secondary/70 border border-border/60 text-[11px] font-mono text-muted overflow-hidden",
 				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$2, {
-						onPress: () => setUrlConfigType("nothing"),
-						variant: urlConfigType === "nothing" ? "primary" : "secondary",
-						children: "No Browser"
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-foreground font-semibold shrink-0",
+						children: "Target CWD:"
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$2, {
-						onPress: () => setUrlConfigType("custom"),
-						variant: urlConfigType === "custom" ? "primary" : "secondary",
-						children: "Custom URL"
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						title: resolvedPreview.resolved,
+						className: "truncate select-all text-accent",
+						children: resolvedPreview.resolved
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$2, {
-						onPress: () => setUrlConfigType("findLine"),
-						variant: urlConfigType === "findLine" ? "primary" : "secondary",
-						children: "Scan Terminal"
+					resolvedPreview.hasVars && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						className: "text-[10px] px-1.5 py-0.5 rounded-full bg-accent/15 text-accent font-sans shrink-0 font-semibold",
+						children: "Dynamic Variable"
 					})
 				]
-			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AnimatePresence, { children: [urlConfigType === "custom" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
-				exit: {
-					opacity: 0,
-					height: 0
-				},
-				initial: {
-					opacity: 0,
-					height: 0
-				},
-				className: "flex flex-col gap-y-3",
-				animate: {
-					opacity: 1,
-					height: "auto"
-				},
-				children: [
-					/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Separator, {}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TextField, {
-						value: customUrl,
-						onChange: setCustomUrl,
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$1, { children: "Custom URL" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, { placeholder: "Enter custom URL (e.g., http://localhost:7860)" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Description, { children: "Specify the exact URL to open in the browser" })
-						]
+			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center gap-1.5 text-[11px] text-muted px-1",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$11, { className: "size-3.5 text-muted/70 shrink-0" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
+					"Commands and scripts will execute inside this directory by default without needing manual",
+					" ",
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("code", {
+						className: "font-JetBrainsMono font-semibold text-foreground",
+						children: "cd"
 					}),
-					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "flex items-center gap-x-4 w-full",
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "text-sm text-muted shrink-0",
-								children: "Open URL:"
-							}),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "flex items-center space-x-2",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$2, {
-									size: "sm",
-									onPress: () => setOpenImmediately(true),
-									variant: openImmediately ? "primary" : "secondary",
-									children: "Immediately"
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$2, {
-									size: "sm",
-									onPress: () => setOpenImmediately(false),
-									variant: openImmediately ? "secondary" : "primary",
-									children: "After Timeout (Seconds)"
-								})]
-							}),
-							!openImmediately && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NumberField, {
-								minValue: 1,
-								maxValue: 999,
-								value: timeout,
-								onChange: setTimeoutValue,
-								fullWidth: true,
-								children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(NumberField.Group, { children: [
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NumberField.DecrementButton, {}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NumberField.Input, {}),
-									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NumberField.IncrementButton, {})
-								] })
-							})
-						]
-					})
-				]
-			}), urlConfigType === "findLine" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-				className: "overflow-hidden",
-				exit: {
-					opacity: 0,
-					height: 0
-				},
-				initial: {
-					opacity: 0,
-					height: 0
-				},
-				animate: {
-					opacity: 1,
-					height: "auto"
-				},
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "flex flex-col gap-y-3 border-t border-border pt-4 mt-2",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TextField, {
-						value: findLine,
-						onChange: setFindLine,
-						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$1, { children: "Line Must Contain" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, { placeholder: "e.g., \"Running on local URL:\" or \"Uvicorn running on\"" }),
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Description, { children: "Enter text to search for in terminal output. The URL will be extracted from that line." })
-						]
-					})
-				})
-			})] })
+					" steps."
+				] })]
+			})
 		]
 	});
 }
 //#endregion
-//#region extension/src/renderer/Components/Modal/CustomActionsManager.tsx
-var { useMemo: useMemo$2 } = await importShared("react");
-var { useDispatch: useDispatch$3 } = await importShared("react-redux");
-var { useSelector: useSelector$3 } = await importShared("react-redux");
-function CustomActionsManager({ selectedCardIds, onToggleSelect }) {
+//#region extension/src/renderer/components/manager/CustomActionsManager.tsx
+var { Button: Button$4, InputGroup, Separator } = await importShared("@heroui/react");
+var { useMemo: useMemo$5, useState: useState$3 } = await importShared("react");
+var { useDispatch: useDispatch$3, useSelector: useSelector$4 } = await importShared("react-redux");
+var previewCardVariants = {
+	initial: {
+		opacity: 0,
+		scale: .94,
+		translateY: 10
+	},
+	animate: (index) => ({
+		opacity: 1,
+		scale: 1,
+		translateY: 0,
+		transition: {
+			delay: Math.min(index, 12) * .03,
+			duration: .2,
+			ease: [
+				.16,
+				1,
+				.3,
+				1
+			]
+		}
+	}),
+	exit: {
+		opacity: 0,
+		scale: .92,
+		transition: { duration: .15 }
+	}
+};
+function CustomActionsManager({ selectedCardIds = [], onToggleSelect, onSelectAll, onClearSelect }) {
 	const dispatch = useDispatch$3();
-	const cards = useSelector$3(selectCustomCards);
-	const editingCard = useSelector$3(selectEditingCard);
-	const view = useSelector$3(selectView);
+	const cards = useSelector$4(selectCustomCards);
+	const editingCard = useSelector$4(selectEditingCard);
+	const view = useSelector$4(selectView);
+	const [searchQuery, setSearchQuery] = useState$3("");
+	const [activeFilter, setActiveFilter] = useState$3("all");
 	const handleEdit = (card) => {
 		dispatch(reducerActions.setEditingCard(card));
 		dispatch(reducerActions.setView("form"));
 	};
-	const cardType = useMemo$2(() => editingCard?.cardType, [editingCard]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
-		animate: {
-			opacity: 1,
-			scale: 1,
-			y: 0
-		},
-		exit: {
-			opacity: 0,
-			scale: .95,
-			y: 10
-		},
-		initial: {
-			opacity: 0,
-			scale: .95,
-			y: 10
-		},
-		transition: {
-			duration: .15,
-			ease: "easeOut"
-		},
-		className: "size-full flex items-center justify-center",
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "size-full p-2",
-			children: view === "list" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "p-6",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex flex-row flex-wrap gap-4",
-					children: [cards.map((card) => {
-						const TargetIcon = CardIconById(card.icon);
-						return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PreviewCard, {
-							card,
-							handleEdit,
-							icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(TargetIcon, { className: "size-full" }),
-							isSelected: selectedCardIds?.includes(card.id),
-							onSelect: onToggleSelect ? () => onToggleSelect(card.id) : void 0
-						}, `${card.id}_custom_action`);
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NewCard, {})]
-				})
-			}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "h-full",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "space-y-8 pr-2 pb-4",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(LayoutGroup, { children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
-							title: "Card Type",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardType, {})
+	const handleCreateNew = () => {
+		dispatch(reducerActions.addCard());
+	};
+	const cardType = useMemo$5(() => editingCard?.cardType || "terminal_browser", [editingCard]);
+	const filteredCards = useMemo$5(() => {
+		return cards.filter((card) => {
+			if (activeFilter === "pinned" && !card.categories?.pinned) return false;
+			if (activeFilter !== "all" && activeFilter !== "pinned" && card.cardType !== activeFilter) return false;
+			if (searchQuery.trim()) {
+				const q = searchQuery.toLowerCase();
+				const matchesTitle = card.title.toLowerCase().includes(q);
+				const matchesDesc = (card.description || "").toLowerCase().includes(q);
+				const matchesUrl = (card.urlConfig?.customUrl || "").toLowerCase().includes(q);
+				const matchesAction = (card.actions || []).some((a) => a.action.toLowerCase().includes(q));
+				const matchesCwd = (card.cwd || "").toLowerCase().includes(q);
+				return matchesTitle || matchesDesc || matchesUrl || matchesAction || matchesCwd;
+			}
+			return true;
+		});
+	}, [
+		cards,
+		activeFilter,
+		searchQuery
+	]);
+	const counts = useMemo$5(() => {
+		return {
+			all: cards.length,
+			pinned: cards.filter((c) => c.categories?.pinned).length,
+			terminal_browser: cards.filter((c) => c.cardType === "terminal_browser").length,
+			terminal: cards.filter((c) => c.cardType === "terminal").length,
+			browser: cards.filter((c) => c.cardType === "browser").length,
+			executable: cards.filter((c) => c.cardType === "executable").length
+		};
+	}, [cards]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+		className: "size-full py-2",
+		children: view === "list" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex flex-col gap-y-4",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-row items-center justify-between gap-3 p-1",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(InputGroup, {
+						variant: "secondary",
+						className: "w-full max-w-xs",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup.Prefix, {
+							className: "text-muted",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$9, { className: "size-4" })
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(InputGroup.Input, {
+							value: searchQuery,
+							className: "text-xs",
+							onChange: (e) => setSearchQuery(e.target.value),
+							placeholder: "Search actions, commands, URLs..."
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-1.5 overflow-x-auto pb-0 scrollbar-hide",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer " + (activeFilter === "all" ? "bg-accent text-white shadow-xs" : "bg-surface-secondary text-muted hover:text-foreground hover:bg-surface-tertiary"),
+								type: "button",
+								onClick: () => setActiveFilter("all"),
+								children: ["All", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "text-[10px] opacity-75 ",
+									children: [
+										"(",
+										counts.all,
+										")"
+									]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer " + (activeFilter === "pinned" ? "bg-amber-500 text-white shadow-xs" : "bg-surface-secondary text-muted hover:text-foreground hover:bg-surface-tertiary"),
+								type: "button",
+								onClick: () => setActiveFilter("pinned"),
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$36, { className: "size-3" }),
+									"Pinned",
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+										className: "text-[10px] opacity-75 ",
+										children: [
+											"(",
+											counts.pinned,
+											")"
+										]
+									})
+								]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer " + (activeFilter === "terminal_browser" ? "bg-cyan-500 text-white shadow-xs" : "bg-surface-secondary text-muted hover:text-foreground hover:bg-surface-tertiary"),
+								type: "button",
+								onClick: () => setActiveFilter("terminal_browser"),
+								children: ["Both", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "text-[10px] opacity-75",
+									children: [
+										"(",
+										counts.terminal_browser,
+										")"
+									]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer " + (activeFilter === "terminal" ? "bg-emerald-500 text-white shadow-xs" : "bg-surface-secondary text-muted hover:text-foreground hover:bg-surface-tertiary"),
+								type: "button",
+								onClick: () => setActiveFilter("terminal"),
+								children: ["Terminal", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "text-[10px] opacity-75 ",
+									children: [
+										"(",
+										counts.terminal,
+										")"
+									]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer " + (activeFilter === "browser" ? "bg-accent text-white shadow-xs" : "bg-surface-secondary text-muted hover:text-foreground hover:bg-surface-tertiary"),
+								type: "button",
+								onClick: () => setActiveFilter("browser"),
+								children: ["Browser", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "text-[10px] opacity-75 ",
+									children: [
+										"(",
+										counts.browser,
+										")"
+									]
+								})]
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+								className: "flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold transition-all cursor-pointer " + (activeFilter === "executable" ? "bg-amber-600 text-white shadow-xs" : "bg-surface-secondary text-muted hover:text-foreground hover:bg-surface-tertiary"),
+								type: "button",
+								onClick: () => setActiveFilter("executable"),
+								children: ["EXE", /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "text-[10px] opacity-75 ",
+									children: [
+										"(",
+										counts.executable,
+										")"
+									]
+								})]
+							})
+						]
+					})]
+				}),
+				cards.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-col items-center justify-center p-12 rounded-2xl border border-dashed border-border/60 bg-surface/30 text-center my-6",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "size-14 rounded-2xl bg-accent/15 flex items-center justify-center text-accent mb-4 ring-1 ring-accent/30",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-8" })
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnimatePresence, { children: cardType !== "terminal" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
-							title: "URL Configuration",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UrlConfig, {})
-						}) }),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
-							title: "Execute Actions",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExecuteActions, {})
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "text-base font-bold text-foreground",
+							children: "No Custom Action Shortcuts Yet"
 						}),
-						cardType !== "browser" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
-							title: "Environment Variables",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EnvConfig, {})
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-xs text-muted max-w-md mt-1 mb-6 leading-relaxed",
+							children: "Automate your daily developer workflows by building custom shortcut cards with shell scripts, local web ports, background tools, or executables."
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
-							title: "Card Details",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardDetails, {})
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
-							title: "Add To Categories",
-							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AddToCategories, {})
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$4, {
+							size: "md",
+							onPress: handleCreateNew,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$26, { className: "size-4" }), "Create Your First Action"]
 						})
-					] })
+					]
+				}) : filteredCards.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-col items-center justify-center p-10 rounded-3xl border border-dashed border-border bg-surface shadow-surface text-center my-6",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$9, { className: "size-8 text-muted/50 mb-3" }),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "text-sm font-bold text-foreground",
+							children: "No Matching Actions"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+							className: "text-xs text-muted max-w-sm mt-1 mb-4",
+							children: [
+								"No custom cards match your current search query \"",
+								searchQuery,
+								"\" or filter."
+							]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$4, {
+							onPress: () => {
+								setSearchQuery("");
+								setActiveFilter("all");
+							},
+							size: "sm",
+							variant: "tertiary",
+							children: "Reset Filters"
+						})
+					]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "grid grid-cols-4 gap-3.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(NewCardButton, {}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnimatePresence, {
+						mode: "popLayout",
+						children: filteredCards.map((card, index) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+							exit: "exit",
+							custom: index,
+							layout: "position",
+							initial: "initial",
+							animate: "animate",
+							className: "flex flex-col",
+							variants: previewCardVariants,
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(PreviewCard, {
+								card,
+								handleEdit,
+								isSelected: selectedCardIds?.includes(card.id),
+								icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardIcon, {
+									id: card.icon,
+									className: "size-full"
+								}),
+								onSelect: onToggleSelect ? () => onToggleSelect(card.id) : void 0
+							})
+						}, card.id))
+					})]
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnimatePresence, { children: selectedCardIds && selectedCardIds.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BatchActionBar, {
+					selectedCardIds,
+					totalVisibleCount: filteredCards.length,
+					onClearSelection: () => onClearSelect?.(),
+					onSelectAllVisible: () => onSelectAll?.(filteredCards.map((c) => c.id))
+				}) })
+			]
+		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(motion.div, {
+			exit: {
+				opacity: 0,
+				y: 10
+			},
+			animate: {
+				opacity: 1,
+				y: 0
+			},
+			transition: { duration: .2 },
+			initial: {
+				opacity: 0,
+				y: 10
+			},
+			className: "space-y-4 pb-4 pr-1",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
+					title: "General Information",
+					icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-4" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardDetailsSection, {})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Separator, {}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
+					title: "Working Directory",
+					icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-4" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(WorkingDirectorySection, {})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Separator, {}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
+					title: "Execution Type",
+					icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$10, { className: "size-4" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTypeSection, {})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Separator, {}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
+					title: "Commands & Actions",
+					icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$26, { className: "size-4" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ExecuteActionsSection, {})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Separator, {}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnimatePresence, { children: cardType !== "terminal" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
+					title: "Browser & Web Tab",
+					icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$21, { className: "size-4" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(UrlConfigSection, {})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Separator, {})] }) }),
+				cardType !== "browser" && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
+					title: "Environment Variables",
+					icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Terminal_Icon, { className: "size-4" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(EnvConfigSection, {})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Separator, {})] }),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormSection, {
+					title: "Categories & Placement",
+					icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$15, { className: "size-4" }),
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CategoriesSection, {})
 				})
-			})
+			]
 		})
 	});
 }
 //#endregion
-//#region extension/src/renderer/Components/Modal/CustomActionsModal.tsx
-var { Button: Button$1, Dropdown, Label, Modal, ScrollShadow } = await importShared("@heroui/react");
-var { useEffect: useEffect$1, useMemo: useMemo$1, useRef, useState } = await importShared("react");
-var { useDispatch: useDispatch$2 } = await importShared("react-redux");
-var { useSelector: useSelector$2 } = await importShared("react-redux");
+//#region extension/src/renderer/components/modals/CustomActionsModal.tsx
+var { Button: Button$3, Dropdown, Label: Label$1, Modal: Modal$1, ScrollShadow: ScrollShadow$1 } = await importShared("@heroui/react");
+var { useCallback: useCallback$1, useEffect: useEffect$2, useMemo: useMemo$4, useRef, useState: useState$2 } = await importShared("react");
+var { useDispatch: useDispatch$2, useSelector: useSelector$3 } = await importShared("react-redux");
 function CustomActionsModal({ state }) {
 	const dispatch = useDispatch$2();
-	const view = useSelector$2(selectView);
-	const editingCard = useSelector$2(selectEditingCard);
-	const customCards = useSelector$2(selectCustomCards);
-	const [selectedCardIds, setSelectedCardIds] = useState([]);
+	const view = useSelector$3(selectView);
+	const editingCard = useSelector$3(selectEditingCard);
+	const customCards = useSelector$3(selectCustomCards);
+	const [selectedCardIds, setSelectedCardIds] = useState$2([]);
 	const handleExportClipboard = async () => {
 		try {
 			if (customCards.length === 0) {
@@ -16323,13 +18579,20 @@ function CustomActionsModal({ state }) {
 				toastHolder?.top.danger("Clipboard is empty.");
 				return;
 			}
-			const parsed = JSON.parse(text);
-			if (Array.isArray(parsed)) {
-				dispatch(reducerActions.importCards(parsed));
-				toastHolder?.top.success(`Successfully imported ${parsed.length} cards!`);
-			} else toastHolder?.top.danger("Clipboard content is not a valid list of cards.");
+			let parsed;
+			try {
+				parsed = JSON.parse(text);
+			} catch {
+				toastHolder?.top.danger("Failed to import from clipboard. Ensure valid JSON format.");
+				return;
+			}
+			const sanitized = sanitizeCards(parsed);
+			if (sanitized.length > 0) {
+				dispatch(reducerActions.importCards(sanitized));
+				toastHolder?.top.success(`Successfully imported ${sanitized.length} card(s)!`);
+			} else toastHolder?.top.danger("Clipboard content does not contain valid custom action cards.");
 		} catch (err) {
-			toastHolder?.top.danger("Failed to import from clipboard. Ensure valid JSON format.");
+			toastHolder?.top.danger("Failed to import from clipboard.");
 			console.error(err);
 		}
 	};
@@ -16373,40 +18636,53 @@ function CustomActionsModal({ state }) {
 	const handleToggleSelectCard = (id) => {
 		setSelectedCardIds((prev) => prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]);
 	};
-	const formTitle = useMemo$1(() => view === "list" ? "Custom Actions" : editingCard ? `Editing ${editingCard.title || "New Card"}` : "Create New Custom Card", [editingCard, view]);
-	const saveDisabled = useMemo$1(() => !editingCard?.title || !editingCard.icon, [editingCard]);
-	const handleBackToList = () => {
+	const handleSelectAll = useCallback$1((ids) => {
+		setSelectedCardIds(ids);
+	}, []);
+	const handleClearSelect = useCallback$1(() => {
+		setSelectedCardIds([]);
+	}, []);
+	const saveDisabled = useMemo$4(() => !editingCard?.title || !editingCard.icon, [editingCard]);
+	const isExistingCard = useMemo$4(() => Boolean(editingCard?.id && customCards.some((card) => card.id === editingCard.id)), [editingCard?.id, customCards]);
+	const handleBackToList = useCallback$1(() => {
 		dispatch(reducerActions.setView("list"));
 		dispatch(reducerActions.setEditingCard(void 0));
-	};
-	const saveCard = () => {
+	}, [dispatch]);
+	const saveCard = useCallback$1(() => {
+		if (saveDisabled) return;
 		dispatch(reducerActions.saveCard());
 		toastHolder?.top.success("Card saved successfully!");
-	};
+	}, [dispatch, saveDisabled]);
 	const deleteCard = () => dispatch(reducerActions.removeCard());
-	useEffect$1(() => {
-		const onKeyUp = (e) => {
+	useEffect$2(() => {
+		const onKeyDown = (e) => {
 			if (e.key === "Escape") {
 				if (view === "form") handleBackToList();
 				else state.close();
+			} else if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+				if (view === "form") {
+					e.preventDefault();
+					saveCard();
+				}
 			}
 		};
-		document.addEventListener("keyup", onKeyUp);
-		return () => document.removeEventListener("keyup", onKeyUp);
+		document.addEventListener("keydown", onKeyDown);
+		return () => document.removeEventListener("keydown", onKeyDown);
 	}, [
 		handleBackToList,
+		saveCard,
 		view,
 		state
 	]);
 	const prevIsOpen = useRef(state.isOpen);
-	useEffect$1(() => {
+	useEffect$2(() => {
 		if (prevIsOpen.current && !state.isOpen) {
 			dispatch(reducerActions.setView("list"));
 			dispatch(reducerActions.setEditingCard(void 0));
 		}
 		prevIsOpen.current = state.isOpen;
 	}, [state.isOpen, dispatch]);
-	useEffect$1(() => {
+	useEffect$2(() => {
 		return () => {
 			if (state.isOpen) {
 				dispatch(reducerActions.setView("list"));
@@ -16416,67 +18692,115 @@ function CustomActionsModal({ state }) {
 	}, [state.isOpen, dispatch]);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabModal, {
 		isOpen: state.isOpen,
-		dialogClassName: "px-0",
 		onOpenChange: state.setOpen,
+		dialogClassName: "px-0 max-w-6xl",
 		isKeyboardDismissDisabled: true,
 		children: [
-			view !== "form" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal.CloseTrigger, {}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Modal.Header, {
-				className: "flex-row items-center gap-x-2 px-4",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "w-10 h-10 flex items-center justify-center",
-					children: view === "form" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$1, {
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.CloseTrigger, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Header, {
+				className: "flex-row items-center gap-x-3 px-5",
+				children: view === "form" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-x-3 w-full",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$3, {
+						size: "sm",
 						variant: "ghost",
 						onPress: handleBackToList,
+						"aria-label": "Back to Actions (Esc)",
 						isIconOnly: true,
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$14, { className: "size-5" })
-					})
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal.Heading, { children: formTitle })]
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$30, { className: "size-4.5" })
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-x-2 text-sm font-semibold",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								onClick: handleBackToList,
+								className: "text-muted hover:text-foreground cursor-pointer transition-colors",
+								children: "Custom Actions"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-muted/50",
+								children: "/"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-foreground truncate max-w-md",
+								children: isExistingCard ? `Edit "${editingCard?.title || "Untitled"}"` : "Create New Action"
+							})
+						]
+					})]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-x-2.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "size-8 text-accent flex items-center justify-center",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-5" })
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "flex flex-col",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Heading, {
+							className: "text-sm font-bold text-foreground",
+							children: "Custom Actions"
+						})
+					})]
+				})
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal.Body, {
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Body, {
 				className: "overflow-hidden",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ScrollShadow, {
-					className: "size-full px-4",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ScrollShadow$1, {
+					className: "size-full px-5 py-4 max-h-[72vh]",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomActionsManager, {
+						onSelectAll: handleSelectAll,
 						selectedCardIds,
+						onClearSelect: handleClearSelect,
 						onToggleSelect: handleToggleSelectCard
 					})
 				})
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal.Footer, {
-				className: "justify-between px-4",
-				children: view === "form" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$1, {
-					onPress: deleteCard,
-					variant: "danger-soft",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, {}), "Delete"]
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "flex flex-row items-center gap-x-2",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$1, {
-						onPress: saveCard,
-						isDisabled: saveDisabled,
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$9, {}), "Save Card"]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$1, {
-						variant: "secondary",
-						onPress: handleBackToList,
-						children: "Cancel"
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal$1.Footer, {
+				className: "justify-between px-5",
+				children: view === "form" ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between w-full",
+					children: [isExistingCard ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$3, {
+						size: "md",
+						onPress: deleteCard,
+						variant: "danger-soft",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$2, { className: "size-4 text-danger" }), "Delete Action"]
+					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-x-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$3, {
+							size: "md",
+							variant: "secondary",
+							onPress: handleBackToList,
+							children: "Cancel"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$3, {
+							size: "md",
+							onPress: saveCard,
+							isDisabled: saveDisabled,
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$24, { className: "size-4" }), "Save Action"]
+						})]
 					})]
-				})] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex flex-row justify-between items-center w-full",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-						className: "text-xs text-muted",
-						children: [
-							customCards.length,
-							" card",
-							customCards.length !== 1 ? "s" : "",
-							" configured",
-							selectedCardIds.length > 0 && ` (${selectedCardIds.length} selected)`
-						]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "flex flex-row items-center gap-x-2",
-						children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$1, {
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-x-2",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "text-xs font-mono text-muted",
+							children: [
+								customCards.length,
+								" action",
+								customCards.length !== 1 ? "s" : ""
+							]
+						}), selectedCardIds.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+							className: "text-xs px-2 py-0.5 rounded-full bg-accent/15 text-accent font-semibold",
+							children: [selectedCardIds.length, " selected"]
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-x-2",
+						children: [selectedCardIds.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$3, {
+							size: "sm",
+							variant: "ghost",
+							onPress: () => setSelectedCardIds([]),
+							children: "Clear Selection"
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$3, {
 							size: "sm",
 							variant: "secondary",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$4, { className: "size-4 text-cyan-500" }), "Manage Cards"]
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$12, { className: "size-4 text-accent" }), "Manage Cards"]
 						}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Dropdown.Popover, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown.Menu, {
 							onAction: (key) => {
 								switch (key) {
@@ -16505,28 +18829,28 @@ function CustomActionsModal({ state }) {
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown.Item, {
 									id: "import-clipboard",
 									textValue: "Import from Clipboard",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$12, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label, { children: "Import from Clipboard" })]
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$27, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$1, { children: "Import from Clipboard" })]
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown.Item, {
 									id: "import-file",
-									textValue: "Import from File",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$4, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label, { children: "Import from File" })]
+									textValue: "Import from JSON File",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$12, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$1, { children: "Import from File" })]
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown.Item, {
 									id: "export-clipboard-all",
 									textValue: "Export All to Clipboard",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$10, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label, { children: "Export All to Clipboard" })]
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$25, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$1, { children: "Export All to Clipboard" })]
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown.Item, {
 									id: "export-file-all",
-									textValue: "Export All to File",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$7, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label, { children: "Export All to File" })]
+									textValue: "Export All to JSON File",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$20, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$1, { children: "Export All to File" })]
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Dropdown.Item, {
 									id: "export-clipboard-selected",
 									isDisabled: selectedCardIds.length === 0,
 									textValue: `Export Selected (${selectedCardIds.length}) to Clipboard`,
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$10, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label, { children: [
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$25, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$1, { children: [
 										"Export Selected (",
 										selectedCardIds.length,
 										") to Clipboard"
@@ -16536,7 +18860,7 @@ function CustomActionsModal({ state }) {
 									id: "export-file-selected",
 									isDisabled: selectedCardIds.length === 0,
 									textValue: `Export Selected (${selectedCardIds.length}) to File`,
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$7, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label, { children: [
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$20, { className: "size-4 shrink-0 text-muted" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Label$1, { children: [
 										"Export Selected (",
 										selectedCardIds.length,
 										") to File"
@@ -16546,10 +18870,10 @@ function CustomActionsModal({ state }) {
 									variant: "danger",
 									id: "clear-selection",
 									textValue: "Clear Selection",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-4 shrink-0 text-danger" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label, { children: "Clear Selection" })]
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$2, { className: "size-4 shrink-0 text-danger" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label$1, { children: "Clear Selection" })]
 								})
 							]
-						}) })] })
+						}) })] })]
 					})]
 				})
 			})
@@ -16557,24 +18881,387 @@ function CustomActionsModal({ state }) {
 	});
 }
 //#endregion
-//#region extension/src/renderer/Components/ActionCard/ActionCard.tsx
-var { Button, useOverlayState: useOverlayState$1 } = await importShared("@heroui/react");
-var { useDispatch: useDispatch$1 } = await importShared("react-redux");
+//#region extension/src/renderer/components/modals/SafetyConfirmationModal.tsx
+var { AlertDialog, Button: Button$2 } = await importShared("@heroui/react");
+var { useMemo: useMemo$3 } = await importShared("react");
+function SafetyConfirmationModal({ isOpen, onOpenChange, card, onConfirm }) {
+	const { title, confirmationMessage, actions, urlConfig, cwd } = card;
+	const activeActions = useMemo$3(() => {
+		return (actions || []).filter((a) => !a.disabled);
+	}, [actions]);
+	const targetUrl = useMemo$3(() => {
+		if ((urlConfig?.type === "custom" || urlConfig?.type === "htmlFile") && urlConfig.customUrl) return urlConfig.customUrl;
+		return null;
+	}, [urlConfig]);
+	const handleConfirm = () => {
+		onConfirm();
+		onOpenChange(false);
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabAlertDialog, {
+		isOpen,
+		dialogClassName: "max-w-lg",
+		onOpenChange,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AlertDialog.CloseTrigger, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AlertDialog.Header, {
+				className: "flex items-center gap-x-2.5",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex size-9 shrink-0 items-center justify-center rounded-2xl bg-warning/15 text-warning ring-1 ring-warning/30",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$3, { className: "size-5" })
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AlertDialog.Heading, {
+					className: "text-sm font-bold text-foreground truncate",
+					children: [
+						"Run \"",
+						title || "Untitled Action",
+						"\"?"
+					]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AlertDialog.Body, {
+				className: "space-y-3",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+						className: "text-xs text-muted leading-relaxed",
+						children: confirmationMessage || "Are you sure you want to execute this action? This shortcut is configured to require confirmation before running."
+					}),
+					cwd && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-surface-secondary/70 border border-border/50 text-[11px] text-muted font-mono truncate",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$16, { className: "size-3.5 shrink-0 text-accent" }),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-muted/70 select-none",
+								children: "cwd:"
+							}),
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-foreground truncate",
+								children: cwd
+							})
+						]
+					}),
+					(activeActions.length > 0 || targetUrl) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex flex-col gap-1 max-h-36 overflow-y-auto rounded-2xl bg-surface-secondary px-3 py-2 border border-border font-JetBrainsMono text-xs select-all",
+						children: [activeActions.map((action, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-start gap-2 text-foreground/90 leading-tight",
+							children: [activeActions.length > 1 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-muted/60 text-[10px] select-none shrink-0 font-sans",
+								children: [idx + 1, "."]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "break-all whitespace-pre-wrap flex-1",
+								children: action.action
+							})]
+						}, action.id || idx)), targetUrl && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-start gap-2 text-cyan-600 dark:text-cyan-400 leading-tight " + (activeActions.length > 0 ? "pt-1 border-t border-border/30" : ""),
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-muted/60 text-[10px] select-none shrink-0 font-sans",
+								children: "URL:"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "break-all whitespace-pre-wrap flex-1",
+								children: targetUrl
+							})]
+						})]
+					})
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(AlertDialog.Footer, {
+				className: "flex items-center justify-end gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$2, {
+					size: "md",
+					variant: "secondary",
+					onPress: () => onOpenChange(false),
+					children: "Cancel"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$2, {
+					size: "md",
+					autoFocus: true,
+					variant: "danger-soft",
+					onPress: handleConfirm,
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$5, { className: "size-4" }), "Confirm & Run"]
+				})]
+			})
+		]
+	});
+}
+//#endregion
+//#region extension/src/renderer/components/modals/VariablePromptModal.tsx
+var { Button: Button$1, Form, Input, Label, Modal, ScrollShadow, TextField } = await importShared("@heroui/react");
+var { useEffect: useEffect$1, useMemo: useMemo$2, useState: useState$1 } = await importShared("react");
+function VariablePromptModal({ isOpen, onOpenChange, card, cardIcon, onExecute }) {
+	const variables = useMemo$2(() => {
+		return extractCardVariables(card);
+	}, [card]);
+	const defaultValuesMap = useMemo$2(() => {
+		const map = {};
+		variables.forEach((v) => {
+			map[v.name] = v.defaultValue ?? "";
+		});
+		return map;
+	}, [variables]);
+	const [values, setValues] = useState$1(defaultValuesMap);
+	const [copied, setCopied] = useState$1(false);
+	useEffect$1(() => {
+		if (isOpen) {
+			setValues(defaultValuesMap);
+			setCopied(false);
+		}
+	}, [isOpen, defaultValuesMap]);
+	const handleInputChange = (name, val) => {
+		setValues((prev) => ({
+			...prev,
+			[name]: val
+		}));
+	};
+	const handleResetDefaults = () => {
+		setValues(defaultValuesMap);
+	};
+	const handleSubmit = (e) => {
+		if (e) e.preventDefault();
+		onExecute(substituteCardVariables(card, values));
+		onOpenChange(false);
+	};
+	const resolvedCard = useMemo$2(() => {
+		return substituteCardVariables(card, values);
+	}, [card, values]);
+	const activeActions = useMemo$2(() => {
+		return (resolvedCard.actions || []).filter((a) => !a.disabled);
+	}, [resolvedCard]);
+	const resolvedUrl = useMemo$2(() => {
+		if ((resolvedCard.urlConfig?.type === "custom" || resolvedCard.urlConfig?.type === "htmlFile") && resolvedCard.urlConfig?.customUrl) return resolvedCard.urlConfig.customUrl;
+		return null;
+	}, [resolvedCard]);
+	const handleCopyPreview = async () => {
+		const lines = [...activeActions.map((a) => a.action), ...resolvedUrl ? [resolvedUrl] : []];
+		try {
+			await navigator.clipboard.writeText(lines.join("\n"));
+			setCopied(true);
+			setTimeout(() => setCopied(false), 1500);
+		} catch (err) {
+			console.error(err);
+		}
+	};
+	const firstEmptyVarName = useMemo$2(() => {
+		const emptyVar = variables.find((v) => !v.defaultValue);
+		return emptyVar ? emptyVar.name : variables[0]?.name;
+	}, [variables]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(TabModal, {
+		isOpen,
+		isDismissable: true,
+		dialogClassName: "max-w-xl",
+		onOpenChange,
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal.CloseTrigger, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Modal.Header, {
+				className: "flex flex-col gap-y-3 px-6 pb-3",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center justify-between gap-x-3 w-full",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "flex items-center gap-x-3 min-w-0",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "flex size-10 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent p-2 ring-1 ring-accent/30",
+							children: cardIcon || /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$5, { className: "size-6" })
+						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-col min-w-0",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex items-center gap-2",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Modal.Heading, {
+									className: "text-sm font-bold text-foreground truncate",
+									children: [
+										"Run \"",
+										card.title || "Untitled Action",
+										"\""
+									]
+								}), card.requireConfirmation && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+									className: "flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-warning/15 text-warning border border-warning/30 shrink-0",
+									title: card.confirmationMessage || "Safety confirmation required",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$3, { className: "size-2.5" }), "Protected"]
+								})]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+								className: "text-xs text-muted leading-tight mt-0.5",
+								children: [
+									"Configure ",
+									variables.length,
+									" template variable",
+									variables.length !== 1 ? "s" : "",
+									" before running."
+								]
+							})]
+						})]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$1, {
+						size: "sm",
+						variant: "ghost",
+						onPress: handleCopyPreview,
+						className: "h-7 px-2 text-[10.5px] text-muted hover:text-foreground shrink-0",
+						children: [copied ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$28, { className: "size-3 text-success" }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$25, { className: "size-3" }), copied ? "Copied" : "Copy"]
+					})]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-col gap-1 overflow-y-auto rounded-2xl w-full bg-surface-secondary px-3 py-2 border border-border font-JetBrainsMono text-xs select-all",
+					children: [
+						" ",
+						activeActions.map((action, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-start gap-2 text-foreground/90 leading-tight",
+							children: [activeActions.length > 1 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+								className: "text-muted/60 text-[10px] select-none shrink-0 font-sans",
+								children: [idx + 1, "."]
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "break-all whitespace-pre-wrap flex-1",
+								children: action.action
+							})]
+						}, idx)),
+						resolvedUrl && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex items-start gap-2 text-cyan-600 dark:text-cyan-400 leading-tight " + (activeActions.length > 0 ? "pt-1 border-t border-border/30" : ""),
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-muted/60 text-[10px] select-none shrink-0 font-sans",
+								children: "URL:"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "break-all whitespace-pre-wrap flex-1",
+								children: resolvedUrl
+							})]
+						}),
+						activeActions.length === 0 && !resolvedUrl && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+							className: "text-muted text-xs italic",
+							children: "No active commands or URLs configured."
+						})
+					]
+				})]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Modal.Body, {
+				className: "overflow-hidden",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Form, {
+					className: "h-full",
+					onSubmit: handleSubmit,
+					id: "variable-prompt-form",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ScrollShadow, {
+						className: "pr-1 space-y-4 h-full",
+						children: variables.map((v, i) => {
+							const currentValue = values[v.name] ?? "";
+							const isDefault = v.defaultValue !== void 0 && currentValue === v.defaultValue;
+							return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "flex flex-col gap-y-1.5 p-3 rounded-2xl bg-surface-secondary/60 border border-border/50",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex items-center justify-between gap-2",
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Label, {
+											className: "flex items-center gap-1.5 text-xs font-semibold text-foreground",
+											children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+												className: "font-JetBrainsMono text-accent font-bold",
+												children: [
+													"{{",
+													v.name,
+													"}}"
+												]
+											})
+										}), v.defaultValue !== void 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "text-[10px] px-2 py-0.5 rounded-full " + (isDefault ? "bg-surface text-accent font-medium" : "bg-surface-tertiary text-muted border border-border/50"),
+											children: ["default: ", v.defaultValue || "\"\""]
+										})]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(TextField, {
+										name: v.name,
+										autoFocus: i === 0,
+										value: currentValue,
+										onChange: (val) => handleInputChange(v.name, val),
+										fullWidth: true,
+										children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+											autoFocus: v.name === firstEmptyVarName,
+											className: "font-JetBrainsMono text-xs bg-surface shadow-surface",
+											placeholder: v.defaultValue ? `Default: ${v.defaultValue}` : `Enter value for ${v.name}...`
+										})
+									}),
+									v.usages.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "flex flex-col gap-1 pt-1",
+										children: [v.usages.slice(0, 2).map((usage, uIdx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+											className: "flex items-center gap-1.5 text-[10.5px] text-muted/80 font-JetBrainsMono truncate",
+											children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-surface text-muted shrink-0",
+												children: usage.type
+											}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+												className: "truncate",
+												children: usage.snippet
+											})]
+										}, uIdx)), v.usages.length > 2 && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+											className: "text-[10px] text-muted/60 pl-1 font-mono",
+											children: [
+												"+",
+												v.usages.length - 2,
+												" more references"
+											]
+										})]
+									})
+								]
+							}, v.name);
+						})
+					})
+				})
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Modal.Footer, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "flex items-center gap-2",
+				children: variables.some((v) => v.defaultValue !== void 0) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$1, {
+					size: "sm",
+					variant: "ghost",
+					onPress: handleResetDefaults,
+					className: "text-muted hover:text-foreground",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$4, { className: "size-3.5" }), "Reset Defaults"]
+				})
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				className: "flex items-center gap-2",
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button$1, {
+					size: "md",
+					variant: "secondary",
+					onPress: () => onOpenChange(false),
+					children: "Cancel"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button$1, {
+					size: "md",
+					type: "submit",
+					form: "variable-prompt-form",
+					onPress: () => handleSubmit(),
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$5, { className: "size-4" }), "Run Action"]
+				})]
+			})] })
+		]
+	});
+}
+//#endregion
+//#region extension/src/renderer/components/cards/ActionCard/ActionCard.tsx
+var { Button, Tooltip, useOverlayState: useOverlayState$1 } = await importShared("@heroui/react");
+var { useCallback, useMemo: useMemo$1, useState } = await importShared("react");
+var { useDispatch: useDispatch$1, useSelector: useSelector$2 } = await importShared("react-redux");
 var LINE_ENDING = window.osPlatform === "win32" ? "\r" : "\n";
 var IS_MACOS = window.osPlatform === "darwin";
 var IS_WINDOWS = window.osPlatform === "win32";
 function ActionCard({ icon: Icon, card }) {
 	const dispatch = useDispatch$1();
+	const systemPaths = useSelector$2(selectSystemPaths);
+	const runningExecutions = useSelector$2(selectRunningExecutions);
 	const activeTab = useTabsState("activeTab");
-	const { title, description, actions, cardType, urlConfig } = card;
-	const onClick = () => {
-		actions.filter((action) => action.type === "open").forEach((open) => filesIpc.openPath(open.action));
+	const tabs = useTabsState("tabs");
+	const modalState = useOverlayState$1();
+	const promptModalState = useOverlayState$1();
+	const confirmModalState = useOverlayState$1();
+	const [pendingCard, setPendingCard] = useState(card);
+	const { title, description } = card;
+	const isPinned = Boolean(card.categories?.pinned);
+	const handleTogglePin = useCallback(() => {
+		dispatch(reducerActions.batchToggleCategory({
+			cardIds: [card.id],
+			category: "pinned"
+		}));
+	}, [card.id, dispatch]);
+	const runningExecution = useMemo$1(() => runningExecutions.find((item) => item.cardId === card.id), [runningExecutions, card.id]);
+	const isRunning = Boolean(runningExecution);
+	const executeCard = useCallback((targetCard) => {
+		const resolvedCwd = targetCard.cwd ? resolvePathShortcuts(targetCard.cwd, systemPaths) : void 0;
+		const activeActions = (targetCard.actions || []).filter((action) => !action.disabled);
+		activeActions.filter((action) => action.type === "open").forEach((open) => {
+			const resolvedPath = resolvePathShortcuts(open.action, systemPaths);
+			filesIpc.openPath(resolvedPath);
+		});
 		const manageUrls = (ptyId, onDone) => {
-			if (urlConfig.type === "custom" && urlConfig.customUrl) {
+			const { urlConfig } = targetCard;
+			if ((urlConfig.type === "custom" || urlConfig.type === "htmlFile") && urlConfig.customUrl) {
 				const openUrl = () => {
+					let address = resolvePathShortcuts(urlConfig.customUrl, systemPaths);
+					if (urlConfig.type === "htmlFile" || address.startsWith("file://") || address.match(/^[a-zA-Z]:[\\/]/) || address.startsWith("/")) address = formatLocalPathToUrl(address);
 					dispatch(cardsActions.setRunningCardCustomAddress({
 						tabId: activeTab,
-						address: urlConfig.customUrl
+						address
 					}));
 					if (onDone) onDone();
 				};
@@ -16608,7 +19295,7 @@ function ActionCard({ icon: Icon, card }) {
 			}
 		};
 		const writeEnvVars = (ptyId) => {
-			if (card.env && card.env.length > 0) card.env.forEach((envVar) => {
+			if (targetCard.env && targetCard.env.length > 0) targetCard.env.forEach((envVar) => {
 				if (envVar.key && envVar.key.trim()) {
 					if (IS_WINDOWS) ptyIpc.write(ptyId, `$env:${envVar.key.trim()}="${envVar.value}"${LINE_ENDING}`);
 					else ptyIpc.write(ptyId, `export ${envVar.key.trim()}="${envVar.value}"${LINE_ENDING}`);
@@ -16617,24 +19304,32 @@ function ActionCard({ icon: Icon, card }) {
 		};
 		const runCustomCommands = (ptyId) => {
 			writeEnvVars(ptyId);
-			actions.forEach((action) => {
+			activeActions.forEach((action) => {
 				if (action.type === "command") ptyIpc.write(ptyId, `${action.action}${LINE_ENDING}`);
 				else if (action.type === "script") ptyIpc.write(ptyId, getScriptCommand(action.action));
 			});
 		};
-		switch (cardType) {
+		switch (targetCard.cardType) {
 			case "executable": {
-				const pathToExe = actions.find((action) => action.type === "exe")?.action;
+				const pathToExe = activeActions.find((action) => action.type === "exe")?.action;
 				if (!pathToExe) return;
 				const ptyID = `${activeTab}_both`;
 				const envObj = {};
-				card.env?.forEach((item) => {
+				targetCard.env?.forEach((item) => {
 					if (item.key.trim()) envObj[item.key.trim()] = item.value;
 				});
-				window.electron.ipcRenderer.send(customActionsChannels.startExe, ptyID, pathToExe, envObj);
+				const resolvedExe = resolvePathShortcuts(pathToExe, systemPaths);
+				window.electron.ipcRenderer.send(customActionsChannels.startExe, ptyID, resolvedExe, envObj, resolvedCwd);
 				dispatch(cardsActions.addRunningCard({
 					tabId: activeTab,
 					id: ptyID
+				}));
+				dispatch(reducerActions.addRunningExecution({
+					cardId: targetCard.id,
+					tabId: activeTab,
+					ptyId: ptyID,
+					cardType: targetCard.cardType,
+					startedAt: Date.now()
 				}));
 				manageUrls(ptyID, () => {
 					dispatch(cardsActions.setRunningCardView({
@@ -16644,19 +19339,37 @@ function ActionCard({ icon: Icon, card }) {
 				});
 				break;
 			}
-			case "browser":
+			case "browser": {
+				const ptyID = `${activeTab}_browser`;
 				dispatch(cardsActions.addRunningEmpty({
 					tabId: activeTab,
-					type: "browser"
+					type: "browser",
+					dir: resolvedCwd
 				}));
-				manageUrls(`${activeTab}_browser`);
+				dispatch(reducerActions.addRunningExecution({
+					cardId: targetCard.id,
+					tabId: activeTab,
+					ptyId: ptyID,
+					cardType: targetCard.cardType,
+					startedAt: Date.now()
+				}));
+				manageUrls(ptyID);
 				break;
+			}
 			case "terminal": {
+				const ptyID = `${activeTab}_terminal`;
 				dispatch(cardsActions.addRunningEmpty({
 					tabId: activeTab,
-					type: "terminal"
+					type: "terminal",
+					dir: resolvedCwd
 				}));
-				const ptyID = `${activeTab}_terminal`;
+				dispatch(reducerActions.addRunningExecution({
+					cardId: targetCard.id,
+					tabId: activeTab,
+					ptyId: ptyID,
+					cardType: targetCard.cardType,
+					startedAt: Date.now()
+				}));
 				manageUrls(ptyID);
 				setTimeout(() => runCustomCommands(ptyID), 100);
 				break;
@@ -16665,7 +19378,15 @@ function ActionCard({ icon: Icon, card }) {
 				const ptyID = `${activeTab}_both`;
 				dispatch(cardsActions.addRunningEmpty({
 					tabId: activeTab,
-					type: "both"
+					type: "both",
+					dir: resolvedCwd
+				}));
+				dispatch(reducerActions.addRunningExecution({
+					cardId: targetCard.id,
+					tabId: activeTab,
+					ptyId: ptyID,
+					cardType: targetCard.cardType,
+					startedAt: Date.now()
 				}));
 				manageUrls(ptyID, () => {
 					dispatch(cardsActions.setRunningCardView({
@@ -16677,115 +19398,308 @@ function ActionCard({ icon: Icon, card }) {
 				break;
 			}
 		}
+	}, [
+		activeTab,
+		dispatch,
+		systemPaths
+	]);
+	const handleStopExecution = useCallback((e) => {
+		if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+		if (!runningExecution) return;
+		const { ptyId, tabId, cardType } = runningExecution;
+		if (cardType !== "browser") {
+			try {
+				ptyIpc.write(ptyId, "");
+			} catch {}
+			ptyIpc.stop(ptyId);
+			if (cardType === "executable") window.electron.ipcRenderer.send(ptyChannels.stopProcess, ptyId);
+		}
+		browserIpc.send.removeBrowser(ptyId);
+		dispatch(cardsActions.stopRunningCard({ tabId }));
+		const targetTab = tabs.find((t) => t.id === tabId);
+		const restoredTitle = targetTab && PageTitleByPageId[targetTab.pageID] || "Home";
+		dispatch(tabsActions.setTabTitle({
+			tabID: tabId,
+			title: restoredTitle
+		}));
+		dispatch(tabsActions.setTabIsTerminal({
+			tabID: tabId,
+			isTerminal: false
+		}));
+		dispatch(tabsActions.setTabFavIcon({
+			tabID: tabId,
+			show: false,
+			url: ""
+		}));
+		dispatch(tabsActions.setTabProgress({
+			tabID: tabId,
+			progress: void 0
+		}));
+		dispatch(reducerActions.removeRunningExecution({ cardId: card.id }));
+	}, [
+		runningExecution,
+		card.id,
+		tabs,
+		dispatch
+	]);
+	const handleCardPress = () => {
+		if (isRunning && runningExecution) {
+			dispatch(tabsActions.setActiveTab(runningExecution.tabId));
+			return;
+		}
+		if (hasTemplateVariables(card)) promptModalState.open();
+		else if (card.requireConfirmation) {
+			setPendingCard(card);
+			confirmModalState.open();
+		} else executeCard(card);
 	};
-	const modalState = useOverlayState$1();
-	const openConfig = () => {
+	const handleVariableExecute = (resolvedCard) => {
+		if (card.requireConfirmation) {
+			setPendingCard(resolvedCard);
+			confirmModalState.open();
+		} else executeCard(resolvedCard);
+	};
+	const openConfig = (e) => {
+		if (e && typeof e.stopPropagation === "function") e.stopPropagation();
 		dispatch(reducerActions.setEditingCard(card));
 		dispatch(reducerActions.setView("form"));
 		modalState.open();
 	};
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToolsCard, {
-		footer: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+	const renderIcon = () => {
+		if (!isRunning) return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, {
+			className: "size-8",
+			id: runningExecution?.tabId
+		});
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip, {
+			delay: 150,
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "relative size-8 flex items-center justify-center",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { className: "size-8 text-emerald-500 dark:text-emerald-400" })
+			}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip.Content, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "font-semibold text-xs text-emerald-600 dark:text-emerald-400",
+				children: "Process Running"
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-[10px] text-muted",
+				children: "Click card to view session tab"
+			})] })]
+		});
+	};
+	const renderFooter = () => {
+		if (isRunning) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			onClick: (e) => e.stopPropagation(),
+			className: "flex items-center justify-between w-full",
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					className: "flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 absolute top-4 right-4 border border-emerald-500/25 text-emerald-600 dark:text-emerald-400 text-xs font-semibold select-none",
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Running" })
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex items-center gap-1.5",
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip, {
+						delay: 150,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							size: "sm",
+							variant: "danger-soft",
+							onPress: handleStopExecution,
+							className: "shrink-0 font-medium",
+							"aria-label": "Stop running process",
+							isIconOnly: true,
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(r$32, { className: "size-3.5" })
+						}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip.Content, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-xs font-medium",
+							children: "Stop Process"
+						}) })]
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Tooltip, {
+						delay: 150,
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip.Trigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+							size: "sm",
+							variant: "tertiary",
+							onPress: openConfig,
+							className: "shrink-0",
+							"aria-label": "Edit card",
+							isIconOnly: true,
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$6, { className: "text-semi-muted size-3.5" })
+						}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Tooltip.Content, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-xs",
+							children: "Edit Action"
+						}) })]
+					})]
+				})
+			]
+		});
+		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+			size: "sm",
 			variant: "tertiary",
 			onPress: openConfig,
 			className: "shrink-0",
+			"aria-label": "Edit card",
 			isIconOnly: true,
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$3, { className: "text-semi-muted" })
+			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$6, { className: "text-semi-muted size-3.5" })
+		});
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToolsCard, {
+			description: description || "No description provided. Click to execute this action, run scripts, or open the configured URL in your workspace.",
+			id: card.id,
+			title,
+			icon: renderIcon(),
+			isPinned,
+			footer: renderFooter(),
+			onPress: handleCardPress,
+			onPinPress: handleTogglePin,
+			avatarClassName: isRunning ? "ring-emerald-500 dark:ring-emerald-400 ring-2 animate-pulse" : "ring-cyan-500"
 		}),
-		description: description || "No description provided. Click to execute this action, run scripts, or open the configured URL in your workspace.",
-		title,
-		onPress: onClick,
-		avatarClassName: "ring-cyan-500",
-		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { className: "size-8" })
-	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomActionsModal, { state: modalState })] });
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomActionsModal, { state: modalState }),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(VariablePromptModal, {
+			card,
+			isOpen: promptModalState.isOpen,
+			onExecute: handleVariableExecute,
+			onOpenChange: promptModalState.setOpen,
+			cardIcon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Icon, { className: "size-full" })
+		}),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SafetyConfirmationModal, {
+			card: pendingCard,
+			isOpen: confirmModalState.isOpen,
+			onOpenChange: confirmModalState.setOpen,
+			onConfirm: () => executeCard(pendingCard)
+		})
+	] });
 }
 //#endregion
-//#region extension/src/renderer/Components/CardsContainer.tsx
+//#region extension/src/renderer/components/cards/CardsContainer.tsx
 var { useMemo } = await importShared("react");
 var { useSelector: useSelector$1 } = await importShared("react-redux");
-function CardsContainer({ cards }) {
-	return cards.map((card) => {
-		const icon = CardIconById(card.icon);
-		return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ActionCard, {
-			card,
-			icon
-		}, card.id);
+var cardVariants = {
+	initial: {
+		opacity: 0,
+		translateY: 20
+	},
+	animate: (index) => ({
+		opacity: 1,
+		translateY: 0,
+		transition: { delay: index * .05 }
+	}),
+	exit: {
+		opacity: 0,
+		translateY: 20,
+		transition: { duration: .15 }
+	}
+};
+function CardsContainer({ cards, startIndex = 0 }) {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnimatePresence, {
+		mode: "popLayout",
+		children: cards.map((card, index) => {
+			const icon = CardIconById(card.icon);
+			return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(motion.div, {
+				exit: "exit",
+				layout: "position",
+				initial: "initial",
+				animate: "animate",
+				variants: cardVariants,
+				custom: startIndex + index,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ActionCard, {
+					card,
+					icon
+				})
+			}, card.id);
+		})
 	});
 }
-function PinnedActions() {
+function PinnedActions({ startIndex = 0 } = {}) {
 	const customCards = useSelector$1(selectCustomCards);
-	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories.pinned ? card : null)), [customCards]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, { cards: pinnedCards });
+	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories?.pinned ? card : null)), [customCards]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, {
+		cards: pinnedCards,
+		startIndex
+	});
 }
-function RecentlyActions() {
+function RecentlyActions({ startIndex = 0 } = {}) {
 	const customCards = useSelector$1(selectCustomCards);
-	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories.recentlyUsed ? card : null)), [customCards]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, { cards: pinnedCards });
+	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories?.recentlyUsed ? card : null)), [customCards]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, {
+		cards: pinnedCards,
+		startIndex
+	});
 }
-function AllActions() {
+function AllActions({ startIndex = 0 } = {}) {
 	const customCards = useSelector$1(selectCustomCards);
-	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories.all ? card : null)), [customCards]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, { cards: pinnedCards });
+	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories?.all ? card : null)), [customCards]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, {
+		cards: pinnedCards,
+		startIndex
+	});
 }
-function ImageActions() {
+function ImageActions({ startIndex = 0 } = {}) {
 	const customCards = useSelector$1(selectCustomCards);
-	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories.image ? card : null)), [customCards]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, { cards: pinnedCards });
+	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories?.image ? card : null)), [customCards]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, {
+		cards: pinnedCards,
+		startIndex
+	});
 }
-function TextActions() {
+function TextActions({ startIndex = 0 } = {}) {
 	const customCards = useSelector$1(selectCustomCards);
-	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories.text ? card : null)), [customCards]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, { cards: pinnedCards });
+	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories?.text ? card : null)), [customCards]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, {
+		cards: pinnedCards,
+		startIndex
+	});
 }
-function AudioActions() {
+function AudioActions({ startIndex = 0 } = {}) {
 	const customCards = useSelector$1(selectCustomCards);
-	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories.audio ? card : null)), [customCards]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, { cards: pinnedCards });
+	const pinnedCards = useMemo(() => compact(customCards.map((card) => card.categories?.audio ? card : null)), [customCards]);
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardsContainer, {
+		cards: pinnedCards,
+		startIndex
+	});
 }
 //#endregion
-//#region extension/src/renderer/Components/ActionCard/ActionCard_TerminalUtils.ts
-/**
-* Escapes special characters in a string for use in a regular expression.
-*/
-function escapeRegExp(str) {
-	return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-/**
-* Extracts a URL from terminal output that contains a specific keyword.
-* @param input - The raw string data from the terminal.
-* @param keyword - The keyword to search for (e.g., "To see the GUI go to").
-* @returns The captured URL string or undefined if not found.
-*/
-function catchTerminalAddress(input, keyword) {
-	const escapedKeyword = escapeRegExp(keyword);
-	const pattern = new RegExp(`${escapedKeyword}.*?:\\s*.*?(https?:\\/\\/.*?)(?=\\s|\\u001b|$)`, "i");
-	const match = input.match(pattern);
-	if (match) return match[1];
+//#region extension/src/renderer/components/cards/ToolsPageCard.tsx
+var { useOverlayState } = await importShared("@heroui/react");
+function ToolsPageCard() {
+	const state = useOverlayState();
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToolsCard, {
+		description: "Create, customize, and manage custom shortcut cards with your own scripts, APIs, or shell commands to automate your daily developer workflows.",
+		id: "custom-actions",
+		onPress: state.open,
+		title: "Custom Actions",
+		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i$1, { className: "size-8 text-cyan-500" })
+	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomActionsModal, { state })] });
 }
 //#endregion
-//#region extension/src/renderer/Components/CustomHooks.tsx
-var { Fragment, useEffect } = await importShared("react");
-var { useDispatch } = await importShared("react-redux");
-var { useSelector } = await importShared("react-redux");
-function CustomHook() {
+//#region extension/src/renderer/hooks/useCustomActionsLifecycle.ts
+var { useEffect } = await importShared("react");
+var { useDispatch, useSelector } = await importShared("react-redux");
+function useCustomActionsLifecycle() {
 	const dispatch = useDispatch();
 	const customCards = useSelector(selectCustomCards);
 	const saveCards = useSelector(selectSaveCards);
 	const urlCatchingSession = useSelector(selectUrlCatchingSession);
+	const runningCards = useCardsState("runningCard");
+	const tabs = useTabsState("tabs");
+	const runningExecutions = useSelector(selectRunningExecutions);
 	useEffect(() => {
 		if (saveCards) {
 			window.electron.ipcRenderer.send(customActionsChannels.setCards, customCards);
 			dispatch(reducerActions.clearSaveCards());
 		}
-	}, [saveCards, customCards]);
+	}, [
+		saveCards,
+		customCards,
+		dispatch
+	]);
 	useEffect(() => {
 		window.electron.ipcRenderer.invoke(customActionsChannels.getCards).then((cards) => {
 			dispatch(reducerActions.updateState({
 				key: "customCards",
-				value: cards
+				value: sanitizeCards(cards)
 			}));
 		});
-	}, []);
+		window.electron.ipcRenderer.invoke(customActionsChannels.getSystemPaths).then((paths) => {
+			if (paths) dispatch(reducerActions.setSystemPaths(paths));
+		});
+	}, [dispatch]);
 	useEffect(() => {
 		if (!urlCatchingSession || urlCatchingSession.urlFound) return;
 		const { ptyId, tabId, findLine } = urlCatchingSession;
@@ -16807,20 +19721,71 @@ function CustomHook() {
 		});
 		return () => offData();
 	}, [urlCatchingSession, dispatch]);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Fragment, {});
-}
-//#endregion
-//#region extension/src/renderer/Components/ToolsPage.tsx
-var { useOverlayState } = await importShared("@heroui/react");
-function CustomActionsCard() {
-	const state = useOverlayState();
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(ToolsCard, {
-		description: "Create, customize, and manage custom shortcut cards with your own scripts, APIs, or shell commands to automate your daily developer workflows.",
-		id: "custom-actions",
-		onPress: state.open,
-		title: "Custom Actions",
-		icon: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(i, { className: "size-8 text-cyan-500" })
-	}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CustomActionsModal, { state })] });
+	useEffect(() => {
+		const offExit = ptyIpc.onExit((exitId) => {
+			const match = (runningExecutions || []).find((item) => item.ptyId === exitId);
+			if (match) {
+				browserIpc.send.removeBrowser(exitId);
+				dispatch(cardsActions.stopRunningCard({ tabId: match.tabId }));
+				const targetTab = tabs.find((t) => t.id === match.tabId);
+				const restoredTitle = targetTab && PageTitleByPageId[targetTab.pageID] || "Home";
+				dispatch(tabsActions.setTabTitle({
+					tabID: match.tabId,
+					title: restoredTitle
+				}));
+				dispatch(tabsActions.setTabIsTerminal({
+					tabID: match.tabId,
+					isTerminal: false
+				}));
+				dispatch(tabsActions.setTabFavIcon({
+					tabID: match.tabId,
+					show: false,
+					url: ""
+				}));
+				dispatch(tabsActions.setTabProgress({
+					tabID: match.tabId,
+					progress: void 0
+				}));
+				dispatch(reducerActions.removeRunningExecution({ ptyId: exitId }));
+			} else dispatch(reducerActions.removeRunningExecution({ ptyId: exitId }));
+		});
+		return () => offExit();
+	}, [
+		runningExecutions,
+		tabs,
+		dispatch
+	]);
+	useEffect(() => {
+		if (!runningExecutions || runningExecutions.length === 0) return;
+		const activeTabIds = new Set(runningCards.map((rc) => rc.tabId));
+		const activePtyIds = new Set(runningCards.map((rc) => rc.id));
+		runningExecutions.forEach((exec) => {
+			if (!activeTabIds.has(exec.tabId) && !activePtyIds.has(exec.ptyId)) {
+				const targetTab = tabs.find((t) => t.id === exec.tabId);
+				if (targetTab) {
+					const restoredTitle = PageTitleByPageId[targetTab.pageID] || "Home";
+					if (targetTab.title !== restoredTitle) dispatch(tabsActions.setTabTitle({
+						tabID: exec.tabId,
+						title: restoredTitle
+					}));
+					if (targetTab.isTerminal) dispatch(tabsActions.setTabIsTerminal({
+						tabID: exec.tabId,
+						isTerminal: false
+					}));
+				}
+				dispatch(reducerActions.removeRunningExecution({
+					cardId: exec.cardId,
+					tabId: exec.tabId
+				}));
+			}
+		});
+	}, [
+		runningCards,
+		runningExecutions,
+		tabs,
+		dispatch
+	]);
+	return null;
 }
 //#endregion
 //#region extension/src/renderer/Extension.tsx
@@ -16828,26 +19793,26 @@ function InitialExtensions(lynxAPI) {
 	lynxAPI.initBrowserSentry(SENTRY_DSN);
 	lynxAPI.addReducer([{
 		name: "customActions",
-		reducer: reducer_default
+		reducer: customActionsSlice_default
 	}]);
 	if (lynxAPI.toast) setToast(lynxAPI.toast);
 	lynxAPI.cards.registerToolsCard?.({
 		id: "custom-actions",
 		title: "Custom Actions",
 		description: "Create, customize, and manage custom shortcut cards with your own scripts, APIs, or shell commands to automate your daily developer workflows.",
-		component: CustomActionsCard,
+		component: ToolsPageCard,
 		where: "tools_page"
 	});
-	if (!lynxAPI.cards.registerToolsCard) lynxAPI.customizePages.tools.add.cardsContainer(CustomActionsCard);
+	if (!lynxAPI.cards.registerToolsCard) lynxAPI.customizePages.tools.add.cardsContainer(ToolsPageCard);
 	lynxAPI.customizePages.home.add.pinCategory(PinnedActions);
 	lynxAPI.customizePages.home.add.recentlyCategory(RecentlyActions);
 	lynxAPI.customizePages.home.add.allCategory(AllActions);
 	lynxAPI.customizePages.image.add.cardsContainer(ImageActions);
 	lynxAPI.customizePages.text.add.cardsContainer(TextActions);
 	lynxAPI.customizePages.audio.add.cardsContainer(AudioActions);
-	lynxAPI.addCustomHook(CustomHook);
+	lynxAPI.addCustomHook(useCustomActionsLifecycle);
 }
 //#endregion
 export { InitialExtensions as t };
 
-//# sourceMappingURL=Extension-RSMIh-xR.js.map
+//# sourceMappingURL=Extension-Cxxpuc9X.js.map

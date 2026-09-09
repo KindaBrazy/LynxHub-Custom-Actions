@@ -1,9 +1,9 @@
 (function() {
 	try {
 		var e = "undefined" != typeof window ? window : "undefined" != typeof global ? global : "undefined" != typeof globalThis ? globalThis : "undefined" != typeof self ? self : {};
-		e.SENTRY_RELEASE = { id: "f9f2e045fae8353a4c8417903eeca14e9c7534d6" };
+		e.SENTRY_RELEASE = { id: "7e66a4581cd13b10744cfc717fce9cd99218f74a" };
 		var n = new e.Error().stack;
-		n && (e._sentryDebugIds = e._sentryDebugIds || {}, e._sentryDebugIds[n] = "2deb58b5-6844-4f13-aa6f-bd11cd335a44", e._sentryDebugIdIdentifier = "sentry-dbid-2deb58b5-6844-4f13-aa6f-bd11cd335a44");
+		n && (e._sentryDebugIds = e._sentryDebugIds || {}, e._sentryDebugIds[n] = "e789135e-ddef-4879-948f-f35011be0fd3", e._sentryDebugIdIdentifier = "sentry-dbid-e789135e-ddef-4879-948f-f35011be0fd3");
 	} catch (e) {}
 })();
 Object.defineProperty(exports, Symbol.toStringTag, { value: "Module" });
@@ -39,22 +39,146 @@ node_fs = __toESM(node_fs, 1);
 let node_os = require("node:os");
 let node_path = require("node:path");
 node_path = __toESM(node_path, 1);
-//#region extension/src/cross/constants.ts
-var SENTRY_DSN = "https://60228860c0bb09090539b7157812575c@o4509344104316928.ingest.us.sentry.io/4511891820380160";
-//#endregion
-//#region extension/src/cross/CrossUtils.ts
+//#region extension/src/common/consts/channels.ts
 var customActionsChannels = {
 	setCards: "customActions_setCards",
 	getCards: "customActions_getCards",
 	startExe: "customActions_startExe",
 	exportToFile: "customActions_exportToFile",
-	importFromFile: "customActions_importFromFile"
+	importFromFile: "customActions_importFromFile",
+	getSystemPaths: "customActions_getSystemPaths"
 };
 var storageKeys = { customActions: "customActions" };
 //#endregion
-//#region extension/src/main/Methods/CardsManager.ts
+//#region extension/src/common/consts/sentry.ts
+var SENTRY_DSN = "https://60228860c0bb09090539b7157812575c@o4509344104316928.ingest.us.sentry.io/4511891820380160";
+//#endregion
+//#region extension/src/common/utils/cardSanitizer.ts
+var VALID_CARD_TYPES = [
+	"executable",
+	"browser",
+	"terminal",
+	"terminal_browser"
+];
+var VALID_URL_CONFIG_TYPES = [
+	"custom",
+	"findLine",
+	"nothing",
+	"htmlFile"
+];
+var VALID_ACTION_TYPES = [
+	"script",
+	"exe",
+	"open",
+	"command"
+];
+var VALID_CATEGORIES = [
+	"pinned",
+	"recentlyUsed",
+	"all",
+	"image",
+	"text",
+	"audio"
+];
+function generateUUID() {
+	if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") return crypto.randomUUID();
+	return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+		const r = Math.random() * 16 | 0;
+		return (c === "x" ? r : r & 3 | 8).toString(16);
+	});
+}
+function sanitizeUrlConfig(raw) {
+	const defaultConfig = {
+		type: "nothing",
+		openImmediately: true,
+		timeout: 5
+	};
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) return defaultConfig;
+	const obj = raw;
+	const config = {
+		type: VALID_URL_CONFIG_TYPES.includes(obj.type) ? obj.type : "nothing",
+		openImmediately: typeof obj.openImmediately === "boolean" ? obj.openImmediately : true,
+		timeout: typeof obj.timeout === "number" && Number.isFinite(obj.timeout) && obj.timeout >= 0 ? obj.timeout : 5
+	};
+	if (typeof obj.customUrl === "string" && obj.customUrl.trim()) config.customUrl = obj.customUrl.trim();
+	if (typeof obj.findLine === "string" && obj.findLine.trim()) config.findLine = obj.findLine.trim();
+	return config;
+}
+function sanitizeCategories(raw) {
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+	const obj = raw;
+	const categories = {};
+	for (const key of VALID_CATEGORIES) if (typeof obj[key] === "boolean") categories[key] = obj[key];
+	return categories;
+}
+function sanitizeActions(raw) {
+	if (!Array.isArray(raw)) return [];
+	const actions = [];
+	for (const item of raw) {
+		if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+		const obj = item;
+		const action = typeof obj.action === "string" ? obj.action : String(obj.action ?? "");
+		const type = VALID_ACTION_TYPES.includes(obj.type) ? obj.type : "command";
+		const id = typeof obj.id === "string" && obj.id.trim() ? obj.id.trim() : generateUUID();
+		const disabled = typeof obj.disabled === "boolean" ? obj.disabled : void 0;
+		const cwd = typeof obj.cwd === "string" && obj.cwd.trim() ? obj.cwd.trim() : void 0;
+		actions.push({
+			id,
+			action,
+			type,
+			...cwd ? { cwd } : {},
+			...disabled !== void 0 ? { disabled } : {}
+		});
+	}
+	return actions;
+}
+function sanitizeEnv(raw) {
+	if (!Array.isArray(raw)) return [];
+	const env = [];
+	for (const item of raw) {
+		if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+		const obj = item;
+		const key = typeof obj.key === "string" ? obj.key : String(obj.key ?? "");
+		const value = typeof obj.value === "string" ? obj.value : String(obj.value ?? "");
+		if (key.trim() || value.trim()) env.push({
+			key,
+			value
+		});
+	}
+	return env;
+}
+function sanitizeCard(raw) {
+	if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+	const obj = raw;
+	return {
+		id: typeof obj.id === "string" && obj.id.trim() ? obj.id.trim() : generateUUID(),
+		title: typeof obj.title === "string" && obj.title.trim() ? obj.title.trim() : "Untitled Action",
+		description: typeof obj.description === "string" ? obj.description : void 0,
+		icon: typeof obj.icon === "string" && obj.icon.trim() ? obj.icon.trim() : "bot",
+		cwd: typeof obj.cwd === "string" && obj.cwd.trim() ? obj.cwd.trim() : void 0,
+		requireConfirmation: typeof obj.requireConfirmation === "boolean" ? obj.requireConfirmation : void 0,
+		confirmationMessage: typeof obj.confirmationMessage === "string" && obj.confirmationMessage.trim() ? obj.confirmationMessage.trim() : void 0,
+		cardType: VALID_CARD_TYPES.includes(obj.cardType) ? obj.cardType : "terminal_browser",
+		urlConfig: sanitizeUrlConfig(obj.urlConfig),
+		categories: sanitizeCategories(obj.categories),
+		actions: sanitizeActions(obj.actions),
+		env: sanitizeEnv(obj.env)
+	};
+}
+function sanitizeCards(raw) {
+	if (!raw) return [];
+	const items = Array.isArray(raw) ? raw : [raw];
+	const sanitized = [];
+	for (const item of items) {
+		const card = sanitizeCard(item);
+		if (card) sanitized.push(card);
+	}
+	return sanitized;
+}
+//#endregion
+//#region extension/src/main/services/cardsStorage.ts
 function getCards(storageManager) {
-	return storageManager.getCustomData(storageKeys.customActions) || [];
+	return sanitizeCards(storageManager.getCustomData(storageKeys.customActions));
 }
 function setCards(storageManager, cards) {
 	storageManager.setCustomData(storageKeys.customActions, cards);
@@ -84,12 +208,12 @@ async function importFromFile() {
 	if (canceled || filePaths.length === 0) return null;
 	const content = await fs_promises.readFile(filePaths[0], "utf-8");
 	try {
-		const parsed = JSON.parse(content);
-		if (Array.isArray(parsed)) return parsed;
-		throw new Error("File content is not an array");
+		const sanitized = sanitizeCards(JSON.parse(content));
+		if (sanitized.length === 0) throw new Error("No valid custom action cards found in file.");
+		return sanitized;
 	} catch (e) {
 		console.error("Failed to parse custom actions file:", e);
-		throw new Error("Invalid file format. Expected a JSON array of custom cards.", { cause: e });
+		throw new Error(e.message || "Invalid file format. Expected a JSON array of custom cards.", { cause: e });
 	}
 }
 //#endregion
@@ -113,7 +237,7 @@ var ptyChannels = {
 	onProgress: "pty-on-progress"
 };
 //#endregion
-//#region extension/src/main/Methods/ExeManager.ts
+//#region extension/src/main/services/processManager.ts
 var import_tree_kill = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((exports, module) => {
 	var childProcess = require("child_process");
 	var spawn = childProcess.spawn;
@@ -208,19 +332,22 @@ var import_tree_kill = /* @__PURE__ */ __toESM((/* @__PURE__ */ __commonJSMin(((
 		ps.on("close", onClose);
 	}
 })))(), 1);
-/** Manages child processes for executables, using Node's built-in child_process module. */
-var ExeManager = class {
+/**
+* Manages child processes for executables, handling output streaming to PTY channels
+* and clean process tree termination.
+*/
+var ProcessManager = class {
 	isRunning;
 	process;
 	id;
-	constructor(id, exePath, appManager, onExitCallback, env) {
+	constructor(id, exePath, appManager, onExitCallback, env, cwd) {
 		this.id = id;
 		let validatedExe = void 0;
 		if (exePath && exePath.length > 0) try {
 			node_fs.default.accessSync(exePath, node_fs.default.constants.R_OK);
 			validatedExe = node_path.default.resolve(exePath);
 		} catch (error) {
-			console.warn(`Exe File ${exePath} is not accessible.`);
+			console.warn(`Exe file ${exePath} is not accessible.`);
 		}
 		else console.warn(`Exe path is empty.`);
 		if (!validatedExe) {
@@ -238,17 +365,22 @@ var ExeManager = class {
 			commandToRun = validatedExe;
 			if (commandToRun.includes(" ")) commandToRun = `"${commandToRun}"`;
 		}
+		let workingDir = node_path.default.dirname(validatedExe);
+		if (cwd && cwd.trim().length > 0) try {
+			if (node_fs.default.existsSync(cwd.trim())) workingDir = node_path.default.resolve(cwd.trim());
+		} catch (err) {
+			console.warn(`Provided cwd "${cwd}" is invalid, defaulting to exe directory:`, err);
+		}
 		this.process = (0, node_child_process.spawn)(commandToRun, spawnArgs, {
 			env: {
 				...process.env,
 				...env
 			},
 			shell: spawnArgs.length === 0,
-			cwd: process.cwd()
+			cwd: workingDir
 		});
 		this.isRunning = true;
 		this.process.stdout?.on("data", (data) => {
-			console.log("on stdout data", this.id);
 			appManager?.getWebContent()?.send(ptyChannels.onData, this.id, data.toString());
 		});
 		this.process.stderr?.on("data", (data) => {
@@ -307,7 +439,6 @@ var ExeManager = class {
 	}
 	/**
 	* Writes data to the child process's standard input.
-	* @param data - The data to write, either a string or an array of strings.
 	*/
 	write(data) {
 		if (!this.isRunning || !this.process?.stdin) return;
@@ -316,17 +447,17 @@ var ExeManager = class {
 	}
 };
 //#endregion
-//#region extension/src/main/Methods/StartExecute.ts
+//#region extension/src/main/services/executionService.ts
 var processMap = /* @__PURE__ */ new Map();
-function startExecute(appManager) {
-	electron.ipcMain.on(customActionsChannels.startExe, (_, id, exePath, env) => {
+function registerExecutionHandlers(appManager) {
+	electron.ipcMain.on(customActionsChannels.startExe, (_, id, exePath, env, cwd) => {
 		if (processMap.has(id)) {
 			processMap.get(id)?.stop();
 			processMap.delete(id);
 		}
-		const manager = new ExeManager(id, exePath, appManager, (exitId) => {
+		const manager = new ProcessManager(id, exePath, appManager, (exitId) => {
 			processMap.delete(exitId);
-		}, env);
+		}, env, cwd);
 		processMap.set(id, manager);
 	});
 	electron.ipcMain.on(ptyChannels.stopProcess, (_, id) => {
@@ -347,9 +478,20 @@ async function initialExtension(lynxApi, utils) {
 			electron.ipcMain.on(customActionsChannels.setCards, (_, cards) => setCards(storageManager, cards));
 			electron.ipcMain.handle(customActionsChannels.exportToFile, (_, cards) => exportToFile(cards));
 			electron.ipcMain.handle(customActionsChannels.importFromFile, () => importFromFile());
+			electron.ipcMain.handle(customActionsChannels.getSystemPaths, async () => {
+				const appDataDir = storageManager.getData("app").appDataDir || electron.app.getPath("userData");
+				return {
+					home: electron.app.getPath("home"),
+					desktop: electron.app.getPath("desktop"),
+					downloads: electron.app.getPath("downloads"),
+					documents: electron.app.getPath("documents"),
+					workspace: appDataDir,
+					appData: electron.app.getPath("userData")
+				};
+			});
 		});
 		utils.getAppManager().then((appManager) => {
-			startExecute(appManager);
+			registerExecutionHandlers(appManager);
 		});
 	});
 }
